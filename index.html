@@ -389,7 +389,7 @@
       <div class="brand-mark"></div>
       <div>
         <h1>Alchemist's Ledger</h1>
-        <div class="subtitle">Deck dashboard — Little Alchemist Deck Optimizer</div>
+        <div class="subtitle">Little Alchemist deck dashboard</div>
       </div>
     </div>
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end;">
@@ -399,20 +399,20 @@
       <button class="reset-btn" id="textDataBtn">Text transfer</button>
       <button class="add-btn" id="confirmImportBtn" style="display:none;padding:7px 14px;font-size:12px;">Confirm import</button>
       <input type="file" id="importDataInput" accept="application/json" style="display:none;">
-      <div class="version-tag" id="versionTag">v5.11 · 300×60</div>
+      <div class="version-tag" id="versionTag">build 20 · unfused cap</div>
     </div>
   </header>
 
   <div class="panel" id="textDataPanel" style="display:none;margin-bottom:22px;">
-    <p class="panel-title" style="font-size:18px;">Text transfer</p>
-    <p class="panel-desc">For moving data between devices when file downloads don't work (common in iOS Safari). Copy the text below on one device, paste it here on the other, then press Load.</p>
+    <p class="panel-title" style="font-size:18px;">Text Transfer</p>
+    <p class="panel-desc">Copy on one device, paste on the other, then Load. Useful when file downloads fail, as they often do in iOS Safari.</p>
     <div style="padding:0 20px 14px;">
       <textarea id="textDataArea" spellcheck="false" style="width:100%;min-height:130px;background:var(--panel-2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px;font-family:'IBM Plex Mono',monospace;font-size:11.5px;resize:vertical;"></textarea>
     </div>
     <div class="controls" style="padding-top:0;">
-      <button class="add-btn" id="textFillBtn">Fill with my data</button>
-      <button class="reset-btn" id="textCopyBtn">Copy to clipboard</button>
-      <button class="add-btn" id="textLoadBtn">Load pasted data</button>
+      <button class="add-btn" id="textFillBtn">Fill</button>
+      <button class="reset-btn" id="textCopyBtn">Copy</button>
+      <button class="add-btn" id="textLoadBtn">Load</button>
       <span class="result-count" id="textDataStatus" style="color:var(--gold);"></span>
     </div>
     <div style="height:14px;"></div>
@@ -455,8 +455,8 @@
           </div>
         </div>
         <div class="panel" style="flex:1;">
-          <p class="panel-title">Top upgrade available</p>
-          <p class="panel-desc">Highest-scoring cards not currently in your deck.</p>
+          <p class="panel-title">Top Upgrades</p>
+          <p class="panel-desc">Highest-scoring cards you aren't running.</p>
           <div class="upgrade-list" id="upgradeList"></div>
         </div>
       </div>
@@ -464,26 +464,26 @@
 
     <div class="two-col">
       <div class="panel">
-        <p class="panel-title">Collection by rarity</p>
-        <p class="panel-desc">Owned cards vs. full catalogue, by rarity tier.</p>
+        <p class="panel-title">Collection by Rarity</p>
+        <p class="panel-desc">What you own against the full catalogue.</p>
         <div class="rarity-list" id="rarityList"></div>
       </div>
       <div class="panel">
-        <p class="panel-title">Upcoming Goblin Spawns</p>
-        <p class="panel-desc">Every future chance and guaranteed spawn date from your Goblin log.</p>
+        <p class="panel-title">Upcoming Spawns</p>
+        <p class="panel-desc">Chance and guaranteed dates still ahead.</p>
         <div class="upgrade-list" id="goblinUpcomingList"></div>
       </div>
     </div>
 
     <div class="two-col">
       <div class="panel">
-        <p class="panel-title">Next Pack Releasing</p>
-        <p class="panel-desc">Pulled from the Pack Schedule.</p>
+        <p class="panel-title">Next Pack</p>
+        <p class="panel-desc">From the Pack Schedule.</p>
         <div id="nextPackBox"></div>
       </div>
       <div class="panel">
-        <p class="panel-title">Pack Tracker Summary</p>
-        <p class="panel-desc">Rollup of every pack logged in Pack Tracker.</p>
+        <p class="panel-title">Pack Totals</p>
+        <p class="panel-desc">Totals from Pack Tracker.</p>
         <div id="packSummaryBox"></div>
       </div>
     </div>
@@ -493,7 +493,7 @@
   <section id="mylibrary">
     <div class="panel">
       <p class="panel-title">My Library</p>
-      <p class="panel-desc">Edit your card collection here. Add cards you've pulled, adjust quantity, level, fusion and Onyx state — then head to Deck Builder to generate a deck from it. Changes are saved automatically in this browser.</p>
+      <p class="panel-desc">Your collection. Add pulls and set quantity, level, fusion and Onyx. Saved automatically, and used by every other tab.</p>
 
       <div class="add-row-form" id="addRowForm">
         <select class="mini-input" id="addName"></select>
@@ -504,6 +504,67 @@
         <label class="mini-check"><input type="checkbox" id="addFused"> Fused</label>
         <input type="number" class="mini-input qty" id="addQty" value="1" min="1" max="3">
         <button class="add-btn" id="addBtn">+ Add card</button>
+      </div>
+
+      <div class="add-row-form" style="padding-top:0;">
+        <button class="reset-btn" id="bulkToggleBtn">Bulk edit</button>
+        <span class="result-count" id="bulkStatus" style="color:var(--gold);margin-left:0;"></span>
+      </div>
+
+      <div id="bulkPanel" style="display:none;margin:0 20px 14px;padding:14px;background:var(--panel-2);border:1px solid var(--border);border-radius:10px;">
+        <div class="builder-controls" style="padding:0 0 8px;">
+          <label class="builder-field">
+            <span>Select by</span>
+            <select id="bulkSelectMode" style="width:140px;">
+              <option value="tier" selected>Tier</option>
+              <option value="list">Pasted list</option>
+            </select>
+          </label>
+          <label class="builder-field" id="bulkTierField">
+            <span>Tier</span>
+            <select id="bulkTier" style="width:140px;">
+              <option value="all" selected>All tiers</option>
+              <option value="Common">Bronze</option>
+              <option value="Uncommon">Silver</option>
+              <option value="Rare">Gold</option>
+            </select>
+          </label>
+          <label class="builder-field" id="bulkFilterField">
+            <span>Name contains</span>
+            <input type="text" id="bulkNameFilter" placeholder="optional">
+          </label>
+        </div>
+
+        <div id="bulkListField" style="display:none;padding-bottom:8px;">
+          <textarea id="bulkList" spellcheck="false" placeholder="One per line or comma separated:&#10;Fire&#10;Bear x2&#10;Angel:Onyx&#10;Toy fused" style="width:100%;min-height:90px;background:var(--panel);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px;font-family:'IBM Plex Mono',monospace;font-size:12px;resize:vertical;"></textarea>
+        </div>
+
+        <div class="builder-controls" style="padding:0 0 8px;">
+          <label class="builder-field">
+            <span>Quantity</span>
+            <input type="number" id="bulkQty" value="3" min="0" max="3" style="width:90px;">
+          </label>
+          <label class="mini-check" style="align-self:flex-end;padding-bottom:9px;"><input type="checkbox" id="bulkOnyx"> Onyx</label>
+          <label class="mini-check" style="align-self:flex-end;padding-bottom:9px;"><input type="checkbox" id="bulkFused" checked> Fused</label>
+          <label class="builder-field">
+            <span>Mode</span>
+            <select id="bulkMode" style="width:170px;">
+              <option value="topup" selected>Top up to quantity</option>
+              <option value="set">Set exactly</option>
+              <option value="remove">Remove</option>
+            </select>
+          </label>
+          <button class="reset-btn" id="bulkPreviewBtn" style="align-self:flex-end;">Preview</button>
+          <button class="add-btn" id="bulkApplyBtn" style="align-self:flex-end;display:none;">Apply</button>
+        </div>
+
+        <div id="bulkPreview" style="font-size:12.5px;color:var(--text);line-height:1.6;"></div>
+
+        <div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--border);display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+          <span style="font-size:11.5px;color:var(--muted);">Presets:</span>
+          <button class="reset-btn" id="presetBronzeSilver">Bronze + Silver ×3 fused</button>
+          <button class="reset-btn" id="presetCoreGold">Core Gold ×3 fused</button>
+        </div>
       </div>
 
       <div class="controls" style="padding-top:6px;">
@@ -537,7 +598,7 @@
   <section id="builder">
     <div class="panel" style="margin-bottom:20px;">
       <p class="panel-title">Deck Builder</p>
-      <p class="panel-desc">Generates a deck from your library above, maximizing total combo strength between the cards you run. This is an independent synergy model built from the game's own card-combo data — it won't reproduce the workbook's internal score exactly, but it optimizes toward the same goal: strong combos, fused bonuses, and diminishing returns on duplicates.</p>
+      <p class="panel-desc">Builds the strongest deck your library allows, weighing combos, fusion, card level and duplicate falloff.</p>
       <div class="builder-controls">
         <label class="builder-field">
           <span>Deck size</span>
@@ -560,37 +621,12 @@
           <input type="number" id="bCopyReduction" value="0.9" min="0.1" max="1" step="0.05">
         </label>
         <label class="builder-field">
-          <span>Level penalty</span>
-          <input type="number" id="bLevelPenalty" value="0.12" min="0" max="0.24" step="0.01">
+          <span>Max unfused</span>
+          <input type="number" id="bMaxUnfused" placeholder="any" min="0" max="60">
         </label>
-        <button class="add-btn" id="generateBtn" style="align-self:flex-end;">Generate best deck</button>
+        <button class="add-btn" id="generateBtn" style="align-self:flex-end;">Generate deck</button>
       </div>
       <div id="builderStatus" style="padding:0 20px 18px;color:var(--muted);font-size:12.5px;"></div>
-    </div>
-
-    <div class="panel" style="margin-bottom:20px;">
-      <p class="panel-title" style="font-size:18px;">Calibration</p>
-      <p class="panel-desc">The builder's score is its own estimate. Enter the real in-game score for a deck you've generated, and it will fit a conversion factor so future estimates are shown in in-game units. More samples give a better fit.</p>
-      <div class="builder-controls">
-        <label class="builder-field">
-          <span>Model score</span>
-          <input type="number" id="calModel" placeholder="e.g. 4820" step="any">
-        </label>
-        <label class="builder-field">
-          <span>Actual in-game score</span>
-          <input type="number" id="calActual" placeholder="e.g. 20729" step="any">
-        </label>
-        <button class="add-btn" id="calAddBtn" style="align-self:flex-end;">Add sample</button>
-      </div>
-      <p class="panel-desc" id="calStatus" style="color:var(--gold);"></p>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr><th>Model score</th><th>Actual score</th><th>Implied factor</th><th></th></tr>
-          </thead>
-          <tbody id="calBody"></tbody>
-        </table>
-      </div>
     </div>
 
     <div class="panel" id="builderResultPanel" style="display:none;">
@@ -599,7 +635,7 @@
         <p class="panel-desc" style="padding:0;margin:0;flex:1;"><span id="resultSummary"></span></p>
         <button class="add-btn" id="replaceDeckBtn">Use as Reference Deck</button>
       </div>
-      <p class="panel-desc" style="color:var(--muted);font-size:11.5px;">This score is our own synergy estimate, not the game's internal formula — use it to compare options within this tool, not as an exact in-game number.</p>
+      <p class="panel-desc" style="color:var(--muted);font-size:11.5px;">Benchmark is the same deck with no fusion bonus, duplicate falloff or level penalty — the gap is what your fusion and levelling are worth.</p>
       <p class="panel-desc" id="replaceStatus" style="color:var(--gold);display:none;"></p>
       <div class="stat-row" style="padding:0 20px 18px;">
         <div class="panel stat-card" style="background:var(--panel-2);">
@@ -615,7 +651,7 @@
           <div class="lbl">Unfused</div>
         </div>
       </div>
-      <p class="panel-title" style="font-size:16px;">Rarity breakdown</p>
+      <p class="panel-title" style="font-size:16px;">Rarity Breakdown</p>
       <div class="rarity-list" id="builderRarityList"></div>
       <div class="table-wrap">
         <table>
@@ -638,12 +674,12 @@
   <!-- DECK -->
   <section id="deck">
     <div class="panel" style="margin-bottom:20px;">
-      <p class="panel-title">Saved Reference Decks</p>
-      <p class="panel-desc">One slot per optimisation mode. Generating a deck in Deck Builder and pressing "Use as Reference Deck" saves it to the slot matching the mode it was built for.</p>
+      <p class="panel-title">Saved Decks</p>
+      <p class="panel-desc">One slot per mode. Decks save to the slot they were built for.</p>
       <div class="controls" id="refSlotChips" style="padding-bottom:18px;"></div>
     </div>
     <div class="panel" id="deckChangePanel" style="display:none;margin-bottom:20px;">
-      <p class="panel-title">Changes from Previous Reference Deck</p>
+      <p class="panel-title">Changes from Previous</p>
       <p class="panel-desc" id="deckChangeSummary"></p>
       <div class="two-col" style="margin-top:0;">
         <div>
@@ -658,7 +694,7 @@
     </div>
     <div class="panel">
       <p class="panel-title" id="deckPanelTitle">Current Deck</p>
-      <p class="panel-desc">Every card in the selected reference deck, its fusion state, and combo performance.</p>
+      <p class="panel-desc">Cards, fusion state, and combo coverage.</p>
       <div class="controls">
         <input type="text" class="search-input" id="deckSearch" placeholder="Search deck cards…">
         <span class="result-count" id="deckCount"></span>
@@ -682,8 +718,8 @@
   <!-- SUGGESTIONS -->
   <section id="suggestions">
     <div class="panel">
-      <p class="panel-title">Card Suggestions</p>
-      <p class="panel-desc">Ranks the 10 cards that would add the most combo strength. Analyse against a saved reference deck to see what improves the deck you actually run, or against the best deck buildable from your library. Because fusing needs two copies of the same card, each candidate is scored two ways — run as an extra copy, or fused with one you already own — and the better route is shown.</p>
+      <p class="panel-title">Suggestions</p>
+      <p class="panel-desc">Ranks what to pull next, measured against a saved deck or the best your library can build. Each card is scored both as a new copy and as a fusion with one you own — the better route is shown.</p>
       <div class="builder-controls" style="padding-top:6px;">
         <label class="builder-field">
           <span>Analyse against</span>
@@ -706,7 +742,7 @@
           <span>Deck size baseline</span>
           <input type="number" id="sDeckSize" value="28" min="4" max="60">
         </label>
-        <button class="add-btn" id="recalcSuggBtn" style="align-self:flex-end;">Recalculate suggestions</button>
+        <button class="add-btn" id="recalcSuggBtn" style="align-self:flex-end;">Recalculate</button>
       </div>
       <div id="suggStatus" style="padding:0 20px 4px;color:var(--muted);font-size:12.5px;"></div>
       <div id="suggFusable" style="display:none;margin:0 20px 12px;padding:10px 14px;background:var(--panel-2);border:1px solid var(--gold-soft);border-radius:8px;color:var(--text);font-size:12.5px;line-height:1.5;"></div>
@@ -735,7 +771,7 @@
   <section id="goblin">
     <div class="panel">
       <p class="panel-title">Goblin Log</p>
-      <p class="panel-desc">Track Goblin sightings by date and type. Once an entry is logged, pick the card you obtained from it next to the Guaranteed Date column — it'll be added to My Library automatically.</p>
+      <p class="panel-desc">Log sightings by date and type. Name the card you obtained and it goes to My Library.</p>
 
       <div class="add-row-form" id="goblinAddForm">
         <input type="date" class="mini-input" id="goblinDate">
@@ -774,7 +810,7 @@
   <section id="packtracker">
     <div class="panel">
       <p class="panel-title">Pack Tracker</p>
-      <p class="panel-desc">Log the packs you open and their pack number.</p>
+      <p class="panel-desc">Packs opened, by number.</p>
 
       <div class="add-row-form" id="packAddForm">
         <select class="mini-input" id="packType">
@@ -793,6 +829,7 @@
         <table>
           <thead>
             <tr>
+              <th data-key="seq" data-table="pack">#<span class="arrow"></span></th>
               <th data-key="type" data-table="pack">Pack Type <span class="arrow"></span></th>
               <th data-key="packNumber" data-table="pack">Pack Number <span class="arrow"></span></th>
               <th></th>
@@ -808,18 +845,18 @@
   <section id="packschedule">
     <div class="panel">
       <p class="panel-title">Pack Schedule</p>
-      <p class="panel-desc">Full release schedule of packs, with the OCC (Onyx variant) and GCC cards obtainable through each. Cards not yet in My Library are flagged "missing". You can add, edit, or remove rows — your changes are saved in this browser.</p>
+      <p class="panel-desc">Every scheduled pack and the cards it yields. Anything missing from My Library is flagged. Rows are editable.</p>
 
       <div class="add-row-form" id="scheduleAddForm">
         <input type="text" class="mini-input" id="schedName" placeholder="Pack name">
         <input type="date" class="mini-input" id="schedDate">
-        <input type="text" class="mini-input" id="schedOcc" placeholder="OCC (Onyx card)">
+        <input type="text" class="mini-input" id="schedOcc" placeholder="OCC card">
         <input type="text" class="mini-input" id="schedGcc" placeholder="GCC card">
         <button class="add-btn" id="schedAddBtn">+ Add entry</button>
       </div>
 
       <div class="controls">
-        <input type="text" class="search-input" id="scheduleSearch" placeholder="Search pack, OCC, or GCC…">
+        <input type="text" class="search-input" id="scheduleSearch" placeholder="Search packs or cards…">
         <label class="mini-check"><input type="checkbox" id="scheduleMissingOnly"> Show missing cards only</label>
         <label class="mini-check"><input type="checkbox" id="scheduleUpcomingOnly"> Upcoming only</label>
         <span class="result-count" id="scheduleCount"></span>
@@ -839,12 +876,36 @@
         </table>
       </div>
       <div style="padding:0 20px 20px;">
-        <button class="reset-btn" id="schedResetBtn">Reset schedule to shipped default</button>
+        <button class="reset-btn" id="schedBulkBtn">Bulk update</button>
+        <button class="reset-btn" id="schedExportBtn">Export CSV</button>
+        <button class="reset-btn" id="schedResetBtn">Reset to default</button>
+      </div>
+
+      <div id="schedBulkPanel" style="display:none;margin:0 20px 20px;padding:14px;background:var(--panel-2);border:1px solid var(--border);border-radius:10px;">
+        <p style="margin:0 0 10px;font-size:12.5px;color:var(--muted);line-height:1.6;">
+          <strong>Pack Name, Date</strong> is enough — each pack always yields the same cards, so OCC and GCC are filled in automatically. Add them as third and fourth columns only to override.
+          Paste CSV or straight from a spreadsheet, or upload a .csv. A header row is skipped. Dates accept <code>2026-01-04</code>, <code>1/4/26</code> or <code>4 Jan 2026</code>.
+        </p>
+        <textarea id="schedBulkText" spellcheck="false" placeholder="Pack Name, Date&#10;Cloaked, 2026-01-01&#10;Fantasy, 2026-01-04&#10;Aviary, 1/6/26" style="width:100%;min-height:130px;background:var(--panel);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px;font-family:'IBM Plex Mono',monospace;font-size:11.5px;resize:vertical;"></textarea>
+        <div class="controls" style="padding:10px 0 0;">
+          <label class="builder-field">
+            <span>Mode</span>
+            <select id="schedBulkMode" style="width:200px;">
+              <option value="replace" selected>Replace whole schedule</option>
+              <option value="merge">Merge — update and add</option>
+            </select>
+          </label>
+          <button class="reset-btn" id="schedUploadBtn" style="align-self:flex-end;">Upload .csv</button>
+          <input type="file" id="schedFileInput" accept=".csv,.tsv,.txt,text/csv" style="display:none;">
+          <button class="reset-btn" id="schedPreviewBtn" style="align-self:flex-end;">Preview</button>
+          <button class="add-btn" id="schedApplyBtn" style="align-self:flex-end;display:none;">Apply</button>
+        </div>
+        <div id="schedBulkPreview" style="font-size:12.5px;line-height:1.6;margin-top:8px;"></div>
       </div>
     </div>
   </section>
 
-  <footer>Built from your deck optimizer workbook · figures reflect the sheet at time of export</footer>
+  <footer>Card and combo data from your deck optimizer workbook</footer>
 </div>
 
 <script>
@@ -896,13 +957,31 @@ async function saveReferenceDecks(){
   }catch(e){ /* storage unavailable */ }
 }
 
+// "3d ago" style age, so a stale saved deck is obvious at a glance.
+function relativeAge(iso){
+  if(!iso) return null;
+  const then = new Date(iso);
+  if(isNaN(then)) return null;
+  const mins = Math.floor((Date.now() - then.getTime())/60000);
+  if(mins < 1) return 'just now';
+  if(mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins/60);
+  if(hrs < 24) return `${hrs}h ago`;
+  const days = Math.floor(hrs/24);
+  if(days < 30) return `${days}d ago`;
+  return `${Math.floor(days/30)}mo ago`;
+}
+
 function renderRefSlotChips(){
   ['refSlotChips','refSlotChipsOverview'].forEach(id=>{
     const el = document.getElementById(id);
     if(!el) return;
     el.innerHTML = REF_SLOTS.map(s=>{
       const r = referenceDecks[s.key];
-      const sub = r.deck.length ? `${r.deck.length} cards · ${Math.round(r.score).toLocaleString()}` : 'empty';
+      const age = relativeAge(r.savedAt);
+      const sub = r.deck.length
+        ? `${r.deck.length} cards · ${Math.round(r.score).toLocaleString()}${age?` · ${age}`:''}`
+        : 'empty';
       return `<div class="toggle-chip ref-slot-chip ${s.key===activeRefSlot?'active':''}" data-slot="${s.key}">
         ${escapeHtml(s.label)} <span style="opacity:.7;font-size:11px;">(${sub})</span>
       </div>`;
@@ -916,6 +995,15 @@ function renderRefSlotChips(){
     renderOverview();
     document.getElementById('deckChangePanel').style.display = 'none';
   }));
+}
+
+// Each pack always yields the same OCC and GCC cards, so imports only need
+// name and date — the card columns are filled from here when omitted.
+const PACK_CARDS = {"Cloaked":{"occ":"Void","gcc":"Camouflage"},"Fantasy":{"occ":"Fairy Tale","gcc":"Precious Ring Lore"},"Aviary":{"occ":"Wind","gcc":"Bird"},"Wingman":{"occ":"Superhero","gcc":"Sidekick"},"Viking":{"occ":"Horn","gcc":"Viking"},"Aquatic":{"occ":"Trident","gcc":"Underwater"},"Machine":{"occ":"Elf","gcc":"Robot"},"Clairvoyant":{"occ":"Insect","gcc":"Psychic"},"Far Away":{"occ":"Space","gcc":"Galaxy Wars"},"Wizarding":{"occ":"Magic","gcc":"Wizarding School"},"Oceana":{"occ":"Underwater","gcc":"Fish"},"Arms":{"occ":"Vampire","gcc":"Weapon"},"Commander":{"occ":"Undead","gcc":"Leader"},"Adventure":{"occ":"Wealth","gcc":"Adventure"},"Hypno":{"occ":"Werewolf","gcc":"Mind Control"},"Valentine's":{"occ":"Precious Ring Lore","gcc":"Love"},"Slime":{"occ":"Poison","gcc":"Blob"},"Primate":{"occ":"Prehistoric","gcc":"Monkey"},"Combat":{"occ":"Villain","gcc":"War"},"Scaly":{"occ":"Turtle","gcc":"Reptile"},"Vanity":{"occ":"Cat","gcc":"Beauty"},"Regal":{"occ":"Chinchilla","gcc":"Royalty"},"Scheming":{"occ":"Leader","gcc":"Royal Game"},"Confectionery":{"occ":"Hammer","gcc":"Sweets"},"Muscle":{"occ":"Sword","gcc":"Strength"},"Fable":{"occ":"Fairy","gcc":"Fairy Tale"},"Swift":{"occ":"Energy","gcc":"Speed"},"Innovation":{"occ":"Science","gcc":"Invention"},"Canine":{"occ":"Knight","gcc":"Dog"},"Dark Age":{"occ":"Time","gcc":"Medieval"},"The Dark":{"occ":"Madness","gcc":"Darkness"},"Mon":{"occ":"Dragon","gcc":"Pocket Pet"},"Meta":{"occ":"Multiples","gcc":"Card"},"Slumber":{"occ":"Bat","gcc":"Sleep"},"Half Half":{"occ":"Mutation","gcc":"Hybrid"},"Subterranean":{"occ":"Sci-Fi","gcc":"Underground"},"Hope":{"occ":"Love","gcc":"Hopefulness"},"Bug":{"occ":"Superhero","gcc":"Insect"},"Phantom":{"occ":"Water","gcc":"Spirit"},"Arachnid":{"occ":"Affliction","gcc":"Arachnid"},"Tortoise":{"occ":"Death","gcc":"Turtle"},"First Aid":{"occ":"Life","gcc":"Healing"},"Sahara":{"occ":"Relic","gcc":"Desert"},"Millionaire":{"occ":"Human","gcc":"Wealth"},"End of World":{"occ":"Strength","gcc":"Apocalypse"},"Portal":{"occ":"Extraterrestrial","gcc":"Portal"},"Frozen":{"occ":"Sun","gcc":"Ice"},"Gargantuan":{"occ":"Anger","gcc":"Giant"},"Botanical":{"occ":"Invention","gcc":"Plant"},"Mutant":{"occ":"Sci-Fi","gcc":"Mutation"},"Pirate":{"occ":"Monkey","gcc":"Pirate"},"Melody":{"occ":"Monster","gcc":"Music"},"Shrine":{"occ":"The Chosen One","gcc":"Shrine"},"Chosen Hero":{"occ":"Knight","gcc":"The Chosen One"},"Skeletal":{"occ":"Cursed","gcc":"Bone"},"Multiplicity":{"occ":"Metal","gcc":"Multiples"},"Jungle":{"occ":"Prehistoric","gcc":"Jungle"},"Animation":{"occ":"Toy","gcc":"Cartoon"},"Spycraft":{"occ":"Camouflage","gcc":"Spy"},"Future Fight":{"occ":"War","gcc":"Future Fight"},"Sports":{"occ":"Speed","gcc":"Sports"},"Futuristic":{"occ":"Water","gcc":"Sci-Fi"},"Summertide":{"occ":"Arcade","gcc":"Summertide"},"Accursed":{"occ":"Superhero","gcc":"Cursed"},"Rat":{"occ":"Wizard","gcc":"Rodent"},"Fun":{"occ":"Bear","gcc":"Toy"},"Atomic Aftermath":{"occ":"Apocalypse","gcc":"Atomic Aftermath"},"Parasitic":{"occ":"Knowledge","gcc":"Parasite"},"Plague":{"occ":"Water Serpent","gcc":"Affliction"},"Carnage":{"occ":"Weapon","gcc":"Destruction"},"Booming Spike":{"occ":"Demon","gcc":"Horn"},"Bloody":{"occ":"Earth","gcc":"Blood"},"Tiny":{"occ":"Insect","gcc":"Miniature"},"Rage":{"occ":"Void","gcc":"Anger"},"Insanity":{"occ":"Knowledge","gcc":"Madness"},"Undying":{"occ":"Vampire","gcc":"Immortality"},"Hallow's Eve":{"occ":"Spirit","gcc":"Halloween"},"Fight":{"occ":"Werewolf","gcc":"Martial Arts"},"Mythos":{"occ":"Food","gcc":"Myth"},"Martian":{"occ":"Space","gcc":"Extraterrestrial"},"Gamer":{"occ":"Chinchilla","gcc":"Arcade"},"Thanksgiving":{"occ":"Bird","gcc":"Turkey Day"},"Lunar":{"occ":"Wings","gcc":"Moon"},"Anniversary":{"occ":"Sweets/Golem","gcc":"Celebration"},"Wintertide":{"occ":"Holidays","gcc":"Wintertide"},"Zoom Zoom":{"occ":"Invention","gcc":"Vehicle"},"Yuletide":{"occ":"Pocket Pet","gcc":"Holidays"},"New Years":{"occ":"Horse/Moon","gcc":"New Years"}};
+function packCardsFor(name){
+  const t = normalizeCardName(name);
+  for(const k in PACK_CARDS) if(normalizeCardName(k)===t) return PACK_CARDS[k];
+  return null;
 }
 
 // Mutable, user-editable copy of the schedule (seeded from the shipped data above).
@@ -1157,7 +1245,7 @@ function computeSuggestions(){
     mode: usingSaved ? source : document.getElementById('sMode').value,
     fusionBuff: 1.5,
     copyReduction: 0.9,
-    levelPenalty: parseFloat(document.getElementById('bLevelPenalty').value) || 0.12,
+    levelPenalty: LEVEL_PENALTY,
   };
   const deckSize = Math.max(1, parseInt(document.getElementById('sDeckSize').value)||28);
 
@@ -1305,7 +1393,7 @@ function computeSuggestions(){
 function runSuggestionAnalysis(){
   const statusEl = document.getElementById('suggStatus');
   if(myLibrary.length===0 || myLibrary.every(r=>r.qty===0)){
-    statusEl.textContent = 'Your library is empty — add some cards in My Library first.';
+    statusEl.textContent = 'Add cards in My Library to see suggestions.';
     document.getElementById('suggLastUpdated').textContent = '';
     lastSuggestions = [];
     document.getElementById('suggBody').innerHTML = '';
@@ -1314,19 +1402,19 @@ function runSuggestionAnalysis(){
     renderUpgradeList();
     return;
   }
-  statusEl.textContent = 'Analyzing your library against the full card database…';
+  statusEl.textContent = 'Analysing…';
   const { suggestions, readyToFuse, usingSaved, source, topPairs } = computeSuggestions();
   lastSuggestions = suggestions.map((s,i)=>({...s, rank:i+1}));
 
   const against = usingSaved
-    ? `your saved "${slotLabel(source)}" deck`
-    : 'the best deck buildable from your library';
+    ? `your ${slotLabel(source)} deck`
+    : 'your best possible deck';
   if(source!=='best' && !usingSaved){
-    statusEl.textContent = `The "${slotLabel(source)}" reference deck is empty — build one in Deck Builder, or switch back to "Best deck from library".`;
+    statusEl.textContent = `${slotLabel(source)} is empty — build it in Deck Builder, or analyse against your library.`;
   } else {
     statusEl.textContent = suggestions.length
-      ? `Top ${suggestions.length} cards to pull, measured against ${against}.`
-      : `No beneficial additions found against ${against}.`;
+      ? `Top ${suggestions.length}, measured against ${against}.`
+      : `Nothing improves ${against}.`;
   }
 
   const fuseEl = document.getElementById('suggFusable');
@@ -1334,7 +1422,7 @@ function runSuggestionAnalysis(){
     const list = readyToFuse
       .map(f=>`${escapeHtml(f.name)}${f.onyx?' (Onyx)':''} ×${f.copies}`)
       .join(', ');
-    fuseEl.innerHTML = `<strong>Already fusable — no pulls needed:</strong> ${list}. Fusing two unfused copies gives a stronger single card.`;
+    fuseEl.innerHTML = `<strong>Fusable now</strong> — ${list}. Two unfused copies make one stronger card.`;
     fuseEl.style.display = 'block';
   } else {
     fuseEl.style.display = 'none';
@@ -1343,7 +1431,7 @@ function runSuggestionAnalysis(){
   const pairEl = document.getElementById('suggPairs');
   if(topPairs && topPairs.length){
     pairEl.innerHTML =
-      `<strong>Best two-card combinations</strong> — these reinforce each other, so pulling both is worth more than either alone:` +
+      `<strong>Best pairs</strong> — worth more together than apart:` +
       topPairs.map(p=>{
         const a = escapeHtml(p.names[0]) + (p.onyx[0]?' (Onyx)':'');
         const b = escapeHtml(p.names[1]) + (p.onyx[1]?' (Onyx)':'');
@@ -1449,8 +1537,15 @@ function getCombo(nameA, nameB){
   return comboMap.get(key) || null;
 }
 // The combo table gives values for fully-levelled cards, so an underlevelled
-// card contributes proportionally less. levelPenalty is per level below 5 and
-// is tunable, since the game's exact curve isn't published.
+// card contributes proportionally less — this much per level below 5.
+const LEVEL_PENALTY = 0.12;
+
+// Neutral settings: same combos, but no fusion bonus, no duplicate falloff and
+// no level penalty. Used as the yardstick a real deck is measured against.
+function benchmarkSettings(settings){
+  return {mode: settings.mode, fusionBuff: 1, copyReduction: 1, levelPenalty: 0};
+}
+
 function levelFactor(level, settings){
   const lv = Math.max(1, Math.min(5, level || 5));
   const penalty = (settings && settings.levelPenalty != null) ? settings.levelPenalty : 0.12;
@@ -1550,7 +1645,7 @@ function renderMyLibrary(){
   if(over.length){
     capEl.innerHTML = `<strong>Over the deck cap:</strong> ` +
       over.map(([n,c])=>`${escapeHtml(n)} ×${c}`).join(', ') +
-      `. Only ${MAX_PER_NAME} of a card can be in a deck (Onyx and non-Onyx count together), so the extras are ignored when building.`;
+      `. Only ${MAX_PER_NAME} per deck, Onyx and non-Onyx counted together — extras are ignored.`;
     capEl.style.display = 'block';
   } else {
     capEl.style.display = 'none';
@@ -1601,7 +1696,7 @@ function renderMyLibrary(){
   if(unknown.length){
     unknownEl.innerHTML = `<strong>Not recognised:</strong> ` +
       unknown.map(n=>escapeHtml(n)).join(', ') +
-      `. These aren't in the combo database, so they contribute nothing to any score. Check the spelling, or remove them.`;
+      `. Not in the combo database, so they score zero. Check spelling or remove.`;
     unknownEl.style.display = 'block';
   } else {
     unknownEl.style.display = 'none';
@@ -1634,6 +1729,194 @@ document.getElementById('addBtn').addEventListener('click', ()=>{
   saveLibrary();
   renderMyLibrary();
   runSuggestionAnalysis();
+});
+
+// ================= BULK EDIT =================
+// Onyx/non-Onyx and fused/unfused are separate holdings that never replace one
+// another, so every operation is keyed on name + onyx + fused and capped
+// independently. The 3-per-deck limit is applied later, when a deck is built.
+const CORE_GOLD = ['Bear','Monster','Space','Leader','Food','Life','Science','Toy','Wind','Villain'];
+
+function baseCatalogue(){
+  return Object.entries(CMB.ccRarity)
+    .filter(([n]) => !n.endsWith(':Onyx'))
+    .map(([n,t]) => ({name:n, tier:t}));
+}
+
+// Accepts "Fire", "Bear x2", "Angel:Onyx", "Toy fused" in any order.
+function parseBulkList(text){
+  const out = [], unknown = [];
+  const known = new Map(CMB.names.map(n=>[normalizeCardName(n), n]));
+  for(let raw of String(text).split(/[\n,]+/)){
+    let t = raw.trim();
+    if(!t) continue;
+    let onyx = false, fused = false, qty = null;
+
+    const qm = t.match(/[x×]\s*(\d+)\s*$/i);
+    if(qm){ qty = parseInt(qm[1]); t = t.slice(0, qm.index).trim(); }
+    if(/:?\bonyx\b/i.test(t)){ onyx = true; t = t.replace(/:?\bonyx\b/ig,' ').trim(); }
+    if(/\bfused\b/i.test(t)){ fused = true; t = t.replace(/\bfused\b/ig,' ').trim(); }
+    t = t.replace(/[:\-]+$/,'').trim();
+    if(!t) continue;
+
+    const canonical = known.get(normalizeCardName(t));
+    if(!canonical){ unknown.push(t); continue; }
+    out.push({name:canonical, onyx, fused, qty});
+  }
+  return {items:out, unknown};
+}
+
+function bulkSelection(){
+  const mode = document.getElementById('bulkSelectMode').value;
+  const tmplOnyx  = document.getElementById('bulkOnyx').checked;
+  const tmplFused = document.getElementById('bulkFused').checked;
+  const tmplQty   = Math.max(0, Math.min(MAX_QTY, parseInt(document.getElementById('bulkQty').value)||0));
+
+  if(mode === 'list'){
+    const {items, unknown} = parseBulkList(document.getElementById('bulkList').value);
+    // Per-line flags win; anything unspecified falls back to the template.
+    return {
+      items: items.map(i=>({
+        name: i.name,
+        onyx: i.onyx || tmplOnyx,
+        fused: i.fused || tmplFused,
+        qty: i.qty != null ? Math.min(MAX_QTY, i.qty) : tmplQty,
+      })),
+      unknown,
+    };
+  }
+
+  const tier = document.getElementById('bulkTier').value;
+  const needle = document.getElementById('bulkNameFilter').value.trim().toLowerCase();
+  const known = new Set(CMB.names);
+  const items = baseCatalogue()
+    .filter(c => known.has(c.name))
+    .filter(c => tier==='all' || c.tier===tier)
+    .filter(c => !needle || c.name.toLowerCase().includes(needle))
+    .map(c => ({name:c.name, onyx:tmplOnyx, fused:tmplFused, qty:tmplQty}));
+  return {items, unknown:[]};
+}
+
+function bulkPlan(){
+  const {items, unknown} = bulkSelection();
+  const mode = document.getElementById('bulkMode').value;
+  const key = i => `${i.name}|${i.onyx}|${i.fused}`;
+
+  const existing = new Map();
+  myLibrary.forEach(r=>{
+    if(r.level===5) existing.set(`${r.name}|${!!r.onyx}|${!!r.fused}`, r);
+  });
+
+  const changes = [];
+  for(const it of items){
+    const row = existing.get(key(it));
+    const have = row ? row.qty : 0;
+    if(mode==='remove'){
+      if(have>0) changes.push({...it, from:have, to:0});
+    } else if(mode==='set'){
+      if(have !== it.qty) changes.push({...it, from:have, to:it.qty});
+    } else { // topup — never reduces
+      if(have < it.qty) changes.push({...it, from:have, to:it.qty});
+    }
+  }
+  const delta = changes.reduce((a,c)=>a + (c.to - c.from), 0);
+  return {items, changes, unknown, mode, delta};
+}
+
+function describeVariant(c){
+  return `${c.name}${c.onyx?' (Onyx)':''}${c.fused?' fused':''}`;
+}
+
+function renderBulkPreview(){
+  const {items, changes, unknown, mode, delta} = bulkPlan();
+  const el = document.getElementById('bulkPreview');
+  const applyBtn = document.getElementById('bulkApplyBtn');
+
+  const parts = [];
+  parts.push(`<strong>${items.length}</strong> card${items.length===1?'':'s'} selected · <strong>${changes.length}</strong> row${changes.length===1?'':'s'} change`);
+  if(mode!=='remove' && delta!==0) parts.push(`${delta>0?'+':''}${delta} copies`);
+  if(mode==='remove') parts.push(`removing ${changes.reduce((a,c)=>a+c.from,0)} copies`);
+  const unchanged = items.length - changes.length;
+  if(unchanged>0) parts.push(`${unchanged} already as requested`);
+
+  let html = parts.join(' · ');
+  if(unknown.length) html += `<div style="color:var(--danger);margin-top:4px;">Not in the database: ${unknown.map(escapeHtml).join(', ')}</div>`;
+  if(changes.length){
+    const sample = changes.slice(0,8).map(c=>`${escapeHtml(describeVariant(c))} ${c.from}→${c.to}`).join(', ');
+    html += `<div style="color:var(--muted);margin-top:4px;">${sample}${changes.length>8?`, +${changes.length-8} more`:''}</div>`;
+  }
+  el.innerHTML = html;
+  applyBtn.style.display = changes.length ? 'inline-block' : 'none';
+}
+
+function applyBulk(){
+  const {changes} = bulkPlan();
+  if(!changes.length) return;
+
+  for(const c of changes){
+    const idx = myLibrary.findIndex(r=>r.name===c.name && !!r.onyx===c.onyx && !!r.fused===c.fused && r.level===5);
+    if(c.to===0){
+      if(idx>=0) myLibrary.splice(idx,1);
+    } else if(idx>=0){
+      myLibrary[idx].qty = c.to;
+    } else {
+      myLibrary.push({id:'r'+(libIdCounter++), name:c.name, onyx:c.onyx, level:5, fused:c.fused, qty:c.to});
+    }
+  }
+
+  saveLibrary();
+  renderMyLibrary();
+  runSuggestionAnalysis();
+  const delta = changes.reduce((a,c)=>a+(c.to-c.from),0);
+  document.getElementById('bulkStatus').textContent =
+    `${changes.length} row${changes.length===1?'':'s'} updated · ${delta>=0?'+':''}${delta} copies`;
+  renderBulkPreview();
+}
+
+function setBulkControls({selectMode, tier, list, qty, onyx, fused, mode}){
+  if(selectMode!=null) document.getElementById('bulkSelectMode').value = selectMode;
+  if(tier!=null)  document.getElementById('bulkTier').value = tier;
+  if(list!=null)  document.getElementById('bulkList').value = list;
+  if(qty!=null)   document.getElementById('bulkQty').value = qty;
+  if(onyx!=null)  document.getElementById('bulkOnyx').checked = onyx;
+  if(fused!=null) document.getElementById('bulkFused').checked = fused;
+  if(mode!=null)  document.getElementById('bulkMode').value = mode;
+  syncBulkControls();
+  renderBulkPreview();
+}
+
+function syncBulkControls(){
+  const isList = document.getElementById('bulkSelectMode').value==='list';
+  document.getElementById('bulkListField').style.display  = isList ? 'block' : 'none';
+  document.getElementById('bulkTierField').style.display  = isList ? 'none' : '';
+  document.getElementById('bulkFilterField').style.display= isList ? 'none' : '';
+}
+
+document.getElementById('bulkToggleBtn').addEventListener('click', ()=>{
+  const p = document.getElementById('bulkPanel');
+  const opening = p.style.display==='none';
+  p.style.display = opening ? 'block' : 'none';
+  if(opening) renderBulkPreview();
+});
+['bulkSelectMode','bulkTier','bulkNameFilter','bulkList','bulkQty','bulkOnyx','bulkFused','bulkMode']
+  .forEach(id=>{
+    const el = document.getElementById(id);
+    el.addEventListener('change', ()=>{ syncBulkControls(); renderBulkPreview(); });
+    el.addEventListener('input',  ()=>{ renderBulkPreview(); });
+  });
+document.getElementById('bulkPreviewBtn').addEventListener('click', renderBulkPreview);
+document.getElementById('bulkApplyBtn').addEventListener('click', applyBulk);
+
+document.getElementById('presetBronzeSilver').addEventListener('click', ()=>{
+  setBulkControls({selectMode:'tier', tier:'Common', qty:3, onyx:false, fused:true, mode:'topup'});
+  applyBulk();
+  setBulkControls({tier:'Uncommon'});
+  applyBulk();
+  setBulkControls({tier:'all'});
+});
+document.getElementById('presetCoreGold').addEventListener('click', ()=>{
+  setBulkControls({selectMode:'list', list:CORE_GOLD.join('\n'), qty:3, onyx:false, fused:true, mode:'topup'});
+  applyBulk();
 });
 
 wireConfirmDelete('#resetLibBtn', ()=>{
@@ -1698,75 +1981,6 @@ function renderBuilderRarity(deck){
   }).join('');
 }
 
-// ---------- Deck Builder calibration ----------
-let calSamples = [];
-
-async function loadCalibration(){
-  try{
-    const result = await window.storage.get('calibration', false);
-    if(result && result.value){
-      const parsed = JSON.parse(result.value);
-      if(Array.isArray(parsed)) calSamples = parsed;
-    }
-  }catch(e){ /* nothing saved yet */ }
-  renderCalibration();
-}
-async function saveCalibration(){
-  try{
-    await window.storage.set('calibration', JSON.stringify(calSamples), false);
-  }catch(e){ /* storage unavailable */ }
-}
-
-// Least-squares fit through the origin: minimises sum (actual - f*model)^2,
-// which gives f = sum(model*actual) / sum(model^2).
-function calibrationFactor(){
-  const valid = calSamples.filter(s=>s.model>0 && s.actual>0);
-  if(!valid.length) return null;
-  const num = valid.reduce((a,s)=>a + s.model*s.actual, 0);
-  const den = valid.reduce((a,s)=>a + s.model*s.model, 0);
-  return den>0 ? num/den : null;
-}
-
-function renderCalibration(){
-  const factor = calibrationFactor();
-  const statusEl = document.getElementById('calStatus');
-  if(factor){
-    const valid = calSamples.filter(s=>s.model>0 && s.actual>0);
-    // Mean absolute percentage error tells you how much to trust the fit.
-    const mape = valid.reduce((a,s)=> a + Math.abs(s.model*factor - s.actual)/s.actual, 0) / valid.length * 100;
-    statusEl.textContent = `Fitted factor: ×${factor.toFixed(2)} from ${valid.length} sample${valid.length===1?'':'s'} · average error ${mape.toFixed(1)}%`;
-  } else {
-    statusEl.textContent = 'No samples yet — generate a deck, note its real in-game score, and add it here.';
-  }
-  document.getElementById('calBody').innerHTML = calSamples.length ? calSamples.map(s=>`
-    <tr data-id="${s.id}">
-      <td style="font-family:'IBM Plex Mono',monospace;">${s.model}</td>
-      <td style="font-family:'IBM Plex Mono',monospace;">${s.actual}</td>
-      <td style="font-family:'IBM Plex Mono',monospace;color:var(--gold);">×${(s.actual/s.model).toFixed(2)}</td>
-      <td><button class="del-btn" data-id="${s.id}" title="Remove">✕</button></td>
-    </tr>
-  `).join('') : '';
-
-  wireConfirmDelete('#calBody .del-btn', (id)=>{
-    calSamples = calSamples.filter(s=>s.id!==id);
-    saveCalibration();
-    renderCalibration();
-  });
-}
-
-document.getElementById('calAddBtn').addEventListener('click', ()=>{
-  const model = parseFloat(document.getElementById('calModel').value);
-  const actual = parseFloat(document.getElementById('calActual').value);
-  if(!(model>0) || !(actual>0)){
-    document.getElementById('calStatus').textContent = 'Enter both a model score and a positive in-game score.';
-    return;
-  }
-  calSamples.push({id:'c'+Date.now(), model, actual});
-  saveCalibration();
-  renderCalibration();
-  document.getElementById('calActual').value = '';
-});
-
 document.getElementById('generateBtn').addEventListener('click', generateBestDeck);
 
 document.getElementById('replaceDeckBtn').addEventListener('click', ()=>{
@@ -1807,7 +2021,7 @@ document.getElementById('replaceDeckBtn').addEventListener('click', ()=>{
 
   const statusEl = document.getElementById('replaceStatus');
   statusEl.style.display = 'block';
-  statusEl.textContent = `Saved to the "${slotLabel(slot)}" reference deck — check the Reference Deck tab.`;
+  statusEl.textContent = `Saved to ${slotLabel(slot)}.`;
   setTimeout(()=>{ statusEl.style.display = 'none'; }, 4000);
 });
 
@@ -1887,25 +2101,53 @@ function expandCandidates(){
 
 // One greedy build plus swap-refinement. `seed` > 0 randomises the opening
 // picks so repeated runs explore different basins.
+// Blank or negative means no constraint.
+function maxUnfusedSetting(){
+  const raw = document.getElementById('bMaxUnfused').value;
+  if(raw === '' || raw == null) return null;
+  const n = parseInt(raw);
+  return (isNaN(n) || n < 0) ? null : n;
+}
+
+function countUnfused(deck){
+  let n=0;
+  for(const c of deck) if(!c.fused) n++;
+  return n;
+}
+
 function buildOnce(inputCandidates, deckSize, settings, seed){
   let candidates = [...inputCandidates];
   let deck = [];
   const targetSize = Math.min(deckSize, candidates.length);
+  // A cap of null means unconstrained.
+  const cap = settings.maxUnfused;
+  const capped = cap != null;
+  let unfused = 0;
+
+  // With a cap, an unfused pick is only allowed while headroom remains.
+  const allowed = (c) => !capped || c.fused || unfused < cap;
 
   while(deck.length < targetSize && candidates.length > 0){
     if(seed > 0 && deck.length < seed){
       // Random opening picks — the diversity is the point of restarting.
-      const r = Math.floor(Math.random()*candidates.length);
-      deck.push(candidates[r]);
-      candidates.splice(r, 1);
+      const pool = candidates.map((c,i)=>[c,i]).filter(([c])=>allowed(c));
+      if(!pool.length) break;
+      const [pick, idx] = pool[Math.floor(Math.random()*pool.length)];
+      deck.push(pick);
+      if(!pick.fused) unfused++;
+      candidates.splice(idx, 1);
       continue;
     }
-    let bestIdx = 0, bestScore = -Infinity;
+    let bestIdx = -1, bestScore = -Infinity;
     for(let i=0;i<candidates.length;i++){
+      if(!allowed(candidates[i])) continue;
       const s = deck.length===0 ? 0 : marginalScore(candidates[i], deck, settings);
       if(s > bestScore){ bestScore = s; bestIdx = i; }
     }
-    deck.push(candidates[bestIdx]);
+    if(bestIdx < 0) break; // nothing legal left to add
+    const pick = candidates[bestIdx];
+    deck.push(pick);
+    if(!pick.fused) unfused++;
     candidates.splice(bestIdx, 1);
   }
 
@@ -1914,9 +2156,13 @@ function buildOnce(inputCandidates, deckSize, settings, seed){
     for(let i=0;i<deck.length;i++){
       const withoutI = deck.filter((_,idx)=>idx!==i);
       const currentContrib = marginalScore(deck[i], withoutI, settings);
+      const unfusedWithoutI = countUnfused(withoutI);
       let bestGain = 1e-9, bestJ = -1;
       for(let j=0;j<candidates.length;j++){
-        const gain = marginalScore(candidates[j], withoutI, settings) - currentContrib;
+        const cand = candidates[j];
+        // A swap must leave the deck within the cap.
+        if(capped && !cand.fused && unfusedWithoutI >= cap) continue;
+        const gain = marginalScore(cand, withoutI, settings) - currentContrib;
         if(gain > bestGain){ bestGain = gain; bestJ = j; }
       }
       if(bestJ>=0){
@@ -1943,39 +2189,75 @@ function computeOptimalDeck(inputCandidates, deckSize, settings, restarts){
   return best || [];
 }
 
-function generateBestDeck(){
+// Yield to the browser so pending paints actually happen.
+const nextFrame = () => new Promise(r => requestAnimationFrame(()=>setTimeout(r,0)));
+
+// Same search as computeOptimalDeck, but pauses between restarts so the status
+// text updates and the page stays responsive on slower devices.
+async function computeOptimalDeckAsync(inputCandidates, deckSize, settings, restarts, onProgress){
+  const n = restarts != null ? restarts : 6;
+  let best = null, bestScore = -Infinity;
+  for(let r=0; r<n; r++){
+    if(onProgress){ onProgress(r, n); await nextFrame(); }
+    const deck = buildOnce(inputCandidates, deckSize, settings, r===0 ? 0 : Math.min(r, 4));
+    const sc = totalScore(deck, settings);
+    if(sc > bestScore){ bestScore = sc; best = deck; }
+  }
+  return best || [];
+}
+
+async function generateBestDeck(){
   const statusEl = document.getElementById('builderStatus');
+  const btn = document.getElementById('generateBtn');
   const deckSize = Math.max(1, parseInt(document.getElementById('bDeckSize').value)||28);
   const settings = {
     mode: document.getElementById('bMode').value,
     fusionBuff: parseFloat(document.getElementById('bFusionBuff').value)||1.5,
     copyReduction: parseFloat(document.getElementById('bCopyReduction').value)||0.9,
-    levelPenalty: parseFloat(document.getElementById('bLevelPenalty').value) || 0,
+    levelPenalty: LEVEL_PENALTY,
+    maxUnfused: maxUnfusedSetting(),
   };
 
   let candidates = expandCandidates();
   if(candidates.length===0){
-    statusEl.textContent = 'Your library is empty — add some cards first.';
+    statusEl.textContent = 'Add cards in My Library first.';
     document.getElementById('builderResultPanel').style.display = 'none';
     return;
   }
 
-  statusEl.textContent = 'Building deck from ' + candidates.length + ' available card copies…';
-
-  const deck = computeOptimalDeck(candidates, deckSize, settings);
+  btn.disabled = true;
+  const deck = await computeOptimalDeckAsync(candidates, deckSize, settings, 6, (i,n)=>{
+    statusEl.textContent = `Building… ${i+1}/${n}`;
+  });
+  btn.disabled = false;
 
   const finalScore = totalScore(deck, settings);
   lastBuilderScore = finalScore;
   lastBuilderMode = settings.mode;
   statusEl.textContent = '';
   document.getElementById('builderResultPanel').style.display = 'block';
-  const factor = calibrationFactor();
-  const calPart = factor ? ` · ≈ ${Math.round(finalScore*factor).toLocaleString()} in-game` : '';
+
+  // Benchmark: the same deck scored with every modifier neutral — no fusion
+  // bonus, no duplicate falloff, no level penalty. The gap shows how much your
+  // fusion and levelling state is actually worth.
+  const benchScore = totalScore(deck, benchmarkSettings(settings));
+  const delta = benchScore>0 ? ((finalScore-benchScore)/benchScore)*100 : 0;
+  const sign = delta>=0 ? '+' : '';
+  const unfusedInDeck = countUnfused(deck);
+  const capPart = settings.maxUnfused != null
+    ? ` · ${unfusedInDeck}/${settings.maxUnfused} unfused`
+    : '';
   document.getElementById('resultSummary').textContent =
-    `${deck.length}-card deck · model score ${finalScore.toFixed(1)}${calPart} · optimizing for ${settings.mode}`;
-  document.getElementById('calModel').value = finalScore.toFixed(1);
+    `${deck.length} cards · ${finalScore.toFixed(1)} · benchmark ${benchScore.toFixed(1)} (${sign}${delta.toFixed(1)}%)${capPart} · ${slotLabel(settings.mode)}`;
+
+  // The cap can make a full deck impossible if there aren't enough fused cards.
+  if(settings.maxUnfused != null && deck.length < Math.min(deckSize, candidates.length)){
+    const fusedAvailable = candidates.filter(c=>c.fused).length;
+    statusEl.textContent =
+      `Only ${deck.length} of ${deckSize} slots filled — a cap of ${settings.maxUnfused} unfused needs more fused cards (you have ${fusedAvailable}).`;
+  }
   document.getElementById('replaceDeckBtn').textContent =
-    `Save as "${slotLabel(settings.mode)}" Reference Deck`;
+    `Save to ${slotLabel(settings.mode)}`;
 
   const onyxCount = deck.filter(s=>s.onyx).length;
   const fusedCount = deck.filter(s=>s.fused).length;
@@ -2220,7 +2502,7 @@ function chainNextGoblin(id){
   const already = goblinLog.some(r=>r.date===iso && r.type===row.type);
   const statusEl = document.getElementById('goblinPreview');
   if(already){
-    statusEl.innerHTML = `<span style="color:var(--muted)">A ${escapeHtml(row.type)} entry for ${formatDate(nextDate)} already exists.</span>`;
+    statusEl.innerHTML = `<span style="color:var(--muted)">Already logged for ${formatDate(nextDate)}.</span>`;
     return;
   }
   const dates = computeSpawnDates(iso, row.type);
@@ -2232,7 +2514,7 @@ function chainNextGoblin(id){
   });
   saveGoblinLog();
   renderGoblinLog();
-  statusEl.innerHTML = `Chained next ${escapeHtml(row.type)} cycle starting ${formatDate(nextDate)}.`;
+  statusEl.innerHTML = `Next ${escapeHtml(row.type)} cycle logged for ${formatDate(nextDate)}.`;
 }
 
 document.getElementById('goblinAddBtn').addEventListener('click', ()=>{
@@ -2283,19 +2565,20 @@ function updatePackTypeHint(){
   if(!type){ hintEl.textContent = ''; return; }
   const normalized = type.trim().toLowerCase();
   const matches = packSchedule.filter(r => r.name.trim().toLowerCase() === normalized && r.date);
-  if(!matches.length){ hintEl.textContent = `No schedule entry found for "${type}".`; return; }
+  if(!matches.length){ hintEl.textContent = `Not in the schedule.`; return; }
   const now = new Date();
   now.setHours(0,0,0,0);
   const withDates = matches.map(r=>({...r, dateObj: parseLocalDate(r.date)}));
   const upcoming = withDates.filter(r=>r.dateObj>=now).sort((a,b)=>a.dateObj-b.dateObj);
   const chosen = upcoming.length ? upcoming[0] : withDates.sort((a,b)=>b.dateObj-a.dateObj)[0];
-  const when = upcoming.length ? 'Next scheduled' : 'Last scheduled';
-  hintEl.textContent = `${when}: ${formatDateShort(chosen.dateObj)} · OCC: ${chosen.occ||'—'} · GCC: ${chosen.gcc||'—'}`;
+  const when = upcoming.length ? 'Next' : 'Last';
+  hintEl.textContent = `${when} ${formatDateShort(chosen.dateObj)} · OCC ${chosen.occ||'—'} · GCC ${chosen.gcc||'—'}`;
 }
 
 let packLog = [];
 let packIdCounter = 0;
-let packSort = {key:'type', dir:1};
+// An order tracker, so the default view is the order things were logged in.
+let packSort = {key:'seq', dir:1};
 
 async function loadPackLog(){
   try{
@@ -2318,22 +2601,25 @@ async function savePackLog(){
 
 function renderPackLog(){
   const key = packSort.key, dir = packSort.dir;
-  const rows = [...packLog].sort((a,b)=>{
-    let av=a[key], bv=b[key];
-    if(typeof av === 'string') return dir*av.localeCompare(bv);
-    return dir*((av??0)-(bv??0));
-  });
+  // Ids are issued sequentially, so their numeric part is the logging order.
+  const rows = packLog.map((r,i)=>({...r, seq: parseInt(String(r.id).slice(1)) || i}))
+    .sort((a,b)=>{
+      let av=a[key], bv=b[key];
+      if(typeof av === 'string') return dir*av.localeCompare(bv);
+      return dir*((av??0)-(bv??0));
+    });
   document.getElementById('packCount').textContent = rows.length + ' packs';
   const validNumbers = rows.map(r=>r.packNumber).filter(n=> n!=null && n!=='' && !isNaN(n));
   const avgEl = document.getElementById('packAvgNumber');
   if(validNumbers.length){
     const avg = validNumbers.reduce((a,b)=>a+Number(b),0) / validNumbers.length;
-    avgEl.textContent = `avg pack #: ${avg.toFixed(2)}`;
+    avgEl.textContent = `avg #${avg.toFixed(2)}`;
   } else {
     avgEl.textContent = '';
   }
-  document.getElementById('packBody').innerHTML = rows.map(r=>`
+  document.getElementById('packBody').innerHTML = rows.map((r,i)=>`
     <tr data-id="${r.id}">
+      <td style="font-family:'IBM Plex Mono',monospace;color:var(--muted)">${i+1}</td>
       <td class="card-name">${escapeHtml(r.type || '—')}</td>
       <td style="font-family:'IBM Plex Mono',monospace;">${r.packNumber!=null && r.packNumber!=='' ? r.packNumber : '—'}</td>
       <td><button class="del-btn" data-id="${r.id}" title="Remove">✕</button></td>
@@ -2415,6 +2701,7 @@ document.getElementById('packAddBtn').addEventListener('click', ()=>{
 
 // ================= PACK SCHEDULE =================
 let scheduleSort = {key:'dateSort', dir:1};
+let editingScheduleId = null;
 
 function isCardOwned(cardName, requireOnyx){
   if(!cardName) return true;
@@ -2492,15 +2779,53 @@ function renderSchedule(){
   });
 
   document.getElementById('scheduleCount').textContent = rows.length + ' packs';
-  document.getElementById('scheduleBody').innerHTML = rows.map(r=>`
+  document.getElementById('scheduleBody').innerHTML = rows.map(r=> r.id===editingScheduleId ? `
+    <tr data-id="${r.id}">
+      <td><input type="text" class="row-input sched-edit" data-field="name" data-id="${r.id}" value="${escapeHtml(r.name)}" style="width:120px;"></td>
+      <td><input type="date" class="row-input sched-edit" data-field="date" data-id="${r.id}" value="${r.date||''}" style="width:140px;"></td>
+      <td><input type="text" class="row-input sched-edit" data-field="occ" data-id="${r.id}" value="${escapeHtml(r.occ||'')}" style="width:120px;"></td>
+      <td><input type="text" class="row-input sched-edit" data-field="gcc" data-id="${r.id}" value="${escapeHtml(r.gcc||'')}" style="width:120px;"></td>
+      <td style="white-space:nowrap;">
+        <button class="add-btn sched-save" data-id="${r.id}" style="padding:5px 10px;font-size:11px;">Save</button>
+        <button class="reset-btn sched-cancel" style="padding:5px 10px;font-size:11px;">Cancel</button>
+      </td>
+    </tr>
+  ` : `
     <tr data-id="${r.id}">
       <td class="card-name">${escapeHtml(r.name)}</td>
       <td style="font-family:'IBM Plex Mono',monospace;">${escapeHtml(r.dateDisplay)}</td>
       <td>${cardCell(r.occ, true)}</td>
       <td>${cardCell(r.gcc, false)}</td>
-      <td><button class="del-btn" data-id="${r.id}" title="Remove">✕</button></td>
+      <td style="white-space:nowrap;">
+        <button class="reset-btn sched-editbtn" data-id="${r.id}" style="padding:4px 9px;font-size:11px;">Edit</button>
+        <button class="del-btn" data-id="${r.id}" title="Remove">✕</button>
+      </td>
     </tr>
   `).join('');
+
+  document.querySelectorAll('.sched-editbtn').forEach(el=>el.addEventListener('click', e=>{
+    editingScheduleId = e.target.dataset.id;
+    renderSchedule();
+  }));
+  document.querySelectorAll('.sched-cancel').forEach(el=>el.addEventListener('click', ()=>{
+    editingScheduleId = null;
+    renderSchedule();
+  }));
+  document.querySelectorAll('.sched-save').forEach(el=>el.addEventListener('click', e=>{
+    const id = e.target.dataset.id;
+    const row = packSchedule.find(r=>r.id===id);
+    if(row){
+      document.querySelectorAll(`.sched-edit[data-id="${id}"]`).forEach(inp=>{
+        const v = inp.value.trim();
+        row[inp.dataset.field] = v || (inp.dataset.field==='name' ? row.name : null);
+      });
+    }
+    editingScheduleId = null;
+    saveSchedule();
+    renderSchedule();
+    renderOverview();
+    renderSugg();
+  }));
 
   wireConfirmDelete('#scheduleBody .del-btn', (id)=>{
     packSchedule = packSchedule.filter(r=>r.id!==id);
@@ -2520,7 +2845,13 @@ document.getElementById('schedAddBtn').addEventListener('click', ()=>{
   const occ = document.getElementById('schedOcc').value.trim();
   const gcc = document.getElementById('schedGcc').value.trim();
   if(!name || !date) return;
-  packSchedule.push({id:'s'+(scheduleIdCounter++), name, date, occ: occ||null, gcc: gcc||null});
+  // Cards are fixed per pack, so fill blanks from the known mapping.
+  const known = packCardsFor(name);
+  packSchedule.push({
+    id:'s'+(scheduleIdCounter++), name, date,
+    occ: occ || (known ? known.occ : null),
+    gcc: gcc || (known ? known.gcc : null),
+  });
   saveSchedule();
   renderSchedule();
   renderOverview();
@@ -2528,6 +2859,206 @@ document.getElementById('schedAddBtn').addEventListener('click', ()=>{
   document.getElementById('schedName').value = '';
   document.getElementById('schedOcc').value = '';
   document.getElementById('schedGcc').value = '';
+});
+
+// ---------- Bulk schedule update ----------
+// Splits a CSV line, honouring quoted fields that contain commas.
+function splitDelimited(line){
+  if(line.includes('\t')) return line.split('\t');
+  const out=[]; let cur='', q=false;
+  for(let i=0;i<line.length;i++){
+    const ch=line[i];
+    if(ch==='"'){
+      if(q && line[i+1]==='"'){ cur+='"'; i++; }
+      else q=!q;
+    } else if(ch===',' && !q){ out.push(cur); cur=''; }
+    else cur+=ch;
+  }
+  out.push(cur);
+  return out;
+}
+
+const MONTHS={jan:1,feb:2,mar:3,apr:4,may:5,jun:6,jul:7,aug:8,sep:9,oct:10,nov:11,dec:12};
+
+// Accepts 2026-01-04, 1/4/26, 04/01/2026 and "4 Jan 2026" / "Jan 4 2026".
+function parseFlexibleDate(raw){
+  const t=String(raw||'').trim();
+  if(!t) return null;
+  const iso=t.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+  if(iso) return `${iso[1]}-${String(+iso[2]).padStart(2,'0')}-${String(+iso[3]).padStart(2,'0')}`;
+  const slash=t.match(/^(\d{1,2})[\/.](\d{1,2})[\/.](\d{2,4})$/);
+  if(slash){
+    let [_,a,b,y]=slash;
+    y=+y; if(y<100) y+=2000;
+    // Ambiguous only when both parts are <= 12; assume US month/day, as the source file does.
+    let mo=+a, da=+b;
+    if(mo>12 && da<=12){ mo=+b; da=+a; }
+    if(mo<1||mo>12||da<1||da>31) return null;
+    return `${y}-${String(mo).padStart(2,'0')}-${String(da).padStart(2,'0')}`;
+  }
+  const named=t.match(/^(?:(\d{1,2})\s+)?([A-Za-z]{3,})\.?\s*(?:(\d{1,2})[,]?\s*)?(\d{4})$/);
+  if(named){
+    const mo=MONTHS[named[2].slice(0,3).toLowerCase()];
+    const da=named[1]||named[3];
+    if(mo && da) return `${named[4]}-${String(mo).padStart(2,'0')}-${String(+da).padStart(2,'0')}`;
+  }
+  return null;
+}
+
+function parseScheduleText(text){
+  const rows=[], errors=[], warnings=[];
+  let filled=0;
+  const lines=String(text).split(/\r?\n/).map(l=>l.trim()).filter(Boolean);
+  lines.forEach((line, i)=>{
+    const cells=splitDelimited(line).map(c=>c.trim().replace(/^"|"$/g,''));
+    if(cells.length<2) return;
+    // Skip a header row.
+    if(i===0 && /pack\s*name/i.test(cells[0]) && /date/i.test(cells[1] || '')) return;
+    const [name, dateRaw, occRaw, gccRaw] = cells;
+    if(!name) return;
+    const date=parseFlexibleDate(dateRaw);
+    if(!date){ errors.push(`line ${i+1}: unreadable date "${dateRaw||''}" (${name})`); return; }
+
+    let occ=(occRaw||'').trim()||null;
+    let gcc=(gccRaw||'').trim()||null;
+    const known=packCardsFor(name);
+    if(known){
+      // Cards are fixed per pack, so fill anything omitted and flag disagreements.
+      if(!occ && !gcc){ occ=known.occ; gcc=known.gcc; filled++; }
+      else {
+        if(!occ) occ=known.occ;
+        if(!gcc) gcc=known.gcc;
+        if(occ && known.occ && normalizeCardName(occ)!==normalizeCardName(known.occ))
+          warnings.push(`line ${i+1}: ${name} OCC "${occ}" differs from the known "${known.occ}"`);
+        if(gcc && known.gcc && normalizeCardName(gcc)!==normalizeCardName(known.gcc))
+          warnings.push(`line ${i+1}: ${name} GCC "${gcc}" differs from the known "${known.gcc}"`);
+      }
+    } else if(!occ && !gcc){
+      warnings.push(`line ${i+1}: "${name}" is an unknown pack — add its OCC and GCC columns`);
+    }
+    rows.push({name, date, occ, gcc});
+  });
+  return {rows, errors, warnings, filled};
+}
+
+function schedBulkPlan(){
+  const {rows, errors, warnings, filled} = parseScheduleText(document.getElementById('schedBulkText').value);
+  const mode = document.getElementById('schedBulkMode').value;
+  const key = r => `${normalizeCardName(r.name)}|${r.date}`;
+  const existing = new Map(packSchedule.map(r=>[key(r), r]));
+
+  let added=0, updated=0, unchanged=0;
+  for(const r of rows){
+    const cur = existing.get(key(r));
+    if(!cur) added++;
+    else if((cur.occ||'')!==(r.occ||'') || (cur.gcc||'')!==(r.gcc||'')) updated++;
+    else unchanged++;
+  }
+  const removed = mode==='replace' ? packSchedule.length - (updated + unchanged) : 0;
+  return {rows, errors, warnings, filled, mode, added, updated, unchanged, removed};
+}
+
+function renderSchedBulkPreview(){
+  const {rows, errors, warnings, filled, mode, added, updated, unchanged, removed} = schedBulkPlan();
+  const el = document.getElementById('schedBulkPreview');
+  const applyBtn = document.getElementById('schedApplyBtn');
+
+  if(!rows.length && !errors.length && !warnings.length){
+    el.innerHTML = '<span style="color:var(--muted);">Paste or upload rows to preview.</span>';
+    applyBtn.style.display='none';
+    return;
+  }
+  const bits=[`<strong>${rows.length}</strong> row${rows.length===1?'':'s'} read`];
+  if(added) bits.push(`${added} new`);
+  if(updated) bits.push(`${updated} updated`);
+  if(unchanged) bits.push(`${unchanged} unchanged`);
+  if(mode==='replace' && removed>0) bits.push(`<span style="color:var(--danger)">${removed} removed</span>`);
+  if(filled) bits.push(`${filled} auto-filled`);
+
+  let html=bits.join(' · ');
+  if(errors.length){
+    html += `<div style="color:var(--danger);margin-top:6px;">${errors.slice(0,5).map(escapeHtml).join('<br>')}` +
+            `${errors.length>5?`<br>+${errors.length-5} more`:''}</div>`;
+  }
+  if(warnings.length){
+    html += `<div style="color:var(--gold);margin-top:6px;">${warnings.slice(0,5).map(escapeHtml).join('<br>')}` +
+            `${warnings.length>5?`<br>+${warnings.length-5} more`:''}</div>`;
+  }
+  if(rows.length){
+    const sample=rows.slice(0,3).map(r=>`${escapeHtml(r.name)} ${r.date}`).join(', ');
+    html += `<div style="color:var(--muted);margin-top:6px;">${sample}${rows.length>3?`, +${rows.length-3} more`:''}</div>`;
+  }
+  el.innerHTML = html;
+  applyBtn.style.display = rows.length ? 'inline-block' : 'none';
+}
+
+function applySchedBulk(){
+  const {rows, mode} = schedBulkPlan();
+  if(!rows.length) return;
+  const key = r => `${normalizeCardName(r.name)}|${r.date}`;
+
+  if(mode==='replace'){
+    packSchedule = rows.map(r=>({id:'s'+(scheduleIdCounter++), ...r}));
+  } else {
+    const byKey = new Map(packSchedule.map(r=>[key(r), r]));
+    for(const r of rows){
+      const cur = byKey.get(key(r));
+      if(cur){ cur.name=r.name; cur.occ=r.occ; cur.gcc=r.gcc; }
+      else packSchedule.push({id:'s'+(scheduleIdCounter++), ...r});
+    }
+  }
+  ensureScheduleIds();
+  saveSchedule();
+  renderSchedule();
+  renderOverview();
+  renderSugg();
+  document.getElementById('schedBulkText').value='';
+  document.getElementById('schedBulkPreview').innerHTML =
+    `<span style="color:var(--gold);">Schedule updated — ${packSchedule.length} rows.</span>`;
+  document.getElementById('schedApplyBtn').style.display='none';
+}
+
+document.getElementById('schedBulkBtn').addEventListener('click', ()=>{
+  const p=document.getElementById('schedBulkPanel');
+  const opening = p.style.display==='none';
+  p.style.display = opening ? 'block' : 'none';
+  if(opening) renderSchedBulkPreview();
+});
+document.getElementById('schedBulkText').addEventListener('input', renderSchedBulkPreview);
+document.getElementById('schedBulkMode').addEventListener('change', renderSchedBulkPreview);
+document.getElementById('schedPreviewBtn').addEventListener('click', renderSchedBulkPreview);
+document.getElementById('schedApplyBtn').addEventListener('click', applySchedBulk);
+
+document.getElementById('schedUploadBtn').addEventListener('click', ()=>{
+  document.getElementById('schedFileInput').click();
+});
+document.getElementById('schedFileInput').addEventListener('change', e=>{
+  const file=e.target.files[0];
+  if(!file) return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    document.getElementById('schedBulkText').value=ev.target.result;
+    renderSchedBulkPreview();
+    e.target.value='';
+  };
+  reader.readAsText(file);
+});
+
+document.getElementById('schedExportBtn').addEventListener('click', ()=>{
+  const esc = v => {
+    const t=String(v==null?'':v);
+    return /[",\n]/.test(t) ? `"${t.replace(/"/g,'""')}"` : t;
+  };
+  const lines=[['Pack Name','Date','OCC','GCC'].join(',')];
+  [...packSchedule]
+    .sort((a,b)=>String(a.date||'').localeCompare(String(b.date||'')))
+    .forEach(r=>lines.push([r.name, r.date, r.occ, r.gcc].map(esc).join(',')));
+  const blob=new Blob([lines.join('\n')],{type:'text/csv'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url; a.download=`pack-schedule-${new Date().toISOString().slice(0,10)}.csv`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 });
 
 wireConfirmDelete('#schedResetBtn', ()=>{
@@ -2547,7 +3078,6 @@ function buildExportPayload(){
     goblinLog,
     packLog,
     packSchedule,
-    calSamples,
     referenceDecks,
     activeRefSlot,
   };
@@ -2574,10 +3104,6 @@ async function applyImportPayload(parsed){
     ensureScheduleIds();
     await saveSchedule();
   }
-  if(Array.isArray(parsed.calSamples)){
-    calSamples = parsed.calSamples;
-    await saveCalibration();
-  }
   if(parsed.referenceDecks && typeof parsed.referenceDecks==='object'){
     for(const {key} of REF_SLOTS){
       const slot = parsed.referenceDecks[key];
@@ -2591,7 +3117,6 @@ async function applyImportPayload(parsed){
   renderGoblinLog();
   renderPackLog();
   renderSchedule();
-  renderCalibration();
   runSuggestionAnalysis();
   renderOverview();
 }
@@ -2624,20 +3149,20 @@ document.getElementById('textDataBtn').addEventListener('click', ()=>{
 
 document.getElementById('textFillBtn').addEventListener('click', ()=>{
   document.getElementById('textDataArea').value = JSON.stringify(buildExportPayload());
-  document.getElementById('textDataStatus').textContent = 'Filled — now copy it.';
+  document.getElementById('textDataStatus').textContent = 'Ready to copy.';
 });
 
 document.getElementById('textCopyBtn').addEventListener('click', async ()=>{
   const ta = document.getElementById('textDataArea');
   const statusEl = document.getElementById('textDataStatus');
-  if(!ta.value.trim()){ statusEl.textContent = 'Nothing to copy — press "Fill with my data" first.'; return; }
+  if(!ta.value.trim()){ statusEl.textContent = 'Press Fill first.'; return; }
   try{
     await navigator.clipboard.writeText(ta.value);
-    statusEl.textContent = 'Copied to clipboard.';
+    statusEl.textContent = 'Copied.';
   }catch(e){
     // Clipboard API is often unavailable in sandboxed frames; fall back to selecting the text.
     ta.focus(); ta.select();
-    statusEl.textContent = 'Text selected — copy it manually.';
+    statusEl.textContent = 'Selected — copy manually.';
   }
 });
 
@@ -2647,10 +3172,10 @@ document.getElementById('textLoadBtn').addEventListener('click', async ()=>{
   if(!raw){ statusEl.textContent = 'Paste your exported text first.'; return; }
   let parsed;
   try{ parsed = JSON.parse(raw); }
-  catch(e){ statusEl.textContent = 'That text is not valid JSON.'; return; }
-  if(!looksLikeLedgerExport(parsed)){ statusEl.textContent = "That doesn't look like an Alchemist's Ledger export."; return; }
+  catch(e){ statusEl.textContent = 'Not valid JSON.'; return; }
+  if(!looksLikeLedgerExport(parsed)){ statusEl.textContent = "Not a Ledger export."; return; }
   await applyImportPayload(parsed);
-  statusEl.textContent = 'Loaded successfully.';
+  statusEl.textContent = 'Loaded.';
 });
 
 let pendingImportData = null;
@@ -2669,13 +3194,13 @@ document.getElementById('importDataInput').addEventListener('change', (e)=>{
     try{
       parsed = JSON.parse(evt.target.result);
     }catch(err){
-      statusEl.textContent = 'That file is not valid JSON.';
+      statusEl.textContent = 'Not valid JSON.';
       e.target.value = '';
       return;
     }
     const hasAny = looksLikeLedgerExport(parsed);
     if(!hasAny){
-      statusEl.textContent = "This file doesn't look like an Alchemist's Ledger export.";
+      statusEl.textContent = "Not a Ledger export.";
       e.target.value = '';
       return;
     }
@@ -2686,7 +3211,7 @@ document.getElementById('importDataInput').addEventListener('change', (e)=>{
       Array.isArray(parsed.packLog) ? parsed.packLog.length+' pack entries' : null,
       Array.isArray(parsed.packSchedule) ? parsed.packSchedule.length+' schedule rows' : null,
     ].filter(Boolean).join(', ');
-    statusEl.textContent = `Ready to import: ${counts}. This will replace your current data.`;
+    statusEl.textContent = `${counts} — this replaces your current data.`;
     document.getElementById('confirmImportBtn').style.display = 'inline-block';
   };
   reader.readAsText(file);
@@ -2699,8 +3224,8 @@ document.getElementById('confirmImportBtn').addEventListener('click', async ()=>
   pendingImportData = null;
   document.getElementById('confirmImportBtn').style.display = 'none';
   document.getElementById('importDataInput').value = '';
-  statusEl.textContent = 'Import complete.';
-  setTimeout(()=>{ if(statusEl.textContent==='Import complete.') statusEl.textContent=''; }, 4000);
+  statusEl.textContent = 'Imported.';
+  setTimeout(()=>{ if(statusEl.textContent==='Imported.') statusEl.textContent=''; }, 4000);
 });
 
 // ---------- init ----------
@@ -2711,7 +3236,6 @@ loadLibrary();
 loadGoblinLog();
 loadPackLog();
 loadSchedule();
-loadCalibration();
 loadReferenceDecks();
 populatePackTypeOptions();
 syncSuggControls();
