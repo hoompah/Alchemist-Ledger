@@ -438,7 +438,7 @@
       <button class="reset-btn" id="cloudSignOut" style="display:none;">Sign out</button>
       <button class="add-btn" id="confirmImportBtn" style="display:none;padding:7px 14px;font-size:12px;">Confirm import</button>
       <input type="file" id="importDataInput" accept="application/json" style="display:none;">
-      <div class="version-tag" id="versionTag">build 26 · sign-in gate</div>
+      <div class="version-tag" id="versionTag">build 27 · setup notice</div>
     </div>
   </header>
 
@@ -962,7 +962,7 @@
 //    https://<your-username>.github.io
 //  and the Google Drive API must be enabled for the project.
 // ============================================================
-const GOOGLE_CLIENT_ID = 272972040307-3o07j143unqnl2amj6iok6brek0uflon.apps.googleusercontent.com'';
+const GOOGLE_CLIENT_ID = '272972040307-3o07j143unqnl2amj6iok6brek0uflon.apps.googleusercontent.com';
 
 // ---------- Storage ----------
 // Inside a Claude artifact, window.storage is provided by the host. Anywhere
@@ -3612,8 +3612,19 @@ const AuthGate = (() => {
   }
 
   function init(){
-    // No client ID means sign-in cannot work at all — never gate in that case.
-    if(!Cloud.enabled()){ hide(); return; }
+    // No client ID means sign-in cannot work at all — never gate in that case,
+    // but say so plainly rather than failing silently.
+    if(!Cloud.enabled()){
+      hide();
+      const el = document.getElementById('dataStatus');
+      if(el){
+        el.textContent = 'Google sign-in not configured — set GOOGLE_CLIENT_ID to enable it.';
+        el.style.color = 'var(--muted)';
+      }
+      console.warn('[Ledger] Sign-in disabled: GOOGLE_CLIENT_ID is empty. ' +
+                   'Paste your OAuth client ID near the top of this file to enable Google sign-in.');
+      return;
+    }
     if(Cloud.signedIn()){ hide(); return; }
     if(sessionStorage.getItem(KEY) === '1'){ hide(); return; }
     show();
