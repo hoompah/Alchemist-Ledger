@@ -438,7 +438,7 @@
       <button class="reset-btn" id="cloudSignOut" style="display:none;">Sign out</button>
       <button class="add-btn" id="confirmImportBtn" style="display:none;padding:7px 14px;font-size:12px;">Confirm import</button>
       <input type="file" id="importDataInput" accept="application/json" style="display:none;">
-      <div class="version-tag" id="versionTag">build 27 · setup notice</div>
+      <div class="version-tag" id="versionTag">build 28 · self-fuse</div>
     </div>
   </header>
 
@@ -620,6 +620,7 @@
               <th data-key="onyx" data-table="mylib">Onyx <span class="arrow"></span></th>
               <th data-key="level" data-table="mylib">Level <span class="arrow"></span></th>
               <th data-key="fused" data-table="mylib">Fused <span class="arrow"></span></th>
+              <th data-key="selfCombo" data-table="mylib">Self-fuse <span class="arrow"></span></th>
               <th data-key="qty" data-table="mylib">Quantity <span class="arrow"></span></th>
               <th></th>
             </tr>
@@ -962,7 +963,7 @@
 //    https://<your-username>.github.io
 //  and the Google Drive API must be enabled for the project.
 // ============================================================
-const GOOGLE_CLIENT_ID = '272972040307-3o07j143unqnl2amj6iok6brek0uflon.apps.googleusercontent.com';
+const GOOGLE_CLIENT_ID = '';
 
 // ---------- Storage ----------
 // Inside a Claude artifact, window.storage is provided by the host. Anywhere
@@ -1682,11 +1683,25 @@ function comboValue(rowX, rowY, mode, opts){
   return base + levelTerm;
 }
 
+// Copy reduction models a real cost: you hold five cards, so drawing a second
+// or third copy of the same card usually crowds out a fusion partner. But when
+// a card fuses with ITSELF, the duplicate is the partner — holding two is the
+// only way to make that fusion, so no penalty applies.
+// Does this card combine with a copy of itself?
+function selfCombines(name){
+  return getCombo(name, name) !== null;
+}
+
+function isSelfCombo(rowX, rowY){
+  return normalizeCardName(rowX.name) === normalizeCardName(rowY.name);
+}
+
 function pairScore(rowX, rowY, settings){
   const raw = comboValue(rowX, rowY, settings.mode, {ignoreLevel: settings.ignoreLevel});
   if(raw == null) return 0;
   const fusedCount = (rowX.fused?1:0)+(rowY.fused?1:0);
   const fusionMult = 1 + (fusedCount/2)*(settings.fusionBuff-1);
+  if(isSelfCombo(rowX, rowY)) return raw*fusionMult;
   const dampenX = Math.pow(settings.copyReduction, Math.max(0, rowX.copyIndex-1));
   const dampenY = Math.pow(settings.copyReduction, Math.max(0, rowY.copyIndex-1));
   return raw*fusionMult*dampenX*dampenY;
@@ -1749,7 +1764,8 @@ let myLibSort = {key:null, dir:1};
 
 function renderMyLibrary(){
   const q = document.getElementById('myLibSearch').value.trim().toLowerCase();
-  let rows = myLibrary.filter(r=> r.name.toLowerCase().includes(q));
+  let rows = myLibrary.filter(r=> r.name.toLowerCase().includes(q))
+    .map(r=>({...r, selfCombo: selfCombines(r.name)}));
 
   if(myLibSort.key){
     const key = myLibSort.key, dir = myLibSort.dir;
@@ -1787,6 +1803,9 @@ function renderMyLibrary(){
         </select>
       </td>
       <td><input type="checkbox" class="lib-fused" data-id="${r.id}" ${r.fused?'checked':''}></td>
+      <td>${r.selfCombo
+        ? '<span class="badge fused" title="Fuses with a copy of itself — duplicates are not penalised">Yes</span>'
+        : '<span style="color:var(--muted);font-size:12px;">—</span>'}</td>
       <td><input type="number" class="row-input lib-qty" data-id="${r.id}" value="${r.qty}" min="0" max="${MAX_QTY}"></td>
       <td><button class="del-btn" data-id="${r.id}" title="Remove">✕</button></td>
     </tr>
