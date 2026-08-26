@@ -438,7 +438,7 @@
       <button class="reset-btn" id="cloudSignOut" style="display:none;">Sign out</button>
       <button class="add-btn" id="confirmImportBtn" style="display:none;padding:7px 14px;font-size:12px;">Confirm import</button>
       <input type="file" id="importDataInput" accept="application/json" style="display:none;">
-      <div class="version-tag" id="versionTag">build 28 · self-fuse</div>
+      <div class="version-tag" id="versionTag">build 29 · heroic slot</div>
     </div>
   </header>
 
@@ -677,7 +677,8 @@
       <p class="panel-title">Recommended Deck</p>
       <div class="controls" style="padding:0 20px 6px;">
         <p class="panel-desc" style="padding:0;margin:0;flex:1;"><span id="resultSummary"></span></p>
-        <button class="add-btn" id="replaceDeckBtn">Use as Reference Deck</button>
+        <select class="mini-input" id="saveSlotTarget" style="width:150px;"></select>
+        <button class="add-btn" id="replaceDeckBtn">Save</button>
       </div>
       <p class="panel-desc" style="color:var(--muted);font-size:11.5px;">Benchmark is the same deck with no fusion bonus, duplicate falloff or level penalty — the gap is what your fusion and levelling are worth.</p>
       <p class="panel-desc" id="replaceStatus" style="color:var(--gold);display:none;"></p>
@@ -772,6 +773,7 @@
             <option value="attack">Saved: Attack</option>
             <option value="defense">Saved: Defense</option>
             <option value="both">Saved: Attack + Defense</option>
+            <option value="heroic">Saved: Heroic</option>
           </select>
         </label>
         <label class="builder-field" id="sModeField">
@@ -1010,15 +1012,20 @@ const CMB = {"names":["Adventure","Affliction","Angel","Anger","Apocalypse","Ara
 const SEED_LIBRARY = [];
 const PACK_SCHEDULE = [{"name":"Cloaked","date":"2026-01-01","occ":"Void","gcc":"Camouflage"},{"name":"Fantasy","date":"2026-01-04","occ":"Fairy Tale","gcc":"Precious Ring Lore"},{"name":"Aviary","date":"2026-01-06","occ":"Wind","gcc":"Bird"},{"name":"Wingman","date":"2026-01-08","occ":"Superhero","gcc":"Sidekick"},{"name":"Viking","date":"2026-01-11","occ":"Horn","gcc":"Viking"},{"name":"Aquatic","date":"2026-01-13","occ":"Trident","gcc":"Underwater"},{"name":"Machine","date":"2026-01-15","occ":"Elf","gcc":"Robot"},{"name":"Clairvoyant","date":"2026-01-18","occ":"Insect","gcc":"Psychic"},{"name":"Far Away","date":"2026-01-20","occ":"Space","gcc":"Galaxy Wars"},{"name":"Wizarding","date":"2026-01-22","occ":"Magic","gcc":"Wizarding School"},{"name":"Oceana","date":"2026-01-25","occ":"Underwater","gcc":"Fish"},{"name":"Arms","date":"2026-01-27","occ":"Vampire","gcc":"Weapon"},{"name":"Commander","date":"2026-01-29","occ":"Undead","gcc":"Leader"},{"name":"Adventure","date":"2026-02-01","occ":"Wealth","gcc":"Adventure"},{"name":"Hypno","date":"2026-02-03","occ":"Werewolf","gcc":"Mind Control"},{"name":"Valentine's","date":"2026-02-05","occ":"Precious Ring Lore","gcc":"Love"},{"name":"Slime","date":"2026-02-08","occ":"Poison","gcc":"Blob"},{"name":"Primate","date":"2026-02-10","occ":"Prehistoric","gcc":"Monkey"},{"name":"Combat","date":"2026-02-12","occ":"Villain","gcc":"War"},{"name":"Scaly","date":"2026-02-15","occ":"Turtle","gcc":"Reptile"},{"name":"Primate","date":"2026-02-11","occ":"Prehistoric","gcc":"Monkey"},{"name":"Combat","date":"2026-02-13","occ":"Villain","gcc":"War"},{"name":"Scaly","date":"2026-02-16","occ":"Turtle","gcc":"Reptile"},{"name":"Vanity","date":"2026-02-18","occ":"Cat","gcc":"Beauty"},{"name":"Regal","date":"2026-02-20","occ":"Chinchilla","gcc":"Royalty"},{"name":"Scheming","date":"2026-02-23","occ":"Leader","gcc":"Royal Game"},{"name":"Confectionery","date":"2026-02-25","occ":"Hammer","gcc":"Sweets"},{"name":"Muscle","date":"2026-02-27","occ":"Sword","gcc":"Strength"},{"name":"Fable","date":"2026-03-02","occ":"Fairy","gcc":"Fairy Tale"},{"name":"Swift","date":"2026-03-04","occ":"Energy","gcc":"Speed"},{"name":"Innovation","date":"2026-03-06","occ":"Science","gcc":"Invention"},{"name":"Canine","date":"2026-03-09","occ":"Knight","gcc":"Dog"},{"name":"Dark Age","date":"2026-03-11","occ":"Time","gcc":"Medieval"},{"name":"The Dark","date":"2026-03-13","occ":"Madness","gcc":"Darkness"},{"name":"Mon","date":"2026-03-16","occ":"Dragon","gcc":"Pocket Pet"},{"name":"Meta","date":"2026-03-18","occ":"Multiples","gcc":"Card"},{"name":"Slumber","date":"2026-03-20","occ":"Bat","gcc":"Sleep"},{"name":"Half Half","date":"2026-03-23","occ":"Mutation","gcc":"Hybrid"},{"name":"Subterranean","date":"2026-03-25","occ":"Sci-Fi","gcc":"Underground"},{"name":"Hope","date":"2026-03-27","occ":"Love","gcc":"Hopefulness"},{"name":"Bug","date":"2026-03-30","occ":"Superhero","gcc":"Insect"},{"name":"Phantom","date":"2026-04-01","occ":"Water","gcc":"Spirit"},{"name":"Arachnid","date":"2026-04-03","occ":"Affliction","gcc":"Arachnid"},{"name":"Tortoise","date":"2026-04-06","occ":"Death","gcc":"Turtle"},{"name":"First Aid","date":"2026-04-08","occ":"Life","gcc":"Healing"},{"name":"Sahara","date":"2026-04-10","occ":"Relic","gcc":"Desert"},{"name":"Millionaire","date":"2026-04-13","occ":"Human","gcc":"Wealth"},{"name":"End of World","date":"2026-04-15","occ":"Strength","gcc":"Apocalypse"},{"name":"Portal","date":"2026-04-17","occ":"Extraterrestrial","gcc":"Portal"},{"name":"Frozen","date":"2026-04-20","occ":"Sun","gcc":"Ice"},{"name":"Wizarding","date":"2026-04-22","occ":"Magic","gcc":"Wizarding School"},{"name":"Gargantuan","date":"2026-04-24","occ":"Anger","gcc":"Giant"},{"name":"Botanical","date":"2026-04-27","occ":"Invention","gcc":"Plant"},{"name":"Mutant","date":"2026-04-29","occ":"Sci-Fi","gcc":"Mutation"},{"name":"Pirate","date":"2026-05-01","occ":"Monkey","gcc":"Pirate"},{"name":"Far Away","date":"2026-05-04","occ":"Space","gcc":"Galaxy Wars"},{"name":"Melody","date":"2026-05-06","occ":"Monster","gcc":"Music"},{"name":"Shrine","date":"2026-05-08","occ":"The Chosen One","gcc":"Shrine"},{"name":"Chosen Hero","date":"2026-05-11","occ":"Knight","gcc":"The Chosen One"},{"name":"Regal","date":"2026-05-13","occ":"Chinchilla","gcc":"Royalty"},{"name":"Skeletal","date":"2026-05-15","occ":"Cursed","gcc":"Bone"},{"name":"Multiplicity","date":"2026-05-18","occ":"Metal","gcc":"Multiples"},{"name":"Muscle","date":"2026-05-20","occ":"Sword","gcc":"Strength"},{"name":"Dark Age","date":"2026-05-22","occ":"Time","gcc":"Medieval"},{"name":"Jungle","date":"2026-05-25","occ":"Prehistoric","gcc":"Jungle"},{"name":"Animation","date":"2026-05-27","occ":"Toy","gcc":"Cartoon"},{"name":"Spycraft","date":"2026-05-29","occ":"Camouflage","gcc":"Spy"},{"name":"Confectionery","date":"2026-06-01","occ":"Hammer","gcc":"Sweets"},{"name":"Commander","date":"2026-06-03","occ":"Undead","gcc":"Leader"},{"name":"Future Fight","date":"2026-06-05","occ":"War","gcc":"Future Fight"},{"name":"Cloaked","date":"2026-06-08","occ":"Void","gcc":"Camouflage"},{"name":"Fantasy","date":"2026-06-10","occ":"Fairy Tale","gcc":"Precious Ring Lore"},{"name":"Sports","date":"2026-06-12","occ":"Speed","gcc":"Sports"},{"name":"Subterranean","date":"2026-06-15","occ":"Sci-Fi","gcc":"Underground"},{"name":"Futuristic","date":"2026-06-17","occ":"Water","gcc":"Sci-Fi"},{"name":"Summertide","date":"2026-06-19","occ":"Arcade","gcc":"Summertide"},{"name":"Half Half","date":"2026-06-22","occ":"Mutation","gcc":"Hybrid"},{"name":"Hypno","date":"2026-06-24","occ":"Werewolf","gcc":"Mind Control"},{"name":"Viking","date":"2026-06-26","occ":"Horn","gcc":"Viking"},{"name":"Accursed","date":"2026-06-29","occ":"Superhero","gcc":"Cursed"},{"name":"Rat","date":"2026-07-01","occ":"Wizard","gcc":"Rodent"},{"name":"Clairvoyant","date":"2026-07-03","occ":"Insect","gcc":"Psychic"},{"name":"Aviary","date":"2026-07-06","occ":"Wind","gcc":"Bird"},{"name":"Fun","date":"2026-07-08","occ":"Bear","gcc":"Toy"},{"name":"Atomic Aftermath","date":"2026-07-10","occ":"Apocalypse","gcc":"Atomic Aftermath"},{"name":"Machine","date":"2026-07-13","occ":"Elf","gcc":"Robot"},{"name":"Parasitic","date":"2026-07-15","occ":"Knowledge","gcc":"Parasite"},{"name":"Combat","date":"2026-07-17","occ":"Villain","gcc":"War"},{"name":"Plague","date":"2026-07-20","occ":"Water Serpent","gcc":"Affliction"},{"name":"Primate","date":"2026-07-22","occ":"Prehistoric","gcc":"Monkey"},{"name":"Oceana","date":"2026-07-24","occ":"Underwater","gcc":"Fish"},{"name":"Scaly","date":"2026-07-27","occ":"Turtle","gcc":"Reptile"},{"name":"Frozen","date":"2026-07-29","occ":"Sun","gcc":"Ice"},{"name":"Meta","date":"2026-07-31","occ":"Multiples","gcc":"Card"},{"name":"Tortoise","date":"2026-08-03","occ":"Death","gcc":"Turtle"},{"name":"Carnage","date":"2026-08-05","occ":"Weapon","gcc":"Destruction"},{"name":"Regal","date":"2026-08-07","occ":"Chinchilla","gcc":"Royalty"},{"name":"Scheming","date":"2026-08-10","occ":"Leader","gcc":"Royal Game"},{"name":"Muscle","date":"2026-08-12","occ":"Sword","gcc":"Strength"},{"name":"Adventure","date":"2026-08-14","occ":"Wealth","gcc":"Adventure"},{"name":"Booming Spike","date":"2026-08-17","occ":"Demon","gcc":"Horn"},{"name":"Canine","date":"2026-08-19","occ":"Knight","gcc":"Dog"},{"name":"Innovation","date":"2026-08-21","occ":"Science","gcc":"Invention"},{"name":"Aquatic","date":"2026-08-24","occ":"Trident","gcc":"Underwater"},{"name":"Bloody","date":"2026-08-26","occ":"Earth","gcc":"Blood"},{"name":"Hope","date":"2026-08-28","occ":"Love","gcc":"Hopefulness"},{"name":"Wizarding","date":"2026-08-31","occ":"Magic","gcc":"Wizarding School"},{"name":"Slumber","date":"2026-02-09","occ":"Bat","gcc":"Sleep"},{"name":"Vanity","date":"2026-04-09","occ":"Cat","gcc":"Beauty"},{"name":"Slime","date":"2026-07-09","occ":"Poison","gcc":"Blob"},{"name":"End of World","date":"2026-09-09","occ":"Strength","gcc":"Apocalypse"},{"name":"Arachnid","date":"2026-11-09","occ":"Affliction","gcc":"Arachnid"},{"name":"Melody","date":"2026-09-14","occ":"Monster","gcc":"Music"},{"name":"Botanical","date":"2026-09-16","occ":"Invention","gcc":"Plant"},{"name":"Half Half","date":"2026-09-18","occ":"Mutation","gcc":"Hybrid"},{"name":"Fable","date":"2026-09-21","occ":"Fairy","gcc":"Fairy Tale"},{"name":"Multiplicity","date":"2026-09-23","occ":"Metal","gcc":"Multiples"},{"name":"Phantom","date":"2026-09-25","occ":"Water","gcc":"Spirit"},{"name":"Portal","date":"2026-09-28","occ":"Extraterrestrial","gcc":"Portal"},{"name":"Tiny","date":"2026-09-30","occ":"Insect","gcc":"Miniature"},{"name":"Sahara","date":"2026-02-10","occ":"Relic","gcc":"Desert"},{"name":"Rage","date":"2026-05-10","occ":"Void","gcc":"Anger"},{"name":"Swift","date":"2026-07-10","occ":"Energy","gcc":"Speed"},{"name":"Insanity","date":"2026-09-10","occ":"Knowledge","gcc":"Madness"},{"name":"Wingman","date":"2026-12-10","occ":"Superhero","gcc":"Sidekick"},{"name":"Shrine","date":"2026-10-14","occ":"The Chosen One","gcc":"Shrine"},{"name":"First Aid","date":"2026-10-16","occ":"Life","gcc":"Healing"},{"name":"The Dark","date":"2026-10-19","occ":"Madness","gcc":"Darkness"},{"name":"Undying","date":"2026-10-21","occ":"Vampire","gcc":"Immortality"},{"name":"Hallow's Eve","date":"2026-10-23","occ":"Spirit","gcc":"Halloween"},{"name":"Fight","date":"2026-10-26","occ":"Werewolf","gcc":"Martial Arts"},{"name":"Skeletal","date":"2026-10-28","occ":"Cursed","gcc":"Bone"},{"name":"Mythos","date":"2026-10-30","occ":"Food","gcc":"Myth"},{"name":"Spycraft","date":"2026-11-02","occ":"Camouflage","gcc":"Spy"},{"name":"Martian","date":"2026-11-04","occ":"Space","gcc":"Extraterrestrial"},{"name":"Future Fight","date":"2026-11-06","occ":"War","gcc":"Future Fight"},{"name":"Primate","date":"2026-11-09","occ":"Prehistoric","gcc":"Monkey"},{"name":"Pirate","date":"2026-11-11","occ":"Monkey","gcc":"Pirate"},{"name":"Millionaire","date":"2026-11-13","occ":"Human","gcc":"Wealth"},{"name":"Sports","date":"2026-11-16","occ":"Speed","gcc":"Sports"},{"name":"Gamer","date":"2026-11-18","occ":"Chinchilla","gcc":"Arcade"},{"name":"Thanksgiving","date":"2026-11-20","occ":"Bird","gcc":"Turkey Day"},{"name":"Lunar","date":"2026-11-23","occ":"Wings","gcc":"Moon"},{"name":"Anniversary","date":"2026-11-25","occ":"Sweets/Golem","gcc":"Celebration"},{"name":"Muscle","date":"2026-11-27","occ":"Sword","gcc":"Strength"},{"name":"Plague","date":"2026-12-02","occ":"Water Serpent","gcc":"Affliction"},{"name":"Animation","date":"2026-12-04","occ":"Toy","gcc":"Cartoon"},{"name":"Wintertide","date":"2026-12-07","occ":"Holidays","gcc":"Wintertide"},{"name":"Zoom Zoom","date":"2026-12-08","occ":"Invention","gcc":"Vehicle"},{"name":"Gargantuan","date":"2026-12-11","occ":"Anger","gcc":"Giant"},{"name":"Mon","date":"2026-12-14","occ":"Dragon","gcc":"Pocket Pet"},{"name":"Mutant","date":"2026-12-16","occ":"Sci-Fi","gcc":"Mutation"},{"name":"Yuletide","date":"2026-12-18","occ":"Pocket Pet","gcc":"Holidays"},{"name":"Tortoise","date":"2026-12-21","occ":"Death","gcc":"Turtle"},{"name":"Dark Age","date":"2026-12-23","occ":"Time","gcc":"Medieval"},{"name":"Frozen","date":"2026-12-25","occ":"Sun","gcc":"Ice"},{"name":"New Years","date":"2026-12-28","occ":"Horse/Moon","gcc":"New Years"},{"name":"Futuristic","date":"2026-12-30","occ":"Water","gcc":"Sci-Fi"}];
 // ---------- Reference decks: one saved slot per optimisation mode ----------
+// A slot is a saved deck, not an optimisation mode. The first three mirror the
+// modes for convenience; Heroic is a format, so it has no implied mode and is
+// only ever targeted explicitly.
 const REF_SLOTS = [
-  {key:'attack',  label:'Attack'},
-  {key:'defense', label:'Defense'},
-  {key:'both',    label:'Attack + Defense'},
+  {key:'attack',  label:'Attack',           mode:'attack'},
+  {key:'defense', label:'Defense',          mode:'defense'},
+  {key:'both',    label:'Attack + Defense', mode:'both'},
+  {key:'heroic',  label:'Heroic',           mode:null},
 ];
 let referenceDecks = {
   attack:  {deck:[], score:0, savedAt:null},
   defense: {deck:[], score:0, savedAt:null},
   both:    {deck:[], score:0, savedAt:null},
+  heroic:  {deck:[], score:0, savedAt:null},
 };
 let activeRefSlot = 'defense';
 
@@ -1349,7 +1356,10 @@ function computeSuggestions(){
 
   const settings = {
     // A saved deck was built for its own mode, so score it that way.
-    mode: usingSaved ? source : document.getElementById('sMode').value,
+    // A slot key is not necessarily a scoring mode (Heroic isn't), so fall back
+    // to the dropdown for slots that have no implied mode.
+    mode: (usingSaved && (REF_SLOTS.find(r=>r.key===source)||{}).mode)
+      || document.getElementById('sMode').value,
     fusionBuff: 1.5,
     copyReduction: 0.9,
   };
@@ -1593,8 +1603,11 @@ document.getElementById('recalcSuggBtn').addEventListener('click', runSuggestion
 // A saved deck already fixes its mode and size, so those controls only apply
 // when analysing a freshly-built deck.
 function syncSuggControls(){
-  const usingSaved = document.getElementById('sSource').value !== 'best';
-  document.getElementById('sModeField').style.display = usingSaved ? 'none' : '';
+  const src = document.getElementById('sSource').value;
+  const usingSaved = src !== 'best';
+  // Slots with an implied mode fix it; Heroic doesn't, so keep the selector.
+  const slotMode = usingSaved ? (REF_SLOTS.find(r=>r.key===src)||{}).mode : null;
+  document.getElementById('sModeField').style.display = (usingSaved && slotMode) ? 'none' : '';
   document.getElementById('sDeckSizeField').style.display = usingSaved ? 'none' : '';
 }
 document.getElementById('sSource').addEventListener('change', ()=>{
@@ -2162,7 +2175,8 @@ document.getElementById('replaceDeckBtn').addEventListener('click', ()=>{
   if(!lastBuilderResult || !lastBuilderResult.length) return;
 
   // The deck goes into the slot for the mode it was optimised under.
-  const slot = lastBuilderMode || 'defense';
+  const sel = document.getElementById('saveSlotTarget');
+  const slot = (sel && referenceDecks[sel.value]) ? sel.value : (lastBuilderMode || 'defense');
   const cfg = lastBuilderSettings || {mode: slot, comboThreshold: 0};
   const previousDeck = JSON.parse(JSON.stringify(referenceDecks[slot].deck));
 
@@ -2439,8 +2453,12 @@ async function generateBestDeck(){
     statusEl.textContent =
       `Only ${deck.length} of ${deckSize} slots filled — a cap of ${settings.maxUnfused} unfused needs more fused cards (you have ${fusedAvailable}).`;
   }
-  document.getElementById('replaceDeckBtn').textContent =
-    `Save to ${slotLabel(settings.mode)}`;
+  // Default the target to the slot matching this mode, if one exists.
+  const sel = document.getElementById('saveSlotTarget');
+  const preferred = (REF_SLOTS.find(r=>r.mode===settings.mode) || {}).key || 'heroic';
+  sel.innerHTML = REF_SLOTS.map(r=>
+    `<option value="${r.key}" ${r.key===preferred?'selected':''}>Save to ${escapeHtml(r.label)}</option>`
+  ).join('');
 
   const onyxCount = deck.filter(s=>s.onyx).length;
   const fusedCount = deck.filter(s=>s.fused).length;
