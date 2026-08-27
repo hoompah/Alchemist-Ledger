@@ -438,7 +438,7 @@
       <button class="reset-btn" id="cloudSignOut" style="display:none;">Sign out</button>
       <button class="add-btn" id="confirmImportBtn" style="display:none;padding:7px 14px;font-size:12px;">Confirm import</button>
       <input type="file" id="importDataInput" accept="application/json" style="display:none;">
-      <div class="version-tag" id="versionTag">build 29 · heroic slot</div>
+      <div class="version-tag" id="versionTag">build 38 · consistency</div>
     </div>
   </header>
 
@@ -642,7 +642,7 @@
       <div class="builder-controls">
         <label class="builder-field">
           <span>Deck size</span>
-          <input type="number" id="bDeckSize" value="28" min="4" max="60">
+          <input type="number" id="bDeckSize" value="28" min="4" max="300">
         </label>
         <label class="builder-field">
           <span>Optimize for</span>
@@ -650,6 +650,7 @@
             <option value="defense" selected>Defense</option>
             <option value="attack">Attack</option>
             <option value="both">Attack + Defense</option>
+            <option value="heroic">Heroic</option>
           </select>
         </label>
         <label class="builder-field">
@@ -669,6 +670,7 @@
         </label>
         <button class="add-btn" id="generateBtn" style="align-self:flex-end;">Generate deck</button>
       </div>
+      <div id="deckSizeHint" style="padding:0 20px 4px;color:var(--gold);font-size:11.5px;"></div>
       <div id="comboThresholdHint" style="padding:0 20px 6px;color:var(--muted);font-size:11.5px;"></div>
       <div id="builderStatus" style="padding:0 20px 18px;color:var(--muted);font-size:12.5px;"></div>
     </div>
@@ -782,11 +784,12 @@
             <option value="defense" selected>Defense</option>
             <option value="attack">Attack</option>
             <option value="both">Attack + Defense</option>
+            <option value="heroic">Heroic</option>
           </select>
         </label>
         <label class="builder-field" id="sDeckSizeField">
           <span>Deck size baseline</span>
-          <input type="number" id="sDeckSize" value="28" min="4" max="60">
+          <input type="number" id="sDeckSize" value="28" min="4" max="300">
         </label>
         <button class="add-btn" id="recalcSuggBtn" style="align-self:flex-end;">Recalculate</button>
       </div>
@@ -1019,7 +1022,7 @@ const REF_SLOTS = [
   {key:'attack',  label:'Attack',           mode:'attack'},
   {key:'defense', label:'Defense',          mode:'defense'},
   {key:'both',    label:'Attack + Defense', mode:'both'},
-  {key:'heroic',  label:'Heroic',           mode:null},
+  {key:'heroic',  label:'Heroic',           mode:'heroic'},
 ];
 let referenceDecks = {
   attack:  {deck:[], score:0, savedAt:null},
@@ -1349,23 +1352,24 @@ function refDeckToSlots(deck){
   });
 }
 
-function computeSuggestions(){
+async function computeSuggestions(){
   const source = document.getElementById('sSource').value; // 'best' | slot key
   const savedSlot = source!=='best' ? referenceDecks[source] : null;
   const usingSaved = !!(savedSlot && savedSlot.deck && savedSlot.deck.length);
 
   const settings = {
     // A saved deck was built for its own mode, so score it that way.
-    // A slot key is not necessarily a scoring mode (Heroic isn't), so fall back
-    // to the dropdown for slots that have no implied mode.
+    // Each saved slot carries the mode it was built for.
     mode: (usingSaved && (REF_SLOTS.find(r=>r.key===source)||{}).mode)
       || document.getElementById('sMode').value,
-    fusionBuff: 1.5,
-    copyReduction: 0.9,
+    // Mirror the Deck Builder's tuning, or suggestions would rank cards under
+    // different assumptions than the deck they're meant to improve.
+    fusionBuff: parseFloat(document.getElementById('bFusionBuff').value) || 1.5,
+    copyReduction: parseFloat(document.getElementById('bCopyReduction').value) || 0.9,
   };
   const deckSize = Math.max(1, parseInt(document.getElementById('sDeckSize').value)||28);
 
-  const candidates = expandCandidates();
+  const candidates = expandCandidates(settings);
   if(candidates.length===0 && !usingSaved){
     return {deck:[], suggestions:[], readyToFuse:[], usingSaved:false, source, topPairs:[]};
   }
@@ -1373,7 +1377,7 @@ function computeSuggestions(){
   const deck = usingSaved
     ? refDeckToSlots(savedSlot.deck)
     // Fewer restarts here: this is a baseline for ranking, not the final deck.
-    : computeOptimalDeck(candidates, deckSize, settings, 2);
+    : await computeOptimalDeck(candidates, deckSize, settings, 2);
   const effectiveSize = usingSaved ? deck.length : deckSize;
 
   // Track total copies and unfused copies separately: fusing consumes two
@@ -1506,7 +1510,18 @@ function computeSuggestions(){
   return {deck, suggestions: ranked, readyToFuse, usingSaved, source, topPairs};
 }
 
-function runSuggestionAnalysis(){
+// The analysis is async and fires on every library edit, so rapid changes can
+// overlap. A run token means only the newest result is allowed to paint, and a
+// short debounce collapses a burst of edits into one run.
+let suggRunToken = 0;
+let suggDebounce = null;
+function queueSuggestionAnalysis(){
+  clearTimeout(suggDebounce);
+  suggDebounce = setTimeout(()=>{ runSuggestionAnalysis(); }, 250);
+}
+
+async function runSuggestionAnalysis(){
+  const token = ++suggRunToken;
   const statusEl = document.getElementById('suggStatus');
   if(myLibrary.length===0 || myLibrary.every(r=>r.qty===0)){
     statusEl.textContent = 'Add cards in My Library to see suggestions.';
@@ -1519,7 +1534,8 @@ function runSuggestionAnalysis(){
     return;
   }
   statusEl.textContent = 'Analysing…';
-  const { suggestions, readyToFuse, usingSaved, source, topPairs } = computeSuggestions();
+  const { suggestions, readyToFuse, usingSaved, source, topPairs } = await computeSuggestions();
+  if(token !== suggRunToken) return;   // a newer run superseded this one
   lastSuggestions = suggestions.map((s,i)=>({...s, rank:i+1}));
 
   const against = usingSaved
@@ -1605,9 +1621,8 @@ document.getElementById('recalcSuggBtn').addEventListener('click', runSuggestion
 function syncSuggControls(){
   const src = document.getElementById('sSource').value;
   const usingSaved = src !== 'best';
-  // Slots with an implied mode fix it; Heroic doesn't, so keep the selector.
-  const slotMode = usingSaved ? (REF_SLOTS.find(r=>r.key===src)||{}).mode : null;
-  document.getElementById('sModeField').style.display = (usingSaved && slotMode) ? 'none' : '';
+  // Every slot now carries its own mode, so the selector is redundant for them.
+  document.getElementById('sModeField').style.display = usingSaved ? 'none' : '';
   document.getElementById('sDeckSizeField').style.display = usingSaved ? 'none' : '';
 }
 document.getElementById('sSource').addEventListener('change', ()=>{
@@ -1669,7 +1684,15 @@ function benchmarkSettings(settings){
 // Level contributes additively and is amplified by combo rarity — it is not a
 // multiplier. If either card is Onyx the pair is treated as top rarity.
 // Verified against the workbook: max attack 45, max defense 46, max sum 73.
-const MODE_FACTOR = {attack:1, defense:1, both:2};
+// Heroic scores on attack+defense like 'both', but is a separate mode so its
+// decks, thresholds and suggestions stay distinct from standard play.
+const MODE_FACTOR = {attack:1, defense:1, both:2, heroic:2};
+const SUM_MODES = new Set(['both','heroic']);
+
+// Heroic plays with a much larger deck, so deck size is remembered per mode
+// rather than shared — switching modes shouldn't silently build a wrong-sized deck.
+const DEFAULT_DECK_SIZE = {attack:28, defense:28, both:28, heroic:234};
+let deckSizeByMode = {...DEFAULT_DECK_SIZE};
 
 function comboValue(rowX, rowY, mode, opts){
   const combo = getCombo(rowX.name, rowY.name);
@@ -1692,7 +1715,7 @@ function comboValue(rowX, rowY, mode, opts){
     ? 0
     : (avgLevel + rarityAdjust) * comboRarity * factor;
 
-  const base = mode==='attack' ? ba : mode==='both' ? (ba + bd) : bd;
+  const base = mode==='attack' ? ba : SUM_MODES.has(mode) ? (ba + bd) : bd;
   return base + levelTerm;
 }
 
@@ -1868,7 +1891,7 @@ function updateLibRow(id, patch){
   const row = myLibrary.find(r=>r.id===id);
   if(row) Object.assign(row, patch);
   saveLibrary();
-  runSuggestionAnalysis();
+  queueSuggestionAnalysis();
 }
 document.getElementById('myLibSearch').addEventListener('input', renderMyLibrary);
 
@@ -2156,7 +2179,7 @@ function updateComboThresholdHint(){
   }
   const pct = (hits / CMB.cmb.length) * 100;
   const el = document.getElementById('comboThresholdHint');
-  const label = mode==='both' ? 'attack+defense' : mode;
+  const label = SUM_MODES.has(mode) ? 'attack+defense' : mode;
   if(hits === 0){
     el.innerHTML = `<span style="color:var(--danger)">No level-5 ${label} combo reaches ${thr}</span> — nothing will count. Onyx pairs score higher, but check the threshold.`;
   } else {
@@ -2205,6 +2228,7 @@ document.getElementById('replaceDeckBtn').addEventListener('click', ()=>{
     savedAt: new Date().toISOString(),
     comboThreshold: cfg.comboThreshold,
     comboMode: cfg.mode,
+    deckSize: newDeck.length,
   };
   activeRefSlot = slot;
   saveReferenceDecks();
@@ -2269,16 +2293,38 @@ function renderDeckDiff(oldDeck, newDeck){
 // non-Onyx variants together — so the cap is per card NAME, not per library row.
 const MAX_PER_NAME = 3;
 
-function expandCandidates(){
+// Rank a library row by what it is actually worth, rather than by a fixed
+// fused-beats-Onyx rule. Onyx raises the base stats AND promotes the pair to top
+// rarity, which can outweigh the fusion buff — and level matters too. Averaging
+// a row against a spread of real partners settles it on the numbers.
+function variantStrength(row, settings){
+  const partners = variantStrength._partners || (variantStrength._partners =
+    CMB.names.filter((_,i)=> i % 7 === 0).slice(0, 20));
+  const probe = {name:row.name, onyx:!!row.onyx, fused:!!row.fused,
+                 level:row.level||5, copyIndex:1};
+  let sum = 0, n = 0;
+  for(const p of partners){
+    if(normalizeCardName(p) === normalizeCardName(row.name)) continue;
+    const other = {name:p, onyx:false, fused:false, level:5, copyIndex:1};
+    const v = pairScore(probe, other, settings);
+    if(v > 0){ sum += v; n++; }
+  }
+  return n ? sum/n : 0;
+}
+
+function expandCandidates(settings){
   const candidates = [];
   let cid = 0;
   const usedByName = new Map();
-  // When the cap bites, keep the strongest variants: fused first, then Onyx.
-  const rows = [...myLibrary].sort((a,b)=>
-    (b.fused?1:0)-(a.fused?1:0) || (b.onyx?1:0)-(a.onyx?1:0)
-  );
+  // Strongest variant of each name takes copy #1, so the duplicate damping
+  // falls on the weaker copies rather than the better ones.
+  const cfg = settings || {mode:'both', fusionBuff:1.5, copyReduction:0.9};
+  const rows = [...myLibrary]
+    .filter(r=> r.qty>0)
+    .map(r=> ({row:r, strength: variantStrength(r, cfg)}))
+    .sort((a,b)=> b.strength - a.strength)
+    .map(x=> x.row);
   for(const row of rows){
-    if(!(row.qty>0)) continue;
     const used = usedByName.get(row.name)||0;
     const allowed = Math.min(row.qty, MAX_PER_NAME - used);
     if(allowed<=0) continue;
@@ -2311,52 +2357,67 @@ function countUnfused(deck){
   return n;
 }
 
-function buildOnce(inputCandidates, deckSize, settings, seed){
+async function buildOnce(inputCandidates, deckSize, settings, seed, onTick){
   let candidates = [...inputCandidates];
   let deck = [];
   const targetSize = Math.min(deckSize, candidates.length);
-  // A cap of null means unconstrained.
   const cap = settings.maxUnfused;
   const capped = cap != null;
   let unfused = 0;
 
-  // With a cap, an unfused pick is only allowed while headroom remains.
   const allowed = (c) => !capped || c.fused || unfused < cap;
+
+  // Running contribution of each candidate to the current deck. Updating this
+  // incrementally turns the greedy phase from O(n^2 m) into O(n m), which is
+  // what makes very large decks (Heroic runs to ~300) feasible at all.
+  let contrib = new Float64Array(candidates.length);
+
+  function take(idx){
+    const pick = candidates[idx];
+    deck.push(pick);
+    if(!pick.fused) unfused++;
+    const last = candidates.length - 1;
+    candidates[idx] = candidates[last];
+    contrib[idx] = contrib[last];
+    candidates.pop();
+    // Fold the new card into every remaining candidate's contribution.
+    for(let i=0;i<candidates.length;i++) contrib[i] += pairScore(candidates[i], pick, settings);
+  }
 
   while(deck.length < targetSize && candidates.length > 0){
     if(seed > 0 && deck.length < seed){
-      // Random opening picks — the diversity is the point of restarting.
-      const pool = candidates.map((c,i)=>[c,i]).filter(([c])=>allowed(c));
+      const pool = [];
+      for(let i=0;i<candidates.length;i++) if(allowed(candidates[i])) pool.push(i);
       if(!pool.length) break;
-      const [pick, idx] = pool[Math.floor(Math.random()*pool.length)];
-      deck.push(pick);
-      if(!pick.fused) unfused++;
-      candidates.splice(idx, 1);
+      take(pool[Math.floor(Math.random()*pool.length)]);
       continue;
     }
     let bestIdx = -1, bestScore = -Infinity;
     for(let i=0;i<candidates.length;i++){
       if(!allowed(candidates[i])) continue;
-      const s = deck.length===0 ? 0 : marginalScore(candidates[i], deck, settings);
+      const s = deck.length===0 ? 0 : contrib[i];
       if(s > bestScore){ bestScore = s; bestIdx = i; }
     }
-    if(bestIdx < 0) break; // nothing legal left to add
-    const pick = candidates[bestIdx];
-    deck.push(pick);
-    if(!pick.fused) unfused++;
-    candidates.splice(bestIdx, 1);
+    if(bestIdx < 0) break;
+    take(bestIdx);
+    if(onTick && deck.length % 20 === 0) await onTick(deck.length, targetSize);
   }
 
-  for(let pass=0; pass<6; pass++){
+  // Swap refinement is inherently O(deck x candidates x deck); scale the number
+  // of passes down as the deck grows so a Heroic build stays responsive.
+  const work = deck.length * candidates.length * deck.length;
+  const passes = work > 4e7 ? 1 : work > 8e6 ? 2 : 6;
+
+  for(let pass=0; pass<passes; pass++){
     let improved = false;
     for(let i=0;i<deck.length;i++){
+      if(onTick && i % 20 === 0) await onTick(deck.length, targetSize, 'refining');
       const withoutI = deck.filter((_,idx)=>idx!==i);
       const currentContrib = marginalScore(deck[i], withoutI, settings);
       const unfusedWithoutI = countUnfused(withoutI);
       let bestGain = 1e-9, bestJ = -1;
       for(let j=0;j<candidates.length;j++){
         const cand = candidates[j];
-        // A swap must leave the deck within the cap.
         if(capped && !cand.fused && unfusedWithoutI >= cap) continue;
         const gain = marginalScore(cand, withoutI, settings) - currentContrib;
         if(gain > bestGain){ bestGain = gain; bestJ = j; }
@@ -2370,15 +2431,17 @@ function buildOnce(inputCandidates, deckSize, settings, seed){
     }
     if(!improved) break;
   }
+
   return deck;
 }
 
-function computeOptimalDeck(inputCandidates, deckSize, settings, restarts){
-  const n = restarts != null ? restarts : 6;
+async function computeOptimalDeck(inputCandidates, deckSize, settings, restarts){
+  const auto = deckSize > 150 ? 2 : deckSize > 60 ? 3 : 6;
+  const n = restarts != null ? restarts : auto;
   let best = null, bestScore = -Infinity;
   for(let r=0; r<n; r++){
     // r === 0 is the deterministic greedy build; later rounds perturb the start.
-    const deck = buildOnce(inputCandidates, deckSize, settings, r===0 ? 0 : Math.min(r, 4));
+    const deck = await buildOnce(inputCandidates, deckSize, settings, r===0 ? 0 : Math.min(r, 4));
     const sc = totalScore(deck, settings);
     if(sc > bestScore){ bestScore = sc; best = deck; }
   }
@@ -2391,11 +2454,21 @@ const nextFrame = () => new Promise(r => requestAnimationFrame(()=>setTimeout(r,
 // Same search as computeOptimalDeck, but pauses between restarts so the status
 // text updates and the page stays responsive on slower devices.
 async function computeOptimalDeckAsync(inputCandidates, deckSize, settings, restarts, onProgress){
-  const n = restarts != null ? restarts : 6;
+  // Large decks are far more expensive per build, so use fewer restarts.
+  const auto = deckSize > 150 ? 2 : deckSize > 60 ? 3 : 6;
+  const n = restarts != null ? restarts : auto;
   let best = null, bestScore = -Infinity;
   for(let r=0; r<n; r++){
     if(onProgress){ onProgress(r, n); await nextFrame(); }
-    const deck = buildOnce(inputCandidates, deckSize, settings, r===0 ? 0 : Math.min(r, 4));
+    // Yield periodically inside the build too — a single large deck can take
+    // seconds on its own, which would otherwise freeze the page.
+    const tick = onProgress
+      ? async (done, total, phase) => {
+          onProgress(r, n, phase ? `${phase} ${done}/${total}` : `${done}/${total}`);
+          await nextFrame();
+        }
+      : null;
+    const deck = await buildOnce(inputCandidates, deckSize, settings, r===0 ? 0 : Math.min(r, 4), tick);
     const sc = totalScore(deck, settings);
     if(sc > bestScore){ bestScore = sc; best = deck; }
   }
@@ -2414,7 +2487,7 @@ async function generateBestDeck(){
     comboThreshold: Math.max(0, parseInt(document.getElementById('bComboThreshold').value) || 0),
   };
 
-  let candidates = expandCandidates();
+  let candidates = expandCandidates(settings);
   if(candidates.length===0){
     statusEl.textContent = 'Add cards in My Library first.';
     document.getElementById('builderResultPanel').style.display = 'none';
@@ -2422,8 +2495,8 @@ async function generateBestDeck(){
   }
 
   btn.disabled = true;
-  const deck = await computeOptimalDeckAsync(candidates, deckSize, settings, 6, (i,n)=>{
-    statusEl.textContent = `Building… ${i+1}/${n}`;
+  const deck = await computeOptimalDeckAsync(candidates, deckSize, settings, null, (i,n,detail)=>{
+    statusEl.textContent = `Building… pass ${i+1}/${n}${detail ? ' · ' + detail : ''}`;
   });
   btn.disabled = false;
 
@@ -2444,8 +2517,8 @@ async function generateBestDeck(){
   const capPart = settings.maxUnfused != null
     ? ` · ${unfusedInDeck}/${settings.maxUnfused} unfused`
     : '';
-  document.getElementById('resultSummary').textContent =
-    `${deck.length} cards · ${finalScore.toFixed(1)} · benchmark ${benchScore.toFixed(1)} (${sign}${delta.toFixed(1)}%)${capPart} · ${slotLabel(settings.mode)}`;
+    document.getElementById('resultSummary').textContent =
+      `${deck.length} cards · ${finalScore.toFixed(1)} · benchmark ${benchScore.toFixed(1)} (${sign}${delta.toFixed(1)}%)${capPart} · ${slotLabel(settings.mode)}`;
 
   // The cap can make a full deck impossible if there aren't enough fused cards.
   if(settings.maxUnfused != null && deck.length < Math.min(deckSize, candidates.length)){
@@ -3610,6 +3683,50 @@ populatePackTypeOptions();
 syncSuggControls();
 renderSchedule();
 updateComboThresholdHint();
+
+// ---------- Deck size follows the selected mode ----------
+let lastSeenMode = null;
+function syncDeckSizeToMode(){
+  const modeEl = document.getElementById('bMode');
+  const sizeEl = document.getElementById('bDeckSize');
+  if(!modeEl || !sizeEl) return;
+  const mode = modeEl.value;
+  // Remember whatever the user set for the mode they're leaving.
+  if(lastSeenMode && lastSeenMode !== mode){
+    const n = parseInt(sizeEl.value);
+    if(!isNaN(n) && n > 0) deckSizeByMode[lastSeenMode] = n;
+  }
+  if(lastSeenMode !== mode){
+    sizeEl.value = deckSizeByMode[mode] != null ? deckSizeByMode[mode] : DEFAULT_DECK_SIZE[mode] || 28;
+  }
+  lastSeenMode = mode;
+
+  const hint = document.getElementById('deckSizeHint');
+  if(hint){
+    if(mode==='heroic'){
+      // Deck size here means fusable cards. Ability cards aren't modelled, so
+      // show the implied total at the usual ~22% share as a planning aid.
+      const n = parseInt(document.getElementById('bDeckSize').value) || 0;
+      const total = Math.round(n / 0.78);
+      hint.textContent = n
+        ? `Builds ${n} fusable cards — about ${total} total once ~22% ability cards are added. Ability cards aren't scored.`
+        : 'Deck size counts fusable cards only; ability cards aren\'t scored.';
+    } else {
+      hint.textContent = '';
+    }
+  }
+}
+document.getElementById('bMode').addEventListener('change', syncDeckSizeToMode);
+document.getElementById('bDeckSize').addEventListener('input', ()=>{
+  const n = parseInt(document.getElementById('bDeckSize').value);
+  if(!isNaN(n) && n > 0 && lastSeenMode) deckSizeByMode[lastSeenMode] = n;
+  const modeEl = document.getElementById('bMode');
+  const hint = document.getElementById('deckSizeHint');
+  if(modeEl && modeEl.value==='heroic' && hint && n > 0){
+    hint.textContent = `Builds ${n} fusable cards — about ${Math.round(n/0.78)} total once ~22% ability cards are added. Ability cards aren't scored.`;
+  }
+});
+syncDeckSizeToMode();
 
 // ---------- Sign-in gate ----------
 // Gating is deliberately soft. If sign-in is misconfigured, blocked by a
