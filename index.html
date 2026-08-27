@@ -406,7 +406,7 @@
           Your data is stored in a private folder in your own Drive. It isn't sent
           anywhere else, and this site never sees your Google password.
         </p>
-        <button class="reset-btn" id="gateSkip" style="font-size:11.5px;">
+        <button class="reset-btn" id="gateSkip" style="font-size:11.5px;padding:9px 16px;">
           Continue without signing in
         </button>
         <p style="color:var(--muted);font-size:11px;margin:8px 0 0;">
@@ -438,7 +438,7 @@
       <button class="reset-btn" id="cloudSignOut" style="display:none;">Sign out</button>
       <button class="add-btn" id="confirmImportBtn" style="display:none;padding:7px 14px;font-size:12px;">Confirm import</button>
       <input type="file" id="importDataInput" accept="application/json" style="display:none;">
-      <div class="version-tag" id="versionTag">build 38 · consistency</div>
+      <div class="version-tag" id="versionTag">build 41 · build guard</div>
     </div>
   </header>
 
@@ -2475,6 +2475,7 @@ async function computeOptimalDeckAsync(inputCandidates, deckSize, settings, rest
   return best || [];
 }
 
+generateBestDeck._token = 0;
 async function generateBestDeck(){
   const statusEl = document.getElementById('builderStatus');
   const btn = document.getElementById('generateBtn');
@@ -2494,11 +2495,27 @@ async function generateBestDeck(){
     return;
   }
 
+  // Guard against overlapping runs: an older build finishing late would
+  // otherwise overwrite the newer result.
+  const runToken = ++generateBestDeck._token;
+
+  let deck;
   btn.disabled = true;
-  const deck = await computeOptimalDeckAsync(candidates, deckSize, settings, null, (i,n,detail)=>{
-    statusEl.textContent = `Building… pass ${i+1}/${n}${detail ? ' · ' + detail : ''}`;
-  });
-  btn.disabled = false;
+  try{
+    deck = await computeOptimalDeckAsync(candidates, deckSize, settings, null, (i,n,detail)=>{
+      if(runToken !== generateBestDeck._token) return;
+      statusEl.textContent = `Building… pass ${i+1}/${n}${detail ? ' · ' + detail : ''}`;
+    });
+  }catch(err){
+    statusEl.textContent = 'Build failed: ' + (err && err.message ? err.message : err);
+    console.error('[Ledger] deck build failed', err);
+    return;
+  }finally{
+    // Must always re-enable, or a single failure freezes the button and the
+    // summary appears stuck on the previous result.
+    btn.disabled = false;
+  }
+  if(runToken !== generateBestDeck._token) return;  // superseded
 
   const finalScore = totalScore(deck, settings);
   lastBuilderScore = finalScore;
@@ -3497,8 +3514,10 @@ const Cloud = (() => {
   }
 
   async function onSignedIn(){
-    renderButtons();
-    if(typeof AuthGate !== 'undefined') AuthGate.hide();
+    // Dismiss the gate first and defensively: everything after this touches the
+    // network, and a failure there must not leave the user stuck behind it.
+    try{ if(typeof AuthGate !== 'undefined') AuthGate.hide(); }catch(e){}
+    try{ renderButtons(); }catch(e){}
     status('Checking Drive…');
     try{
       await findFile();
@@ -3796,8 +3815,18 @@ const AuthGate = (() => {
 document.getElementById('gateSignIn').addEventListener('click', ()=>{
   AuthGate.status('Opening Google sign-in…');
   Cloud.signIn();
+  // If nothing comes back, say so rather than sitting on "Opening…" forever.
+  setTimeout(()=>{
+    if(!Cloud.signedIn()){
+      AuthGate.status('Still waiting on Google. If a popup was blocked, allow it and try again — or continue without signing in.', 'error');
+    }
+  }, 8000);
 });
 document.getElementById('gateSkip').addEventListener('click', ()=>AuthGate.skip());
+// A full-screen overlay with no exit is a trap; Escape always dismisses it.
+document.addEventListener('keydown', e=>{
+  if(e.key === 'Escape') AuthGate.skip();
+});
 
 // ---------- Google sign-in wiring ----------
 document.getElementById('cloudSignIn').addEventListener('click', ()=>Cloud.signIn());
@@ -3805,6 +3834,13 @@ document.getElementById('cloudSignOut').addEventListener('click', ()=>Cloud.sign
 document.getElementById('cloudSync').addEventListener('click', ()=>Cloud.sync());
 
 AuthGate.init();
+
+// Belt and braces: if a token arrives by any path — callback, silent refresh,
+// a retry — dismiss the gate. Relying solely on the callback chain meant one
+// failure anywhere left the page stuck behind the overlay.
+setInterval(()=>{
+  if(Cloud.enabled() && Cloud.signedIn()) AuthGate.hide();
+}, 500);
 
 // The GIS script loads async, so wait for it before initialising.
 (function waitForGoogle(tries){
