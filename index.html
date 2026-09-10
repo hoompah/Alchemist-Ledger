@@ -283,7 +283,7 @@
   select.row-input{width:auto;font-family:'IBM Plex Sans',sans-serif;}
   .del-btn{
     background:none;border:none;color:var(--muted);cursor:pointer;font-size:15px;
-    padding:2px 8px;border-radius:6px;
+    padding:9px 14px;border-radius:6px;
   }
   .del-btn:hover{color:var(--danger);background:rgba(217,104,95,0.1);}
 
@@ -300,6 +300,79 @@
     width:120px;
   }
 
+
+
+  /* ============ VIEW MODE + MOBILE LAYOUT ============ */
+  /* Nothing may push the page sideways. */
+  html,body{overflow-x:hidden;max-width:100%;}
+
+  /* Tabs follow you down the page — with 8 tabs and long tables, scrolling
+     back to the top to switch was the biggest single annoyance. */
+  nav.tabs{position:sticky;top:0;z-index:60;background:var(--bg);
+    box-shadow:0 6px 14px -8px rgba(0,0,0,.9);}
+
+  /* Column headers stay put while a long table scrolls. */
+  thead th{position:sticky;top:0;z-index:5;background:var(--panel);}
+
+  .view-toggle{display:inline-flex;border:1px solid var(--border);border-radius:8px;overflow:hidden;}
+  .view-toggle button{
+    background:none;border:none;color:var(--muted);padding:7px 12px;
+    font-size:11.5px;font-family:inherit;cursor:pointer;font-weight:400;border-radius:0;
+  }
+  .view-toggle button.on{background:var(--gold);color:#1c1826;font-weight:600;}
+
+  #toTop{
+    position:fixed;right:16px;bottom:16px;z-index:70;display:none;
+    width:46px;height:46px;border-radius:50%;background:var(--gold);color:#1c1826;
+    border:none;font-size:19px;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.5);
+  }
+
+  /* ---- card layout: tables become stacked cards ---- */
+  body.m .table-wrap{overflow-x:visible;}
+  body.m table{min-width:0 !important;width:100%;}
+  body.m thead{display:none;}
+  body.m tbody,body.m tr,body.m td{display:block;width:100%;}
+  body.m tbody tr{
+    background:var(--panel-2);border:1px solid var(--border);border-radius:10px;
+    padding:10px 12px;margin-bottom:10px;
+  }
+  body.m tbody td{
+    border:none;padding:5px 0;display:flex;align-items:center;
+    justify-content:space-between;gap:12px;min-height:32px;
+  }
+  body.m tbody td::before{
+    content:attr(data-label);color:var(--muted);font-size:11px;
+    text-transform:uppercase;letter-spacing:.6px;flex:0 0 auto;
+  }
+  body.m tbody td[data-label=""]::before{content:none;}
+  /* the first cell reads as the card's title */
+  body.m tbody td:first-child{
+    font-size:15.5px;font-weight:600;padding-bottom:8px;margin-bottom:4px;
+    border-bottom:1px solid var(--border);
+  }
+  body.m tbody td:first-child::before{font-size:11px;font-weight:400;}
+  body.m .del-btn{padding:10px 16px;font-size:18px;}
+  body.m .stepper{margin-left:auto;}
+
+  /* long lists get a count and a jump control rather than endless scroll */
+  .list-tools{display:flex;gap:8px;align-items:center;padding:0 20px 10px;flex-wrap:wrap;}
+  .list-tools button{
+    background:var(--panel-2);border:1px solid var(--border);color:var(--muted);
+    padding:7px 12px;font-size:12px;border-radius:8px;cursor:pointer;font-weight:400;
+  }
+
+
+  /* ---- rarity dot shown beside every card name ---- */
+  .rdot{
+    display:inline-block;width:9px;height:9px;border-radius:50%;
+    margin-right:7px;vertical-align:middle;flex:0 0 auto;
+    box-shadow:0 0 0 1px rgba(0,0,0,.35) inset;
+  }
+  .rdot.onyx{background:var(--onyx);}
+  .rdot.gold{background:var(--rare);}
+  .rdot.silver{background:var(--uncommon);}
+  .rdot.bronze{background:var(--common);}
+  .rdot.unknown{background:var(--muted);opacity:.5;}
 
   /* ---- mobile-friendly card entry ---- */
   .stepper{display:flex;align-items:center;gap:0;}
@@ -329,12 +402,12 @@
     font-size:12.5px;margin:0 6px 6px 0;cursor:pointer;color:var(--text);
   }
   .chip:active{border-color:var(--gold);color:var(--gold);}
-  @media(max-width:760px){
-    .step-btn{width:46px;height:46px;font-size:22px;}
-    .stepper input{width:54px !important;height:46px;}
-    .res-item{padding:15px 16px;}
-    .res-item .nm{font-size:16px;}
-  }
+  
+  body.m .step-btn{width:46px;height:46px;font-size:22px;}
+  body.m .stepper input{width:54px !important;height:46px;}
+  body.m .res-item{padding:15px 16px;}
+  body.m .res-item .nm{font-size:16px;}
+  
 
   /* ============ MOBILE / TOUCH ============ */
   /* Respect iOS safe areas when installed to the home screen */
@@ -346,76 +419,60 @@
   }
   .table-wrap{ -webkit-overflow-scrolling:touch; }
 
-  @media (max-width:760px){
-    .wrap{ padding:18px 14px 60px; }
-
-    /* Header stacks and shrinks */
-    header.top{ align-items:flex-start; gap:12px; padding-bottom:16px; margin-bottom:16px; }
-    h1{ font-size:28px; }
-    .subtitle{ font-size:12px; }
-    .brand-mark{ width:32px; height:32px; }
-    .version-tag{ font-size:11px; padding:4px 8px; }
-
-    /* Tabs scroll horizontally instead of cramming */
-    nav.tabs{
+  @medi
+  body.m .wrap{ padding:18px 14px 60px; }
+  body.m /* Header stacks and shrinks */ header.top{ align-items:flex-start; gap:12px; padding-bottom:16px; margin-bottom:16px; }
+  body.m h1{ font-size:28px; }
+  body.m .subtitle{ font-size:12px; }
+  body.m .brand-mark{ width:32px; height:32px; }
+  body.m .version-tag{ font-size:11px; padding:4px 8px; }
+  body.m /* Tabs scroll horizontally instead of cramming */ nav.tabs{
       overflow-x:auto; overflow-y:hidden;
       -webkit-overflow-scrolling:touch;
       scrollbar-width:none;
       margin-bottom:18px;
     }
-    nav.tabs::-webkit-scrollbar{ display:none; }
-    nav.tabs button{
+  body.m nav.tabs::-webkit-scrollbar{ display:none; }
+  body.m nav.tabs button{
       flex:0 0 auto; white-space:nowrap;
       padding:10px 14px 13px; font-size:14px;
     }
-
-    /* Everything goes single column */
-    .overview-grid, .two-col, .stat-row{ grid-template-columns:1fr !important; }
-
-    /* Forms and controls stack full-width for easy tapping */
-    .add-row-form, .controls, .builder-controls{
+  body.m /* Everything goes single column */ .overview-grid, .two-col, .stat-row{ grid-template-columns:1fr !important; }
+  body.m /* Forms and controls stack full-width for easy tapping */ .add-row-form, .controls, .builder-controls{
       flex-direction:column; align-items:stretch; gap:10px;
       padding-left:14px; padding-right:14px;
     }
-    .search-input, .mini-input, select.filter,
-    .builder-field, .builder-field input, .builder-field select{
+  body.m .search-input, .mini-input, select.filter, .builder-field, .builder-field input, .builder-field select{
       width:100% !important; min-width:0;
     }
-    .mini-input.qty{ width:100% !important; }
-    .result-count{ margin-left:0 !important; }
+  body.m .mini-input.qty{ width:100% !important; }
+  body.m .result-count{ margin-left:0 !important; }
+  body.m /* Touch-friendly tap targets (44px is Apple's guideline) */ .add-btn, .reset-btn{ padding:12px 16px; font-size:14px; width:100%; }
+  body.m /* ...except header actions, which stay compact side-by-side */ header.top .add-btn, header.top .reset-btn{ width:auto; padding:9px 12px; font-size:12.5px; }
+  body.m header.top > div:last-child{ justify-content:flex-start !important; width:100%; }
+  body.m .del-btn{ padding:8px 12px; font-size:17px; }
+  body.m .toggle-chip{ padding:10px 16px; text-align:center; }
+  body.m input[type="checkbox"]{ width:18px; height:18px; }
+  body.m /* 16px prevents iOS Safari from auto-zooming on focus */ input, select, textarea{ font-size:16px !important; }
+  body.m /* Tables scroll sideways rather than squashing */ .table-wrap{ padding-left:14px; padding-right:14px; }
+  body.m table{ min-width:520px; }
+  body.m thead th, tbody td{ padding:9px 10px; }
+  body.m .row-input{ width:64px; padding:7px 8px; }
+  body.m select.row-input{ width:auto; max-width:150px; }
+  body.m .panel-title{ padding:16px 14px 4px; font-size:18px; }
+  body.m .panel-desc{ padding-left:14px; padding-right:14px; }
+  body.m .rarity-list, .upgrade-list{ padding-left:14px; padding-right:14px; }
+  body.m .rarity-name{ width:74px; font-size:12px; }
+  body.m .rarity-count{ width:58px; }
+  body.m .stat-card .num{ font-size:28px; }
+  
 
-    /* Touch-friendly tap targets (44px is Apple's guideline) */
-    .add-btn, .reset-btn{ padding:12px 16px; font-size:14px; width:100%; }
-    /* ...except header actions, which stay compact side-by-side */
-    header.top .add-btn, header.top .reset-btn{ width:auto; padding:9px 12px; font-size:12.5px; }
-    header.top > div:last-child{ justify-content:flex-start !important; width:100%; }
-    .del-btn{ padding:8px 12px; font-size:17px; }
-    .toggle-chip{ padding:10px 16px; text-align:center; }
-    input[type="checkbox"]{ width:18px; height:18px; }
-    /* 16px prevents iOS Safari from auto-zooming on focus */
-    input, select, textarea{ font-size:16px !important; }
-
-    /* Tables scroll sideways rather than squashing */
-    .table-wrap{ padding-left:14px; padding-right:14px; }
-    table{ min-width:520px; }
-    thead th, tbody td{ padding:9px 10px; }
-    .row-input{ width:64px; padding:7px 8px; }
-    select.row-input{ width:auto; max-width:150px; }
-
-    .panel-title{ padding:16px 14px 4px; font-size:18px; }
-    .panel-desc{ padding-left:14px; padding-right:14px; }
-    .rarity-list, .upgrade-list{ padding-left:14px; padding-right:14px; }
-    .rarity-name{ width:74px; font-size:12px; }
-    .rarity-count{ width:58px; }
-    .stat-card .num{ font-size:28px; }
-  }
-
-  @media (max-width:420px){
-    h1{ font-size:24px; }
-    .wrap{ padding:14px 10px 50px; }
-    table{ min-width:460px; }
-    .stat-card .num{ font-size:25px; }
-  }
+  
+  body.m h1{ font-size:24px; }
+  body.m .wrap{ padding:14px 10px 50px; }
+  body.m table{ min-width:460px; }
+  body.m .stat-card .num{ font-size:25px; }
+  
 </style>
 </head>
 <body>
@@ -474,7 +531,12 @@
       <button class="reset-btn" id="cloudSignOut" style="display:none;">Sign out</button>
       <button class="add-btn" id="confirmImportBtn" style="display:none;padding:7px 14px;font-size:12px;">Confirm import</button>
       <input type="file" id="importDataInput" accept="application/json" style="display:none;">
-      <div class="version-tag" id="versionTag">build 42 · mobile entry</div>
+      <div class="view-toggle" id="viewToggle" title="Switch layout">
+        <button data-view="auto" class="on">Auto</button>
+        <button data-view="desktop">Desktop</button>
+        <button data-view="mobile">Mobile</button>
+      </div>
+      <div class="version-tag" id="versionTag">build 45 · live benchmarks</div>
     </div>
   </header>
 
@@ -1006,6 +1068,7 @@
 
   <footer>Card and combo data from your deck optimizer workbook</footer>
 </div>
+<button id="toTop" title="Back to top">↑</button>
 
 <script>
 // ============================================================
@@ -1229,7 +1292,18 @@ document.querySelectorAll('.tab-btn').forEach(btn=>{
 });
 
 // ---------- Overview ----------
-function renderSeal(score, maxRef){
+// Benchmarks from the theoretical optima computed offline: the best mean value
+// per pair achievable for each mode with a fully-connected all-Onyx deck.
+// Scaling by pair count lets any deck size be judged against the same standard.
+const BEST_MEAN = {attack:39.07, defense:34.63, both:69.64, heroic:69.64};
+
+function bestPossible(mode, deckSize){
+  if(deckSize < 2) return 1;
+  const pairs = deckSize*(deckSize-1)/2;
+  return pairs * (BEST_MEAN[mode] || BEST_MEAN.both);
+}
+
+function renderSeal(score, maxRef, mode){
   const svg = document.getElementById('sealSvg');
   const size=180, cx=90, cy=90, r=72;
   const pct = Math.min(score/maxRef, 1);
@@ -1248,14 +1322,18 @@ function renderSeal(score, maxRef){
       return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="var(--border)" stroke-width="1"></line>`;
     }).join('')}
     <text x="${cx}" y="${cy-6}" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="30" font-weight="600" fill="var(--text)">${score.toLocaleString()}</text>
-    <text x="${cx}" y="${cy+18}" text-anchor="middle" font-family="IBM Plex Sans, sans-serif" font-size="11" fill="var(--muted)">points</text>
+    <text x="${cx}" y="${cy+16}" text-anchor="middle" font-family="IBM Plex Sans, sans-serif" font-size="11" fill="var(--muted)">points</text>
+    <text x="${cx}" y="${cy+32}" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="11" fill="var(--gold)">${(pct*100).toFixed(1)}% of best ${mode==='attack'?'attack':mode==='defense'?'defense':'deck'}</text>
   `;
 }
 
 function renderOverview(){
   const ref = activeRef();
   const score = ref.score || 0;
-  renderSeal(score, Math.max(score*1.15, 25000));
+  // Measured against the best deck theoretically possible for this mode and
+  // size, so the ring answers "how close am I to optimal?"
+  const mode = ref.comboMode || (REF_SLOTS.find(r=>r.key===activeRefSlot)||{}).mode || 'both';
+  renderSeal(score, bestPossible(mode, ref.deck.length), mode);
   document.getElementById('totalScoreLabel').textContent =
     score.toLocaleString() + ' pts · ' + slotLabel(activeRefSlot);
   document.getElementById('deckSizeStat').textContent = ref.deck.length;
@@ -1348,7 +1426,7 @@ function renderDeck(){
   }
   document.getElementById('deckBody').innerHTML = rows.map(d=>`
     <tr>
-      <td class="card-name">${escapeHtml(d.card)}</td>
+      <td class="card-name">${rarityDot(d.name, /:Onyx$/.test(d.name))}${escapeHtml(d.card)}</td>
       <td>${d.fused? '<span class="badge fused">Fused</span>' : '<span class="badge unfused">Unfused</span>'}</td>
       <td>${progressCell(d.combos_num, d.combos_den)}</td>
       <td style="font-family:'IBM Plex Mono',monospace;color:var(--gold)">${d.mod!=null ? (d.mod*100).toFixed(1)+'%' : '—'}</td>
@@ -1366,7 +1444,7 @@ function renderUpgradeList(){
       : '';
     return `
     <div class="upgrade-item">
-      <span class="upgrade-name">${escapeHtml(u.name)}${u.onyx?' <span style="color:var(--onyx)">(Onyx)</span>':''}${srcNote}</span>
+      <span class="upgrade-name">${rarityDot(u.name, u.onyx)}${escapeHtml(u.name)}${u.onyx?' <span style="color:var(--onyx)">(Onyx)</span>':''}${srcNote}</span>
       <span class="upgrade-score">+${u.gain.toFixed(1)}</span>
     </div>
   `;
@@ -1602,7 +1680,7 @@ async function runSuggestionAnalysis(){
   const fuseEl = document.getElementById('suggFusable');
   if(readyToFuse && readyToFuse.length){
     const list = readyToFuse
-      .map(f=>`${escapeHtml(f.name)}${f.onyx?' (Onyx)':''} ×${f.copies}`)
+      .map(f=>`${rarityDot(f.name, f.onyx)}${escapeHtml(f.name)}${f.onyx?' (Onyx)':''} ×${f.copies}`)
       .join(', ');
     fuseEl.innerHTML = `<strong>Fusable now</strong> — ${list}. Two unfused copies make one stronger card.`;
     fuseEl.style.display = 'block';
@@ -1615,8 +1693,8 @@ async function runSuggestionAnalysis(){
     pairEl.innerHTML =
       `<strong>Best pairs</strong> — worth more together than apart:` +
       topPairs.map(p=>{
-        const a = escapeHtml(p.names[0]) + (p.onyx[0]?' (Onyx)':'');
-        const b = escapeHtml(p.names[1]) + (p.onyx[1]?' (Onyx)':'');
+        const a = rarityDot(p.names[0], p.onyx[0]) + escapeHtml(p.names[0]) + (p.onyx[0]?' (Onyx)':'');
+        const b = rarityDot(p.names[1], p.onyx[1]) + escapeHtml(p.names[1]) + (p.onyx[1]?' (Onyx)':'');
         return `<div style="display:flex;justify-content:space-between;gap:12px;margin-top:6px;">
           <span>${a} + ${b}</span>
           <span style="font-family:'IBM Plex Mono',monospace;color:var(--gold);white-space:nowrap;">
@@ -1652,7 +1730,7 @@ function renderSugg(){
     return `
     <tr>
       <td style="font-family:'IBM Plex Mono',monospace;color:var(--muted)">#${s.rank}</td>
-      <td class="card-name">${escapeHtml(s.name)}</td>
+      <td class="card-name">${rarityDot(s.name, s.onyx)}${escapeHtml(s.name)}</td>
       <td>${s.onyx? '<span class="rarity-pill"><span class="dot" style="background:var(--onyx)"></span>Onyx</span>' : '—'}</td>
       <td style="font-family:'IBM Plex Mono',monospace;color:var(--muted)">${s.owned}</td>
       <td>${s.route==='fuse'
@@ -1881,7 +1959,7 @@ function renderMyLibrary(){
   }
   document.getElementById('myLibBody').innerHTML = rows.map(r=>`
     <tr data-id="${r.id}">
-      <td class="card-name">${escapeHtml(r.name)}</td>
+      <td class="card-name">${rarityDot(r.name, r.onyx)}${escapeHtml(r.name)}</td>
       <td><input type="checkbox" class="lib-onyx" data-id="${r.id}" ${r.onyx?'checked':''}></td>
       <td>
         <select class="row-input lib-level" data-id="${r.id}">
@@ -1958,6 +2036,82 @@ function updateLibRow(id, patch){
   queueSuggestionAnalysis();
 }
 document.getElementById('myLibSearch').addEventListener('input', renderMyLibrary);
+
+// ---------- Rarity marker ----------
+// One dot, used wherever a card name appears, so tier is readable at a glance
+// without adding a column. Onyx overrides the base tier.
+const RARITY_CLASS = {Rare:'gold', Uncommon:'silver', Common:'bronze'};
+function rarityDot(name, isOnyx){
+  if(isOnyx) return '<span class="rdot onyx" title="Onyx"></span>';
+  const base = String(name).replace(/:Onyx$/,'');
+  let tier = CMB.ccRarity[base];
+  if(!tier){
+    const k = Object.keys(CMB.ccRarity).find(x=>normalizeCardName(x)===normalizeCardName(base));
+    tier = k ? CMB.ccRarity[k] : null;
+  }
+  const cls = RARITY_CLASS[tier] || 'unknown';
+  const label = {gold:'Gold',silver:'Silver',bronze:'Bronze'}[cls] || 'Unknown tier';
+  return `<span class="rdot ${cls}" title="${label}"></span>`;
+}
+// A name string may already carry the ":Onyx" suffix.
+function cardWithDot(name){
+  const onyx = /:Onyx$/.test(String(name));
+  return rarityDot(name, onyx) + escapeHtml(String(name).replace(/:Onyx$/,'')) +
+         (onyx ? ' <span style="color:var(--onyx);font-size:11px;">Onyx</span>' : '');
+}
+
+// ---------- View mode ----------
+// The layout is driven by a single body class, so the user can override the
+// viewport-based guess in either direction rather than being locked to it.
+let viewMode = 'auto';
+try{ viewMode = localStorage.getItem('alchemists-ledger:view') || 'auto'; }catch(e){}
+
+function applyView(){
+  const mobile = viewMode === 'mobile' ||
+                 (viewMode === 'auto' && window.innerWidth <= 760);
+  document.body.classList.toggle('m', mobile);
+  document.querySelectorAll('#viewToggle button').forEach(b=>{
+    b.classList.toggle('on', b.dataset.view === viewMode);
+  });
+  // Card layout needs each cell to know its column name.
+  labelCells();
+}
+
+// Copy each table's header text onto its cells, so the card layout can show
+// them via CSS. Doing it generically avoids touching every render function.
+function labelCells(){
+  document.querySelectorAll('table').forEach(tbl=>{
+    const heads = [...tbl.querySelectorAll('thead th')].map(th=>{
+      const t = th.textContent.replace(/[▲▼]/g,'').trim();
+      return t;
+    });
+    tbl.querySelectorAll('tbody tr').forEach(tr=>{
+      [...tr.children].forEach((td,i)=>{
+        td.setAttribute('data-label', heads[i] || '');
+      });
+    });
+  });
+}
+
+document.getElementById('viewToggle').addEventListener('click', e=>{
+  const b = e.target.closest('button[data-view]');
+  if(!b) return;
+  viewMode = b.dataset.view;
+  try{ localStorage.setItem('alchemists-ledger:view', viewMode); }catch(err){}
+  applyView();
+});
+window.addEventListener('resize', ()=>{ if(viewMode==='auto') applyView(); });
+
+// Re-label whenever a table is redrawn.
+const _labelSoon = (()=>{ let t; return ()=>{ clearTimeout(t); t=setTimeout(labelCells,60); }; })();
+new MutationObserver(_labelSoon).observe(document.body, {childList:true, subtree:true});
+
+// ---------- Back to top ----------
+const toTop = document.getElementById('toTop');
+window.addEventListener('scroll', ()=>{
+  toTop.style.display = window.scrollY > 600 ? 'block' : 'none';
+});
+toTop.addEventListener('click', ()=>window.scrollTo({top:0, behavior:'smooth'}));
 
 // ---------- Mobile card entry ----------
 // A 139-item native select is a long scroll wheel on a phone. Type-ahead cuts
@@ -2282,25 +2436,38 @@ function cardRarity(slot){
   return match ? CMB.ccRarity[match] : 'Common';
 }
 
+// Catalogue totals derived from the live card data, not the workbook snapshot,
+// which had stale counts (87 Onyx and 101 Gold against a real 85 and 100).
+const CATALOGUE_TOTALS = (()=>{
+  const t = {Onyx:0, Rare:0, Uncommon:0, Common:0};
+  for(const name of CMB.names){
+    if(ONYX_ELIGIBLE.has(name)) t.Onyx++;
+    const tier = CMB.ccRarity[name];
+    if(tier && t[tier] !== undefined) t[tier]++;
+  }
+  return t;
+})();
+
 function renderCollectionRarity(){
   const el = document.getElementById('rarityList');
   if(!el) return;
-  const total = DATA.rarity_all; // full catalogue counts — fixed by the game, not by your library
-  const owned = {};
+  // Count distinct cards held in each tier. An Onyx copy counts as Onyx, and
+  // the same card owned in both forms counts once in each.
+  const owned = {Onyx:new Set(), Rare:new Set(), Uncommon:new Set(), Common:new Set()};
   for(const row of myLibrary){
-    if(row.qty>0){
-      const r = cardRarity(row);
-      owned[r] = (owned[r]||0)+1;
-    }
+    if(!(row.qty>0)) continue;
+    const tier = row.onyx ? 'Onyx' : CMB.ccRarity[row.name];
+    if(owned[tier]) owned[tier].add(row.name);
   }
   el.innerHTML = RARITY_ORDER.map(r=>{
-    const t = total[r]||0, o = owned[r]||0;
-    const pct = t? Math.round((o/t)*100) : 0;
+    const t = CATALOGUE_TOTALS[r]||0;
+    const o = owned[r] ? owned[r].size : 0;
+    const pct = t ? Math.min(100, (o/t)*100) : 0;
     return `
       <div class="rarity-row">
         <span class="rarity-dot" style="background:${RARITY_COLORS[r]}"></span>
         <span class="rarity-name">${rarityLabel(r)}</span>
-        <span class="rarity-bar-track"><span class="rarity-bar-fill" style="width:${pct}%;background:${RARITY_COLORS[r]}"></span></span>
+        <span class="rarity-bar-track"><span class="rarity-bar-fill" style="width:${pct.toFixed(1)}%;background:${RARITY_COLORS[r]}"></span></span>
         <span class="rarity-count">${o} / ${t}</span>
       </div>
     `;
@@ -2667,7 +2834,10 @@ async function generateBestDeck(){
   try{
     deck = await computeOptimalDeckAsync(candidates, deckSize, settings, null, (i,n,detail)=>{
       if(runToken !== generateBestDeck._token) return;
-      statusEl.textContent = `Building… pass ${i+1}/${n}${detail ? ' · ' + detail : ''}`;
+      const msg = `Building… pass ${i+1}/${n}${detail ? ' · ' + detail : ''}`;
+    statusEl.textContent = msg;
+    // Mirror progress onto the button, which is where the user is looking.
+    btn.textContent = detail ? `Building… ${detail}` : 'Building…';
     });
   }catch(err){
     statusEl.textContent = 'Build failed: ' + (err && err.message ? err.message : err);
@@ -2677,6 +2847,7 @@ async function generateBestDeck(){
     // Must always re-enable, or a single failure freezes the button and the
     // summary appears stuck on the previous result.
     btn.disabled = false;
+    btn.textContent = 'Generate deck';
   }
   if(runToken !== generateBestDeck._token) return;  // superseded
 
@@ -2751,7 +2922,7 @@ function renderBuilderTable(){
   });
   document.getElementById('builderBody').innerHTML = rows.map(s=>`
     <tr>
-      <td class="card-name">${escapeHtml(s.name)}</td>
+      <td class="card-name">${rarityDot(s.name, s.onyx)}${escapeHtml(s.name)}</td>
       <td style="font-family:'IBM Plex Mono',monospace;color:var(--muted)">#${s.copyIndex}</td>
       <td>${s.onyx? '<span class="rarity-pill"><span class="dot" style="background:var(--onyx)"></span>Onyx</span>' : '—'}</td>
       <td>${s.fused? '<span class="badge fused">Fused</span>' : '<span class="badge unfused">Unfused</span>'}</td>
@@ -3863,6 +4034,7 @@ loadSchedule();
 loadReferenceDecks();
 populatePackTypeOptions();
 renderRecent();
+applyView();
 syncSuggControls();
 renderSchedule();
 updateComboThresholdHint();
