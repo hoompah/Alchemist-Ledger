@@ -52,8 +52,8 @@
 
   /* Header */
   header.top{
-    display:flex;align-items:flex-end;justify-content:space-between;
-    gap:20px;flex-wrap:wrap;
+    display:flex;align-items:center;justify-content:space-between;
+    gap:16px;flex-wrap:nowrap;
     border-bottom:1px solid var(--border);
     padding-bottom:20px;margin-bottom:22px;
   }
@@ -73,7 +73,7 @@
   }
   .brand{display:flex;align-items:center;gap:14px;}
   .subtitle{color:var(--muted);font-size:13.5px;margin-top:6px;letter-spacing:0.3px;}
-  .version-tag{
+  .version-tag-unused{
     font-family:'IBM Plex Mono', monospace;
     font-size:12px;color:var(--gold);
     border:1px solid var(--gold-soft);
@@ -143,7 +143,12 @@
   @media (max-width:560px){ .stat-row{grid-template-columns:1fr;} }
   .stat-card{padding:15px 16px;min-width:0;}
   .stat-card .num{font-family:'Cormorant Garamond', serif;font-weight:700;
-    font-size:27px;color:var(--text);line-height:1.1;overflow-wrap:anywhere;}
+    font-size:27px;color:var(--text);line-height:1.1;overflow-wrap:anywhere;
+    font-variant-numeric:lining-nums tabular-nums;
+    font-feature-settings:"lnum" 1,"tnum" 1;}
+  /* A name is not a number — it should not use the numeric display face. */
+  .num-text{font-family:'IBM Plex Sans',sans-serif;font-weight:600;
+    font-size:17px;color:var(--text);line-height:1.3;overflow-wrap:anywhere;}
   .stat-card .lbl{color:var(--muted);font-size:11.5px;margin-top:7px;letter-spacing:0.2px;line-height:1.35;}
   .stat-card .sub{color:var(--gold);font-size:12px;margin-top:4px;font-family:'IBM Plex Mono',monospace;}
 
@@ -386,6 +391,48 @@
   body.m .icon-btn{width:42px;height:42px;}
   body.m .icon-btn svg{width:20px;height:20px;}
 
+
+  body.m header.top{gap:10px;}
+  body.m .brand-mark{width:38px;height:38px;}
+  body.m h1{font-size:21px;}
+  body.m .subtitle{font-size:11.5px;}
+
+  /* ---- header actions: one toggle + one menu ---- */
+  .head-actions{display:flex;align-items:center;gap:10px;justify-content:flex-end;flex:none;}
+  .menu-wrap{position:relative;}
+  .menu{
+    display:none;position:absolute;right:0;top:calc(100% + 8px);z-index:80;
+    min-width:216px;background:var(--panel);border:1px solid var(--border);
+    border-radius:10px;padding:6px;box-shadow:0 12px 30px rgba(0,0,0,.55);
+  }
+  .menu.open{display:block;}
+  .menu-item{
+    display:flex;align-items:center;gap:10px;width:100%;
+    background:none;border:none;color:var(--text);font-family:inherit;
+    font-size:13px;font-weight:400;text-align:left;
+    padding:10px 12px;border-radius:7px;cursor:pointer;
+  }
+  .menu-item svg{width:16px;height:16px;flex:none;fill:none;stroke:currentColor;
+    stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;color:var(--muted);}
+  .menu-item:hover{background:var(--panel-2);}
+  .menu-item:hover svg{color:var(--gold);}
+  .menu-status{
+    padding:4px 12px 8px;font-size:11.5px;color:var(--gold);line-height:1.5;
+    display:flex;flex-direction:column;gap:2px;
+  }
+  .menu-status:empty{display:none;}
+  .menu-foot{
+    margin-top:4px;padding:8px 12px 4px;border-top:1px solid var(--border);
+    font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--muted);
+  }
+  /* icon-only view toggle buttons */
+  .view-toggle button svg{width:15px;height:15px;fill:none;stroke:currentColor;
+    stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;display:block;}
+  .view-toggle button{display:flex;align-items:center;justify-content:center;min-width:38px;}
+  body.m .view-toggle button{min-width:44px;padding:9px 12px;}
+  body.m .menu{min-width:236px;}
+  body.m .menu-item{padding:13px 12px;font-size:14px;}
+
   /* ---- rarity dot shown beside every card name ---- */
   .rdot{
     display:inline-block;width:9px;height:9px;border-radius:50%;
@@ -544,33 +591,42 @@
         <div class="subtitle">Little Alchemist deck dashboard</div>
       </div>
     </div>
-    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end;">
-      <span id="dataStatus" style="font-size:11.5px;color:var(--gold);"></span>
-      <span id="cloudStatus" style="font-size:11.5px;color:var(--gold);"></span>
-      <button class="icon-btn" id="exportDataBtn" title="Export data" aria-label="Export data">
-        <svg viewBox="0 0 24 24"><path d="M12 3v12M12 15l-4-4M12 15l4-4M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg>
-      </button>
-      <button class="icon-btn" id="importDataBtn" title="Import data" aria-label="Import data">
-        <svg viewBox="0 0 24 24"><path d="M12 15V3M12 3L8 7M12 3l4 4M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg>
-      </button>
-      <button class="icon-btn" id="textDataBtn" title="Text transfer" aria-label="Text transfer">
-        <svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h10M4 18h13"/></svg>
-      </button>
-      <button class="reset-btn" id="cloudSignIn" style="display:none;">Sign in with Google</button>
-      <button class="icon-btn" id="cloudSync" style="display:none;" title="Sync now" aria-label="Sync now">
-        <svg viewBox="0 0 24 24"><path d="M20 11a8 8 0 00-14-4M4 13a8 8 0 0014 4"/><path d="M4 4v5h5M20 20v-5h-5"/></svg>
-      </button>
-      <button class="icon-btn" id="cloudSignOut" style="display:none;" title="Sign out" aria-label="Sign out">
-        <svg viewBox="0 0 24 24"><path d="M14 8V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2h6a2 2 0 002-2v-2"/><path d="M18 12H9M18 12l-3-3M18 12l-3 3"/></svg>
-      </button>
-      <button class="add-btn" id="confirmImportBtn" style="display:none;padding:7px 14px;font-size:12px;">Confirm import</button>
-      <input type="file" id="importDataInput" accept="application/json" style="display:none;">
+    <div class="head-actions">
+      <!-- One compact control instead of six wrapping icons. -->
       <div class="view-toggle" id="viewToggle" title="Switch layout">
-        <button data-view="auto" class="on">Auto</button>
-        <button data-view="desktop">Desktop</button>
-        <button data-view="mobile">Mobile</button>
+        <button data-view="auto" class="on" title="Follow screen size">Auto</button>
+        <button data-view="desktop" title="Desktop layout" aria-label="Desktop layout">
+          <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="1"/><path d="M8 20h8M12 16v4"/></svg>
+        </button>
+        <button data-view="mobile" title="Mobile layout" aria-label="Mobile layout">
+          <svg viewBox="0 0 24 24"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/></svg>
+        </button>
       </div>
-      <div class="version-tag" id="versionTag">build 49 · pack advice</div>
+
+      <div class="menu-wrap">
+        <button class="icon-btn" id="settingsBtn" title="Settings and data" aria-label="Settings and data" aria-expanded="false">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M19.1 4.9L17 7M7 17l-2.1 2.1"/></svg>
+        </button>
+        <div class="menu" id="settingsMenu">
+          <div class="menu-status"><span id="dataStatus"></span><span id="cloudStatus"></span></div>
+          <button class="menu-item" id="cloudSignIn" style="display:none;">
+            <svg viewBox="0 0 24 24"><path d="M12 3v10M12 13l-3-3M12 13l3-3M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg>Sign in with Google</button>
+          <button class="menu-item" id="cloudSync" style="display:none;">
+            <svg viewBox="0 0 24 24"><path d="M20 11a8 8 0 00-14-4M4 13a8 8 0 0014 4"/><path d="M4 4v5h5M20 20v-5h-5"/></svg>Sync now</button>
+          <button class="menu-item" id="exportDataBtn">
+            <svg viewBox="0 0 24 24"><path d="M12 3v12M12 15l-4-4M12 15l4-4M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg>Export data</button>
+          <button class="menu-item" id="importDataBtn">
+            <svg viewBox="0 0 24 24"><path d="M12 15V3M12 3L8 7M12 3l4 4M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg>Import data</button>
+          <button class="menu-item" id="textDataBtn">
+            <svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h10M4 18h13"/></svg>Text transfer</button>
+          <button class="menu-item" id="confirmImportBtn" style="display:none;color:var(--gold);">
+            <svg viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg>Confirm import</button>
+          <button class="menu-item" id="cloudSignOut" style="display:none;">
+            <svg viewBox="0 0 24 24"><path d="M14 8V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2h6a2 2 0 002-2v-2"/><path d="M18 12H9M18 12l-3-3M18 12l-3 3"/></svg>Sign out</button>
+          <div class="menu-foot" id="versionTag">build 51 · pack targeting</div>
+        </div>
+      </div>
+      <input type="file" id="importDataInput" accept="application/json" style="display:none;">
     </div>
   </header>
 
@@ -1556,79 +1612,100 @@ function refDeckToSlots(deck){
 }
 
 // ---------- Pack recommendations ----------
-// Scores every pack by what its cards would add to the library you already have,
-// so the advice reflects your collection rather than a generic ranking.
-function computePackAdvice(settings, limit){
-  const owned = new Map();          // name -> best variant held
-  for(const r of myLibrary){
-    if(!(r.qty>0)) continue;
-    const cur = owned.get(r.name);
-    if(!cur || (r.onyx && !cur.onyx)) owned.set(r.name, {onyx:!!r.onyx, level:r.level||5, fused:!!r.fused});
-  }
-  // Value of the collection as it stands, counting each distinct card once.
-  const asRow = (n,v)=>({name:n, onyx:v.onyx, fused:v.fused, level:v.level, copyIndex:1});
-  const held = [...owned.entries()].map(([n,v])=>asRow(n,v));
+// Suggestions only rank cards you already own. This answers the other question:
+// which pack should you open next, judged against a specific deck rather than
+// the collection as a whole. A pack helps only if its cards would earn a slot.
+function computePackAdvice(settings, deckRows, limit){
+  if(!deckRows || deckRows.length < 2) return {list:[], base:0, deckSize:0};
+
+  const deck = deckRows.map(d=>({
+    name: String(d.name||'').replace(/:Onyx$/,''),
+    onyx: /:Onyx$/.test(String(d.name||'')) || !!d.onyx,
+    fused: !!d.fused, level: d.level || 5, copyIndex: d.copyIndex || 1
+  }));
   const pairSum = list => {
-    let t=0;
+    let t = 0;
     for(let i=0;i<list.length;i++)
       for(let j=i+1;j<list.length;j++) t += pairScore(list[i], list[j], settings);
     return t;
   };
-  const base = pairSum(held);
+  const base = pairSum(deck);
+
+  // Contribution of each seated card, so we know what a newcomer must beat.
+  const contrib = deck.map((c,i)=>{
+    const rest = deck.filter((_,j)=>j!==i);
+    return {i, v: rest.reduce((a,o)=>a + pairScore(c,o,settings), 0)};
+  }).sort((a,b)=>a.v-b.v);
+  const weakest = contrib[0];
+
+  // What you already hold, so a pack offering a duplicate is scored honestly.
+  const owned = new Map();
+  for(const r of myLibrary){
+    if(!(r.qty>0)) continue;
+    const cur = owned.get(r.name);
+    if(!cur || (r.onyx && !cur.onyx)) owned.set(r.name, {onyx:!!r.onyx});
+  }
+  const findCard = n => CMB.names.find(x=>normalizeCardName(x)===normalizeCardName(n));
 
   const out = [];
   for(const [pack, cards] of Object.entries(PACK_CARDS)){
-    const occ = String(cards.occ||'').split('/').map(x=>x.trim()).filter(Boolean);
-    const gcc = String(cards.gcc||'').split('/').map(x=>x.trim()).filter(Boolean);
-    const next = new Map(owned);
-    const gained = [];
-    for(const c of occ){
-      const known = CMB.names.find(n=>normalizeCardName(n)===normalizeCardName(c));
-      if(!known) continue;
-      const cur = next.get(known);
-      if(cur && cur.onyx) continue;               // already have the Onyx form
-      next.set(known, {onyx:true, level:5, fused:false});
-      gained.push(known + ' (Onyx)');
+    const candidates = [];
+    for(const raw of String(cards.occ||'').split('/')){
+      const n = findCard(raw.trim());
+      if(n) candidates.push({name:n, onyx:true, label:n+' (Onyx)'});
     }
-    for(const c of gcc){
-      const known = CMB.names.find(n=>normalizeCardName(n)===normalizeCardName(c));
-      if(!known || next.has(known)) continue;     // gold adds nothing if already held
-      next.set(known, {onyx:false, level:5, fused:false});
-      gained.push(known);
+    for(const raw of String(cards.gcc||'').split('/')){
+      const n = findCard(raw.trim());
+      if(n) candidates.push({name:n, onyx:false, label:n});
     }
-    if(!gained.length) continue;                  // nothing new in this pack
-    const after = pairSum([...next.entries()].map(([n,v])=>asRow(n,v)));
-    out.push({pack, gain: after - base, gained});
+    let best = null;
+    for(const c of candidates){
+      const have = owned.get(c.name);
+      const isNew = !have || (c.onyx && !have.onyx);
+      const row = {name:c.name, onyx:c.onyx, fused:false, level:5, copyIndex:1};
+      const rest = deck.filter((_,j)=>j!==weakest.i);
+      const gain = rest.reduce((a,o)=>a + pairScore(row,o,settings), 0) - weakest.v;
+      if(!best || gain > best.gain) best = {gain, label:c.label, isNew};
+    }
+    if(!best || best.gain <= 0) continue;   // nothing here beats your weakest card
+    out.push({pack, gain: best.gain, card: best.label, isNew: best.isNew,
+              pct: base ? (best.gain/base)*100 : 0});
   }
   out.sort((a,b)=>b.gain-a.gain);
-  return {base, list: out.slice(0, limit||8)};
+  return {list: out.slice(0, limit||8), base, deckSize: deck.length,
+          replacing: deck[weakest.i] ? deck[weakest.i].name : null};
 }
 
-function renderPackAdvice(settings){
+function renderPackAdvice(settings, deckRows, sourceLabel){
   const box = document.getElementById('packAdvice');
   const list = document.getElementById('packAdviceList');
   if(!box || !list) return;
-  if(!myLibrary.some(r=>r.qty>0)){ box.style.display='none'; return; }
-  const {list: rows} = computePackAdvice(settings, 8);
-  if(!rows.length){
-    list.innerHTML = '<div style="color:var(--muted);font-size:12.5px;">Every pack\'s cards are already in your library.</div>';
-    box.style.display='block';
+  const res = computePackAdvice(settings, deckRows, 8);
+  const desc = box.querySelector('.panel-desc');
+  if(desc){
+    desc.textContent = res.list.length
+      ? `Scored against your ${sourceLabel} (${res.deckSize} cards). A pack counts only if its card would displace ${res.replacing || 'the weakest card'}.`
+      : `Scored against your ${sourceLabel}.`;
+  }
+  if(!res.list.length){
+    list.innerHTML = '<div style="color:var(--muted);font-size:12.5px;">No pack improves this deck — every card on offer is weaker than what you already run.</div>';
+    box.style.display = 'block';
     return;
   }
-  const max = rows[0].gain || 1;
-  list.innerHTML = rows.map((r,i)=>`
+  const max = res.list[0].gain || 1;
+  list.innerHTML = res.list.map((r,i)=>`
     <div class="upgrade-item">
       <span class="upgrade-rank">${i+1}</span>
       <span class="upgrade-name">${escapeHtml(r.pack)}
-        <span style="color:var(--muted);font-size:11.5px;"> — ${r.gained.map(g=>escapeHtml(g)).join(', ')}</span>
+        <span style="color:var(--muted);font-size:11.5px;"> — ${escapeHtml(r.card)}${r.isNew?'':' <em>(already owned)</em>'}</span>
       </span>
-      <span class="rarity-bar-track" style="max-width:110px;">
-        <span class="rarity-bar-fill" style="width:${Math.max(3,(r.gain/max)*100).toFixed(0)}%;background:var(--gold)"></span>
+      <span class="rarity-bar-track" style="max-width:100px;">
+        <span class="rarity-bar-fill" style="width:${Math.max(4,(r.gain/max)*100).toFixed(0)}%;background:var(--gold)"></span>
       </span>
       <span class="upgrade-score">+${Math.round(r.gain).toLocaleString()}</span>
     </div>
   `).join('');
-  box.style.display='block';
+  box.style.display = 'block';
 }
 
 async function computeSuggestions(){
@@ -1804,11 +1881,8 @@ async function runSuggestionAnalysis(){
   const statusEl = document.getElementById('suggStatus');
   if(myLibrary.length===0 || myLibrary.every(r=>r.qty===0)){
     statusEl.textContent = 'Add cards in My Library to see suggestions.';
-    try{ renderPackAdvice({mode: document.getElementById('sMode').value,
-        fusionBuff: parseFloat(document.getElementById('bFusionBuff').value)||1.5,
-        copyReduction: parseFloat(document.getElementById('bCopyReduction').value)||0.9}); }
-  catch(e){ console.warn('[Ledger] pack advice failed', e); }
-  document.getElementById('suggLastUpdated').textContent = '';
+    document.getElementById('packAdvice').style.display = 'none';
+    document.getElementById('suggLastUpdated').textContent = '';
     lastSuggestions = [];
     document.getElementById('suggBody').innerHTML = '';
     document.getElementById('suggFusable').style.display = 'none';
@@ -2214,6 +2288,23 @@ function cardWithDot(name){
   return rarityDot(name, onyx) + escapeHtml(String(name).replace(/:Onyx$/,'')) +
          (onyx ? ' <span style="color:var(--onyx);font-size:11px;">Onyx</span>' : '');
 }
+
+// ---------- Settings menu ----------
+(function(){
+  const btn = document.getElementById('settingsBtn');
+  const menu = document.getElementById('settingsMenu');
+  if(!btn || !menu) return;
+  const close = ()=>{ menu.classList.remove('open'); btn.setAttribute('aria-expanded','false'); };
+  btn.addEventListener('click', e=>{
+    e.stopPropagation();
+    const open = menu.classList.toggle('open');
+    btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+  });
+  // Any action inside closes the menu, so it never sits over the content.
+  menu.addEventListener('click', e=>{ if(e.target.closest('.menu-item')) close(); });
+  document.addEventListener('click', e=>{ if(!e.target.closest('.menu-wrap')) close(); });
+  document.addEventListener('keydown', e=>{ if(e.key==='Escape') close(); });
+})();
 
 // ---------- Mobile sorting ----------
 // The card layout hides thead, so the sort headers become unreachable. Build a
@@ -3510,7 +3601,7 @@ function renderNextPack(){
         <div class="lbl">Day${daysUntil===1?'':'s'} until next pack</div>
       </div>
       <div class="panel stat-card" style="background:var(--panel-2);grid-column:span 2;">
-        <div class="num" style="font-size:22px;">${escapeHtml(next.name)}</div>
+        <div class="num-text">${escapeHtml(next.name)}</div>
         <div class="lbl">${formatDate(next.dateObj)} · OCC: ${escapeHtml(next.occ||'—')} · GCC: ${escapeHtml(next.gcc||'—')}</div>
       </div>
     </div>
@@ -4112,9 +4203,9 @@ const Cloud = (() => {
     if(!inBtn) return;
     const on = signedIn();
     // icon buttons centre via inline-flex; inline-block would break that
-    inBtn.style.display  = enabled() && !on ? 'inline-block' : 'none';
-    outBtn.style.display = on ? 'inline-flex' : 'none';
-    syncBtn.style.display= on ? 'inline-flex' : 'none';
+    inBtn.style.display  = enabled() && !on ? 'flex' : 'none';
+    outBtn.style.display = on ? 'flex' : 'none';
+    syncBtn.style.display= on ? 'flex' : 'none';
   }
 
   return {init, save, signOut, signedIn, enabled,
