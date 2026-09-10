@@ -173,7 +173,9 @@
   .rarity-dot{width:9px;height:9px;border-radius:50%;flex:none;}
   .rarity-name{width:92px;flex:none;color:var(--text);}
   .rarity-bar-track{flex:1;height:8px;background:var(--panel-2);border-radius:4px;overflow:hidden;}
-  .rarity-bar-fill{height:100%;border-radius:4px;}
+  /* span is inline by default, so height and width were both ignored */
+  .rarity-bar-fill{display:block;height:100%;border-radius:4px;min-width:2px;
+    transition:width .5s ease;}
   .rarity-count{width:70px;text-align:right;font-family:'IBM Plex Mono',monospace;color:var(--muted);font-size:12px;flex:none;}
 
   .upgrade-list{padding:0 20px 20px;display:flex;flex-direction:column;gap:10px;}
@@ -215,7 +217,7 @@
     display:flex;align-items:center;gap:8px;min-width:110px;
   }
   .progress-track{flex:1;height:6px;background:var(--panel-2);border-radius:3px;overflow:hidden;}
-  .progress-fill{height:100%;background:linear-gradient(90deg, var(--gold-soft), var(--gold));border-radius:3px;}
+  .progress-fill{display:block;height:100%;min-width:2px;transition:width .5s ease;background:linear-gradient(90deg, var(--gold-soft), var(--gold));border-radius:3px;}
   .progress-text{font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--muted);white-space:nowrap;}
 
   /* Controls */
@@ -536,7 +538,7 @@
         <button data-view="desktop">Desktop</button>
         <button data-view="mobile">Mobile</button>
       </div>
-      <div class="version-tag" id="versionTag">build 45 · live benchmarks</div>
+      <div class="version-tag" id="versionTag">build 46 · bar fix</div>
     </div>
   </header>
 
