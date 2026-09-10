@@ -349,7 +349,6 @@
     border-bottom:1px solid var(--border);
   }
   body.m tbody td:first-child::before{font-size:10.5px;font-weight:400;}
-  body.m .del-btn{padding:10px 16px;font-size:16px;}
   body.m .stepper{margin-left:auto;}
 
   /* long lists get a count and a jump control rather than endless scroll */
@@ -397,6 +396,111 @@
   body.m h1{font-size:20px;}
   body.m .subtitle{font-size:11.5px;}
 
+
+
+  /* ---- card layout: even out the control column ----
+     Every cell is a flex row of label + value, but selects, buttons, inputs and
+     checkboxes each kept their natural width, so nothing lined up down the card.
+     Pin the value side to a consistent share and let controls fill it. */
+  body.m tbody td{min-height:42px;padding:6px 0;gap:10px;}
+  body.m tbody td > *:not(:first-child):not(.rdot){flex:0 0 auto;}
+  body.m tbody td select,
+  body.m tbody td input[type="text"],
+  body.m tbody td input[type="number"],
+  body.m tbody td input[type="date"],
+  body.m tbody td .reset-btn,
+  body.m tbody td .add-btn{
+    flex:1 1 auto;min-width:0;max-width:62%;margin-left:auto;
+    height:38px;box-sizing:border-box;
+  }
+  body.m tbody td .stepper{margin-left:auto;flex:0 0 auto;}
+  body.m tbody td .stepper input{flex:0 0 auto;height:38px;max-width:none;}
+  /* a checkbox and its word should read as one unit, not two loose items */
+  body.m tbody td label{
+    display:inline-flex;align-items:center;gap:6px;flex:0 0 auto;
+    font-size:11.5px;color:var(--muted);white-space:nowrap;
+  }
+  body.m tbody td input[type="checkbox"]{width:20px;height:20px;flex:0 0 auto;}
+  /* delete belongs at the foot of the card, full width, clearly an action */
+  body.m tbody td:last-child{
+    justify-content:stretch;padding-top:10px;margin-top:6px;
+    border-top:1px solid var(--border);min-height:0;
+  }
+  body.m tbody td:last-child::before{display:none;}
+  body.m tbody td:last-child .del-btn{
+    width:100%;padding:11px;border:1px solid var(--border);
+    border-radius:8px;color:var(--muted);font-size:13px;
+    display:flex;align-items:center;justify-content:center;gap:8px;
+  }
+  /* A lone glyph across a full-width button says nothing, so name the action —
+     but the armed state replaces the text with "Confirm", which speaks for
+     itself and must not be doubled up. */
+  body.m tbody td:last-child .del-btn::after{content:"Remove";font-size:13px;}
+  body.m tbody td:last-child .del-btn[data-armed="1"]::after{content:none;}
+  body.m tbody td:last-child .del-btn:active{border-color:var(--danger);color:var(--danger);}
+  body.m tbody tr{padding:12px 14px;}
+  /* Badges and pills are read-only, so they sit at their natural size on the
+     right rather than stretching like an input would. */
+  body.m tbody td .badge{font-size:11.5px;padding:5px 12px;flex:0 0 auto;}
+  body.m tbody td .rarity-pill{flex:0 0 auto;}
+  /* A progress bar has no natural width and would otherwise collapse. */
+  body.m tbody td .progress-track,
+  body.m tbody td .rarity-bar-track{flex:1 1 auto;min-width:70px;max-width:50%;margin-left:auto;}
+
+
+  /* ---- density: mobile cards were ~408px tall, so under two fit a screen ----
+     Rows carrying only text do not need the touch height that control rows do,
+     and the panel chrome around them was sized for a desktop viewport. */
+  body.m tbody td{min-height:0;padding:4px 0;gap:8px;}
+  body.m tbody tr{padding:9px 12px;margin-bottom:7px;}
+  body.m tbody td:first-child{padding-bottom:6px;margin-bottom:3px;}
+
+  /* only rows that actually hold a control need a touch target */
+  body.m tbody td:has(select),
+  body.m tbody td:has(input),
+  body.m tbody td:has(button),
+  body.m tbody td:has(.stepper){min-height:40px;}
+  body.m tbody td select,
+  body.m tbody td input[type="text"],
+  body.m tbody td input[type="number"],
+  body.m tbody td input[type="date"],
+  body.m tbody td .reset-btn,
+  body.m tbody td .add-btn{height:34px;}
+  body.m tbody td .stepper input{height:34px;}
+  body.m tbody td .step-btn{width:38px;height:34px;}
+  body.m tbody td:last-child{padding-top:8px;margin-top:4px;}
+  body.m tbody td:last-child .del-btn{padding:8px;}
+
+  /* panel chrome */
+  body.m .panel{margin-bottom:14px;}
+  body.m .panel-title{padding:12px 14px 3px;}
+  body.m .panel-desc{padding:0 14px 10px;line-height:1.45;}
+  body.m .table-wrap{padding:2px 14px 14px;}
+  body.m .controls{padding:0 14px 10px;gap:8px;}
+  body.m .msort{padding:0 14px 10px;}
+  body.m .rarity-list{gap:8px;padding-bottom:14px;}
+  body.m nav.tabs button{padding:11px 13px;}
+  body.m .wrap{padding:12px 10px 46px;}
+
+
+  /* ---- compact density ----
+     Pairs short values two-up and drops explanatory text, for people who would
+     rather see more rows than read the panel descriptions again. */
+  body.compact.m .panel-desc{display:none;}
+  body.compact.m tbody tr{
+    display:grid;grid-template-columns:1fr 1fr;gap:2px 10px;padding:8px 11px;
+  }
+  body.compact.m tbody td{grid-column:span 1;padding:3px 0;font-size:12px;}
+  body.compact.m tbody td:first-child,
+  body.compact.m tbody td:last-child{grid-column:1 / -1;}
+  body.compact.m tbody td::before{font-size:9.5px;}
+  /* anything with a control still needs a full row to stay tappable */
+  body.compact.m tbody td:has(select),
+  body.compact.m tbody td:has(input),
+  body.compact.m tbody td:has(button),
+  body.compact.m tbody td:has(.stepper){grid-column:1 / -1;}
+  body.compact.m .panel{margin-bottom:10px;}
+  body.compact.m .panel-title{padding:10px 14px 6px;}
 
   /* ---- typography corrections for narrow screens ---- */
   body.m h1{font-size:18px;line-height:1.15;white-space:nowrap;
@@ -548,7 +652,6 @@
   body.m /* Touch-friendly tap targets (44px is Apple's guideline) */ .add-btn, .reset-btn{ padding:12px 16px; font-size:14px; width:100%; }
   body.m /* ...except header actions, which stay compact side-by-side */ header.top .add-btn, header.top .reset-btn{ width:auto; padding:9px 12px; font-size:13px; }
   body.m header.top > div:last-child{ justify-content:flex-start !important; width:100%; }
-  body.m .del-btn{ padding:8px 12px; font-size:16px; }
   body.m .toggle-chip{ padding:10px 16px; text-align:center; }
   body.m input[type="checkbox"]{ width:18px; height:18px; }
   body.m /* 16px prevents iOS Safari from auto-zooming on focus */ input, select, textarea{ font-size:16px !important; }
@@ -652,7 +755,10 @@
             <svg viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg>Confirm import</button>
           <button class="menu-item" id="cloudSignOut" style="display:none;">
             <svg viewBox="0 0 24 24"><path d="M14 8V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2h6a2 2 0 002-2v-2"/><path d="M18 12H9M18 12l-3-3M18 12l-3 3"/></svg>Sign out</button>
-          <div class="menu-foot" id="versionTag">build 52 · type scale</div>
+          <button class="menu-item" id="densityBtn">
+            <svg viewBox="0 0 24 24"><path d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
+            <span id="densityLabel">Compact rows</span></button>
+          <div class="menu-foot" id="versionTag">build 54 · density</div>
         </div>
       </div>
       <input type="file" id="importDataInput" accept="application/json" style="display:none;">
@@ -1504,6 +1610,7 @@ function wireConfirmDelete(selector, onConfirm, confirmLabel){
   document.querySelectorAll(selector).forEach(btn=>{
     if(btn.dataset.confirmWired) return;
     btn.dataset.confirmWired = '1';
+    btn.dataset.armed = '0';
     btn.addEventListener('click', ()=>{
       if(btn.dataset.armed==='1'){
         clearTimeout(btn._armTimeout);
@@ -2317,6 +2424,20 @@ function cardWithDot(name){
   return rarityDot(name, onyx) + escapeHtml(String(name).replace(/:Onyx$/,'')) +
          (onyx ? ' <span style="color:var(--onyx);font-size:11px;">Onyx</span>' : '');
 }
+
+// ---------- Row density ----------
+let compact = false;
+try{ compact = localStorage.getItem('alchemists-ledger:density') === 'compact'; }catch(e){}
+function applyDensity(){
+  document.body.classList.toggle('compact', compact);
+  const lab = document.getElementById('densityLabel');
+  if(lab) lab.textContent = compact ? 'Comfortable rows' : 'Compact rows';
+}
+document.getElementById('densityBtn').addEventListener('click', ()=>{
+  compact = !compact;
+  try{ localStorage.setItem('alchemists-ledger:density', compact ? 'compact' : 'comfortable'); }catch(e){}
+  applyDensity();
+});
 
 // ---------- Settings menu ----------
 (function(){
@@ -4359,6 +4480,7 @@ loadSchedule();
 loadReferenceDecks();
 populatePackTypeOptions();
 renderRecent();
+applyDensity();
 applyView();
 syncSuggControls();
 renderSchedule();
