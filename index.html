@@ -300,6 +300,42 @@
     width:120px;
   }
 
+
+  /* ---- mobile-friendly card entry ---- */
+  .stepper{display:flex;align-items:center;gap:0;}
+  .step-btn{
+    background:var(--panel-2);border:1px solid var(--border);color:var(--text);
+    width:38px;height:38px;font-size:19px;line-height:1;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;font-family:inherit;
+  }
+  .step-btn:first-child{border-radius:8px 0 0 8px;}
+  .step-btn:last-child{border-radius:0 8px 8px 0;}
+  .step-btn:active{background:var(--gold);color:#1c1826;}
+  .stepper input{
+    width:46px !important;text-align:center;border-radius:0 !important;
+    border-left:none !important;border-right:none !important;
+  }
+  .res-item{
+    display:flex;align-items:center;justify-content:space-between;gap:10px;
+    padding:12px 14px;cursor:pointer;border-bottom:1px solid var(--border);
+  }
+  .res-item:last-child{border-bottom:none;}
+  .res-item:hover,.res-item.sel{background:rgba(201,162,77,.14);}
+  .res-item .nm{font-size:15px;}
+  .res-item .meta{font-size:11.5px;color:var(--muted);white-space:nowrap;}
+  .chip{
+    display:inline-flex;align-items:center;gap:6px;background:var(--panel-2);
+    border:1px solid var(--border);border-radius:16px;padding:7px 13px;
+    font-size:12.5px;margin:0 6px 6px 0;cursor:pointer;color:var(--text);
+  }
+  .chip:active{border-color:var(--gold);color:var(--gold);}
+  @media(max-width:760px){
+    .step-btn{width:46px;height:46px;font-size:22px;}
+    .stepper input{width:54px !important;height:46px;}
+    .res-item{padding:15px 16px;}
+    .res-item .nm{font-size:16px;}
+  }
+
   /* ============ MOBILE / TOUCH ============ */
   /* Respect iOS safe areas when installed to the home screen */
   body{
@@ -438,7 +474,7 @@
       <button class="reset-btn" id="cloudSignOut" style="display:none;">Sign out</button>
       <button class="add-btn" id="confirmImportBtn" style="display:none;padding:7px 14px;font-size:12px;">Confirm import</button>
       <input type="file" id="importDataInput" accept="application/json" style="display:none;">
-      <div class="version-tag" id="versionTag">build 41 · build guard</div>
+      <div class="version-tag" id="versionTag">build 42 · mobile entry</div>
     </div>
   </header>
 
@@ -535,15 +571,29 @@
       <p class="panel-desc">Your collection. Add pulls and set quantity, level, fusion and Onyx. Saved automatically, and used by every other tab.</p>
 
       <div class="add-row-form" id="addRowForm">
-        <select class="mini-input" id="addName"></select>
+        <!-- Type-ahead beats a 139-item dropdown on a phone: two or three
+             characters narrow it to a handful of large tap targets. -->
+        <div style="position:relative;flex:1;min-width:200px;">
+          <input type="text" class="mini-input" id="addSearch" autocomplete="off"
+                 placeholder="Type a card name…" style="width:100%;">
+          <div id="addResults" style="display:none;position:absolute;z-index:40;left:0;right:0;top:100%;
+               margin-top:4px;max-height:280px;overflow-y:auto;background:var(--panel-2);
+               border:1px solid var(--border);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.4);"></div>
+        </div>
+        <select class="mini-input" id="addName" style="display:none;"></select>
         <label class="mini-check"><input type="checkbox" id="addOnyx"> Onyx</label>
         <select class="mini-input" id="addLevel">
           <option value="1">Lv 1</option><option value="2">Lv 2</option><option value="3">Lv 3</option><option value="4">Lv 4</option><option value="5" selected>Lv 5</option>
         </select>
         <label class="mini-check"><input type="checkbox" id="addFused"> Fused</label>
-        <input type="number" class="mini-input qty" id="addQty" value="1" min="1" max="3">
+        <div class="stepper" data-target="addQty">
+          <button type="button" class="step-btn" data-step="-1">−</button>
+          <input type="number" class="mini-input qty" id="addQty" value="1" min="1" max="3" readonly>
+          <button type="button" class="step-btn" data-step="1">+</button>
+        </div>
         <button class="add-btn" id="addBtn">+ Add card</button>
       </div>
+      <div id="recentChips" style="display:none;padding:0 20px 12px;"></div>
 
       <div class="add-row-form" style="padding-top:0;">
         <button class="reset-btn" id="bulkToggleBtn">Bulk edit</button>
@@ -1842,7 +1892,11 @@ function renderMyLibrary(){
       <td>${r.selfCombo
         ? '<span class="badge fused" title="Fuses with a copy of itself — duplicates are not penalised">Yes</span>'
         : '<span style="color:var(--muted);font-size:12px;">—</span>'}</td>
-      <td><input type="number" class="row-input lib-qty" data-id="${r.id}" value="${r.qty}" min="0" max="${MAX_QTY}"></td>
+      <td><div class="stepper">
+        <button type="button" class="step-btn lib-step" data-id="${r.id}" data-step="-1">−</button>
+        <input type="number" class="row-input lib-qty" data-id="${r.id}" value="${r.qty}" min="0" max="${MAX_QTY}" readonly>
+        <button type="button" class="step-btn lib-step" data-id="${r.id}" data-step="1">+</button>
+      </div></td>
       <td><button class="del-btn" data-id="${r.id}" title="Remove">✕</button></td>
     </tr>
   `).join('');
@@ -1855,6 +1909,16 @@ function renderMyLibrary(){
   }));
   document.querySelectorAll('.lib-fused').forEach(el=>el.addEventListener('change', e=>{
     updateLibRow(e.target.dataset.id, {fused: e.target.checked});
+  }));
+  document.querySelectorAll('.lib-step').forEach(el=>el.addEventListener('click', e=>{
+    const id=e.target.dataset.id;
+    const row=myLibrary.find(r=>r.id===id);
+    if(!row) return;
+    const next=Math.max(0, Math.min(MAX_QTY, row.qty + parseInt(e.target.dataset.step)));
+    if(next===row.qty) return;
+    updateLibRow(id, {qty: next});
+    const inp=document.querySelector(`.lib-qty[data-id="${id}"]`);
+    if(inp) inp.value=next;
   }));
   document.querySelectorAll('.lib-qty').forEach(el=>el.addEventListener('change', e=>{
     const clamped = Math.min(MAX_QTY, Math.max(0, parseInt(e.target.value)||0));
@@ -1894,6 +1958,105 @@ function updateLibRow(id, patch){
   queueSuggestionAnalysis();
 }
 document.getElementById('myLibSearch').addEventListener('input', renderMyLibrary);
+
+// ---------- Mobile card entry ----------
+// A 139-item native select is a long scroll wheel on a phone. Type-ahead cuts
+// it to a few large tap targets, and steppers avoid summoning the keyboard.
+let recentCards = [];
+try{ recentCards = JSON.parse(localStorage.getItem('alchemists-ledger:recent') || '[]'); }catch(e){}
+
+function ownedCount(name){
+  return myLibrary.filter(r=>r.name===name).reduce((a,r)=>a+r.qty,0);
+}
+
+function renderResults(q){
+  const box = document.getElementById('addResults');
+  const term = normalizeCardName(q);
+  if(!term){ box.style.display='none'; return; }
+  // Prefix matches first — typing "fi" should surface Fire before Sci-Fi.
+  const all = CMB.names.filter(n=>normalizeCardName(n).includes(term));
+  all.sort((a,b)=>{
+    const pa = normalizeCardName(a).startsWith(term) ? 0 : 1;
+    const pb = normalizeCardName(b).startsWith(term) ? 0 : 1;
+    return pa-pb || a.localeCompare(b);
+  });
+  const hits = all.slice(0, 8);
+  if(!hits.length){
+    box.innerHTML = '<div class="res-item"><span class="nm" style="color:var(--muted)">No card matches</span></div>';
+    box.style.display='block'; return;
+  }
+  box.innerHTML = hits.map((n,i)=>{
+    const owned = ownedCount(n);
+    const bits = [];
+    if(ONYX_ELIGIBLE.has(n)) bits.push('Onyx exists');
+    if(getCombo(n,n)) bits.push('self-fuses');
+    if(owned) bits.push('own '+owned);
+    return `<div class="res-item${i===0?' sel':''}" data-name="${escapeHtml(n)}">
+      <span class="nm">${escapeHtml(n)}</span>
+      <span class="meta">${bits.join(' · ')}</span></div>`;
+  }).join('');
+  box.style.display='block';
+  box.querySelectorAll('.res-item[data-name]').forEach(el=>{
+    el.addEventListener('click', ()=>pickCard(el.dataset.name));
+  });
+}
+
+function pickCard(name){
+  document.getElementById('addName').value = name;
+  document.getElementById('addSearch').value = name;
+  document.getElementById('addResults').style.display='none';
+}
+
+function renderRecent(){
+  const el = document.getElementById('recentChips');
+  if(!el) return;
+  if(!recentCards.length){ el.style.display='none'; return; }
+  el.innerHTML = '<span style="font-size:11.5px;color:var(--muted);margin-right:8px;">Recent:</span>' +
+    recentCards.slice(0,8).map(n=>`<span class="chip" data-name="${escapeHtml(n)}">${escapeHtml(n)}</span>`).join('');
+  el.style.display='block';
+  el.querySelectorAll('.chip').forEach(c=>c.addEventListener('click', ()=>pickCard(c.dataset.name)));
+}
+
+function noteRecent(name){
+  recentCards = [name, ...recentCards.filter(n=>n!==name)].slice(0,12);
+  try{ localStorage.setItem('alchemists-ledger:recent', JSON.stringify(recentCards)); }catch(e){}
+  renderRecent();
+}
+
+(function wireSearch(){
+  const inp = document.getElementById('addSearch');
+  const box = document.getElementById('addResults');
+  inp.addEventListener('input', ()=>renderResults(inp.value));
+  inp.addEventListener('focus', ()=>{ if(inp.value) renderResults(inp.value); });
+  inp.addEventListener('keydown', e=>{
+    const items=[...box.querySelectorAll('.res-item[data-name]')];
+    if(!items.length) return;
+    const cur=items.findIndex(i=>i.classList.contains('sel'));
+    if(e.key==='ArrowDown'||e.key==='ArrowUp'){
+      e.preventDefault();
+      const nx=(cur + (e.key==='ArrowDown'?1:-1) + items.length) % items.length;
+      items.forEach(i=>i.classList.remove('sel'));
+      items[nx].classList.add('sel');
+      items[nx].scrollIntoView({block:'nearest'});
+    } else if(e.key==='Enter'){
+      e.preventDefault();
+      pickCard(items[Math.max(0,cur)].dataset.name);
+    }
+  });
+  document.addEventListener('click', e=>{
+    if(!e.target.closest('#addResults') && e.target!==inp) box.style.display='none';
+  });
+})();
+
+// Steppers keep the numeric keyboard from covering the form.
+document.querySelectorAll('.stepper').forEach(st=>{
+  const inp = document.getElementById(st.dataset.target);
+  st.querySelectorAll('.step-btn').forEach(b=>b.addEventListener('click', ()=>{
+    const min = parseInt(inp.min)||0, max = parseInt(inp.max)||99;
+    inp.value = Math.max(min, Math.min(max, (parseInt(inp.value)||min) + parseInt(b.dataset.step)));
+    inp.dispatchEvent(new Event('change', {bubbles:true}));
+  }));
+});
 
 document.getElementById('addBtn').addEventListener('click', ()=>{
   const name = document.getElementById('addName').value;
@@ -3699,6 +3862,7 @@ loadPackLog();
 loadSchedule();
 loadReferenceDecks();
 populatePackTypeOptions();
+renderRecent();
 syncSuggControls();
 renderSchedule();
 updateComboThresholdHint();
