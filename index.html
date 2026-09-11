@@ -136,7 +136,8 @@
   .rarity-bar-fill{display:block;height:100%;border-radius:4px;min-width:2px;
     transition:width .5s ease;}
   .rarity-count{width:86px;text-align:right;font-family:'IBM Plex Mono',monospace;
-    color:var(--muted);font-size:11.5px;flex:none;font-variant-numeric:tabular-nums;}
+    color:var(--muted);font-size:11.5px;flex:none;font-variant-numeric:tabular-nums;
+    white-space:nowrap;}
 
   .upgrade-list{padding:0 20px 20px;display:flex;flex-direction:column;gap:10px;}
   .upgrade-item{
@@ -811,6 +812,28 @@
   body.m .cal-head{padding:0 12px 10px;}
   body.m .cal-detail{margin:0 12px 14px;}
 
+  /* ---- goblin markers ----
+     Two things have to be readable at a glance in one small glyph, so they use
+     different channels: the SHAPE is the goblin (crown / gem / coin) and the
+     FILL is the certainty (solid = guaranteed, dashed outline = chance). Colour
+     repeats the goblin so the two never have to be told apart by colour alone. */
+  .gob-marks{display:flex;flex-wrap:wrap;gap:2px;align-items:center;}
+  .gob-mark{width:13px;height:13px;flex:none;stroke-width:1.8;
+    stroke-linecap:round;stroke-linejoin:round;}
+  .gob-mark.onyx{color:var(--onyx);}
+  .gob-mark.diamond{color:var(--teal);}
+  .gob-mark.gold{color:var(--gold);}
+  .gob-mark .shape{stroke:currentColor;}
+  .gob-mark.guaranteed .shape{fill:currentColor;}
+  .gob-mark.chance .shape{fill:none;stroke-dasharray:2.6 2.4;}
+  .gob-legend{
+    display:flex;flex-wrap:wrap;gap:10px 16px;padding:0 20px 14px;
+    color:var(--muted);font-size:11px;
+  }
+  .gob-legend span{display:inline-flex;align-items:center;gap:5px;}
+  body.m .gob-legend{padding:0 12px 12px;gap:8px 12px;font-size:10px;}
+  body.m .gob-mark{width:12px;height:12px;}
+
   /* ---- pack suggestions: one line each, detail on tap ---- */
   .pack-row{
     background:var(--panel-2);border:1px solid var(--border);
@@ -977,7 +1000,10 @@
   body.m .panel-desc{ padding-left:14px; padding-right:14px; }
   body.m .rarity-list, .upgrade-list{ padding-left:14px; padding-right:14px; }
   body.m .rarity-name{ width:74px; font-size:11.5px; }
-  body.m .rarity-count{ width:58px; }
+  /* Widest value is "100 · 100%" — 10 mono characters at 11.5px is ~69px, so
+     58px forced a wrap. The row gap shrinks to keep the bar its length. */
+  body.m .rarity-row{ gap:8px; }
+  body.m .rarity-count{ width:72px; }
   
 
   
@@ -1516,6 +1542,9 @@
         <button class="add-btn" id="goblinAddBtn">+ Add entry</button>
       </div>
       <p class="panel-desc" id="goblinPreview" style="color:var(--gold);"></p>
+
+      <div id="goblinCalendar"></div>
+      <div class="gob-legend" id="goblinLegend"></div>
 
       <div class="controls" style="padding-top:6px;">
         <span class="result-count" id="goblinCount"></span>
@@ -2305,7 +2334,7 @@ function renderUpgradeList(){
       : '';
     return `
     <div class="upgrade-item">
-      <span class="upgrade-name">${rarityDot(u.name, u.onyx)}${escapeHtml(u.name)}${u.onyx?' <span style="color:var(--onyx)">(Onyx)</span>':''}${srcNote}</span>
+      <span class="upgrade-name">${rarityDot(u.name, u.onyx)}${escapeHtml(u.name)}${srcNote}</span>
       <span class="upgrade-score">+${u.gain.toFixed(1)}</span>
     </div>
   `;
@@ -2381,7 +2410,7 @@ function computePackAdvice(settings, deckRows, limit){
     const offer = [];
     for(const raw of split(cards.occ)){
       const n = findCard(raw);
-      if(n) offer.push({name:n, onyx:true, label:n+' (Onyx)'});
+      if(n) offer.push({name:n, onyx:true, label:n});
     }
     for(const raw of split(cards.gcc)){
       const n = findCard(raw);
@@ -2403,7 +2432,7 @@ function computePackAdvice(settings, deckRows, limit){
       const rest = working.filter((_,j)=>j!==wi);
       const gain = rest.reduce((a,o)=>a + pairScore(row,o,settings), 0) - wv;
       if(gain <= 0) continue;                 // this card cannot earn a seat
-      taken.push({label:c.label, gain, isNew, out: working[wi].name});
+      taken.push({label:c.label, onyx:c.onyx, gain, isNew, out: working[wi].name});
       working = rest.concat([row]);           // seat it, then judge the next card
     }
 
@@ -2467,7 +2496,7 @@ function renderPackAdvice(settings, deckRows, sourceLabel){
         </div>
         ${r.cards.map(c=>`
           <div class="pack-card">
-            <span>${escapeHtml(c.label)}${c.isNew?'':' <em>(owned)</em>'}</span>
+            <span>${rarityDot(c.label, c.onyx)}${escapeHtml(c.label)}${c.isNew?'':' <em>(owned)</em>'}</span>
             <span class="pack-card-out">replaces ${escapeHtml(c.out)}</span>
           </div>`).join('')}
       </div>
@@ -2723,7 +2752,7 @@ async function runSuggestionAnalysis(){
   const fuseEl = document.getElementById('suggFusable');
   if(readyToFuse && readyToFuse.length){
     const list = readyToFuse
-      .map(f=>`${rarityDot(f.name, f.onyx)}${escapeHtml(f.name)}${f.onyx?' (Onyx)':''} ×${f.copies}`)
+      .map(f=>`${rarityDot(f.name, f.onyx)}${escapeHtml(f.name)} ×${f.copies}`)
       .join(', ');
     fuseEl.innerHTML = `<strong>Fusable now</strong> — ${list}. Two unfused copies make one stronger card.`;
     fuseEl.style.display = 'block';
@@ -2736,8 +2765,8 @@ async function runSuggestionAnalysis(){
     pairEl.innerHTML =
       `<strong>Best pairs</strong> — worth more together than apart:` +
       topPairs.map(p=>{
-        const a = rarityDot(p.names[0], p.onyx[0]) + escapeHtml(p.names[0]) + (p.onyx[0]?' (Onyx)':'');
-        const b = rarityDot(p.names[1], p.onyx[1]) + escapeHtml(p.names[1]) + (p.onyx[1]?' (Onyx)':'');
+        const a = rarityDot(p.names[0], p.onyx[0]) + escapeHtml(p.names[0]);
+        const b = rarityDot(p.names[1], p.onyx[1]) + escapeHtml(p.names[1]);
         return `<div style="display:flex;justify-content:space-between;gap:12px;margin-top:6px;">
           <span>${a} + ${b}</span>
           <span style="font-family:'IBM Plex Mono',monospace;color:var(--gold);white-space:nowrap;">
@@ -2777,7 +2806,7 @@ function renderSugg(){
     <tr>
       <td style="font-family:'IBM Plex Mono',monospace;color:var(--muted)">#${s.rank}</td>
       <td class="card-name">${rarityDot(s.name, s.onyx)}${escapeHtml(s.name)}</td>
-      <td>${s.onyx? '<span class="rarity-pill"><span class="dot" style="background:var(--onyx)"></span>Onyx</span>' : '—'}</td>
+      <td>${s.onyx? '<span class="rdot onyx" title="Onyx"></span>' : '<span style="color:var(--muted)">—</span>'}</td>
       <td style="font-family:'IBM Plex Mono',monospace;color:var(--muted)">${s.owned}</td>
       <td>${s.route==='fuse'
         ? '<span class="badge fused" title="You already own an unfused copy — a second one lets you fuse them">Fuse with owned</span>'
@@ -3240,8 +3269,8 @@ function rarityDot(name, isOnyx){
 // A name string may already carry the ":Onyx" suffix.
 function cardWithDot(name){
   const onyx = /:Onyx$/.test(String(name));
-  return rarityDot(name, onyx) + escapeHtml(String(name).replace(/:Onyx$/,'')) +
-         (onyx ? ' <span style="color:var(--onyx);font-size:11px;">Onyx</span>' : '');
+  // The dot is already Onyx-coloured, so spelling it out again is noise.
+  return rarityDot(name, onyx) + escapeHtml(String(name).replace(/:Onyx$/,''));
 }
 
 // ---------- Row density ----------
@@ -4216,7 +4245,7 @@ function renderBuilderTable(){
     <tr>
       <td class="card-name">${rarityDot(s.name, s.onyx)}${escapeHtml(s.name)}</td>
       <td style="font-family:'IBM Plex Mono',monospace;color:var(--muted)">#${s.copyIndex}</td>
-      <td>${s.onyx? '<span class="rarity-pill"><span class="dot" style="background:var(--onyx)"></span>Onyx</span>' : '—'}</td>
+      <td>${s.onyx? '<span class="rdot onyx" title="Onyx"></span>' : '<span style="color:var(--muted)">—</span>'}</td>
       <td>${s.fused? '<span class="badge fused">Fused</span>' : '<span class="badge unfused">Unfused</span>'}</td>
       <td>${s.level}</td>
       <td>${s.selfCombo
@@ -4350,6 +4379,161 @@ function renderGoblinLog(){
   }));
 
   renderGoblinUpcoming();
+  renderGoblinCalendar();
+}
+
+// ---------- Goblin calendar ----------
+// Every logged sighting implies future dates. The calendar shows them with one
+// marker per event; see the .gob-mark CSS for why shape and fill are split.
+let goblinMonth = null;
+
+const GOBLIN_KINDS = {
+  'Onyx Goblin King': {cls:'onyx',    short:'Onyx King',
+    shape:'<path class="shape" d="M4 17l-1.5-9 5 3.5L12 4l4.5 7.5 5-3.5L20 17z"/>'},
+  'Diamond Goblin':   {cls:'diamond', short:'Diamond',
+    shape:'<path class="shape" d="M12 3l7 7-7 11-7-11z"/>'},
+  'Gold Goblin':      {cls:'gold',    short:'Gold',
+    shape:'<circle class="shape" cx="12" cy="12" r="8"/>'},
+};
+
+// kind: 'guaranteed' | 'chance'
+function goblinMark(type, kind, title){
+  const g = GOBLIN_KINDS[type];
+  if(!g) return '';
+  return `<svg class="gob-mark ${g.cls} ${kind}" viewBox="0 0 24 24"
+            role="img" aria-label="${escapeHtml(title||'')}"
+            ><title>${escapeHtml(title||'')}</title>${g.shape}</svg>`;
+}
+
+// Flatten the log into dated events. Only the Onyx King has a chance window;
+// the other two have a single date, which is a guarantee.
+function goblinEvents(){
+  const events = [];
+  for(const r of goblinLog){
+    if(!r.date) continue;
+    const base = parseLocalDate(r.date);
+    if(r.type==='Onyx Goblin King'){
+      events.push({type:r.type, kind:'chance',     dateObj: addDays(base,24)});
+      events.push({type:r.type, kind:'guaranteed', dateObj: addDays(base,54)});
+    } else if(r.type==='Diamond Goblin'){
+      events.push({type:r.type, kind:'guaranteed', dateObj: addDays(base,28)});
+    } else if(r.type==='Gold Goblin'){
+      events.push({type:r.type, kind:'guaranteed', dateObj: addDays(base,12)});
+    }
+  }
+  return events;
+}
+function goblinEventLabel(e){
+  const g = GOBLIN_KINDS[e.type] || {short:e.type};
+  return `${g.short} — ${e.kind==='chance' ? 'chance' : 'guaranteed'}`;
+}
+function dayKey(d){
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+function goblinEventsByDay(){
+  const map = new Map();
+  for(const e of goblinEvents()){
+    const k = dayKey(e.dateObj);
+    if(!map.has(k)) map.set(k, []);
+    map.get(k).push(e);
+  }
+  return map;
+}
+
+function renderGoblinLegend(){
+  const el = document.getElementById('goblinLegend');
+  if(!el) return;
+  const shapes = Object.keys(GOBLIN_KINDS).map(t=>
+    `<span>${goblinMark(t,'guaranteed',t)} ${escapeHtml(GOBLIN_KINDS[t].short)}</span>`).join('');
+  el.innerHTML = shapes +
+    `<span>${goblinMark('Gold Goblin','guaranteed','Guaranteed')} solid = guaranteed</span>` +
+    `<span>${goblinMark('Gold Goblin','chance','Chance')} dashed = chance</span>`;
+}
+
+function renderGoblinCalendar(){
+  const host = document.getElementById('goblinCalendar');
+  if(!host) return;
+
+  const byDay = goblinEventsByDay();
+  const today = new Date(new Date().toDateString());
+  if(!goblinMonth){
+    // Open on the first month that still has something ahead of it.
+    const future = [...byDay.keys()].map(k=>new Date(k+'T00:00:00'))
+      .filter(d=>d>=today).sort((a,b)=>a-b);
+    const anchor = future[0] || new Date();
+    goblinMonth = new Date(anchor.getFullYear(), anchor.getMonth(), 1);
+  }
+
+  const y = goblinMonth.getFullYear(), m = goblinMonth.getMonth();
+  const first = new Date(y, m, 1);
+  const daysInMonth = new Date(y, m+1, 0).getDate();
+  const lead = (first.getDay() + 6) % 7;          // weeks start Monday
+  const monthName = first.toLocaleDateString(undefined, {month:'long', year:'numeric'});
+
+  let cells = '';
+  for(let i=0;i<lead;i++) cells += '<div class="cal-cell cal-blank"></div>';
+  for(let d=1; d<=daysInMonth; d++){
+    const date = new Date(y, m, d);
+    const key = dayKey(date);
+    const entries = byDay.get(key) || [];
+    const isToday = date.getTime() === today.getTime();
+    const past = date < today;
+    cells += `
+      <div class="cal-cell${entries.length?' has-pack':''}${isToday?' today':''}${past?' past':''}"
+           ${entries.length?`data-date="${key}"`:''}>
+        <span class="cal-day">${d}</span>
+        <span class="gob-marks">${entries.slice(0,4)
+          .map(e=>goblinMark(e.type, e.kind, goblinEventLabel(e))).join('')}</span>
+        ${entries.length>4?`<span class="cal-more">+${entries.length-4}</span>`:''}
+      </div>`;
+  }
+
+  host.innerHTML = `
+    <div class="cal-head">
+      <button type="button" class="cal-nav" data-step="-1">‹</button>
+      <span class="cal-month">${escapeHtml(monthName)}</span>
+      <button type="button" class="cal-nav" data-step="1">›</button>
+      <button type="button" class="cal-today">Today</button>
+    </div>
+    <div class="cal-grid">
+      ${['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map(d=>`<div class="cal-dow">${d}</div>`).join('')}
+      ${cells}
+    </div>
+    <div id="goblinCalDetail" class="cal-detail"></div>`;
+
+  host.querySelectorAll('.cal-nav').forEach(b=>b.addEventListener('click', ()=>{
+    goblinMonth = new Date(y, m + parseInt(b.dataset.step), 1);
+    renderGoblinCalendar();
+  }));
+  host.querySelector('.cal-today').addEventListener('click', ()=>{
+    goblinMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+    renderGoblinCalendar();
+  });
+  host.querySelectorAll('.cal-cell[data-date]').forEach(c=>{
+    c.addEventListener('click', ()=>{
+      host.querySelectorAll('.cal-cell').forEach(o=>o.classList.remove('sel'));
+      c.classList.add('sel');
+      showGoblinCalDetail(byDay.get(c.dataset.date) || [], c.dataset.date);
+    });
+  });
+
+  renderGoblinLegend();
+}
+
+function showGoblinCalDetail(entries, dateKey){
+  const box = document.getElementById('goblinCalDetail');
+  if(!box) return;
+  const d = new Date(dateKey + 'T00:00:00');
+  box.innerHTML = `
+    <div class="cal-detail-head">${escapeHtml(d.toLocaleDateString(undefined,{weekday:'long', day:'numeric', month:'long', year:'numeric'}))}</div>
+    ${entries.map(e=>`
+      <div class="cal-detail-row">
+        <div class="cal-detail-name">${goblinMark(e.type, e.kind, goblinEventLabel(e))} ${escapeHtml(e.type)}</div>
+        <div class="cal-detail-cards">
+          <span>${e.kind==='chance' ? 'May spawn from this date' : 'Guaranteed to spawn'}</span>
+        </div>
+      </div>`).join('')}`;
+  box.classList.add('open');
 }
 
 function renderGoblinUpcoming(){
@@ -4357,23 +4541,10 @@ function renderGoblinUpcoming(){
   if(!el) return;
   const now = new Date();
   now.setHours(0,0,0,0);
-  const events = [];
-  for(const r of goblinLog){
-    if(!r.date) continue;
-    const base = parseLocalDate(r.date);
-    if(r.type==='Onyx Goblin King'){
-      events.push({type:r.type, label:'Chance', dateObj: addDays(base,24)});
-      events.push({type:r.type, label:'Guaranteed', dateObj: addDays(base,54)});
-    } else if(r.type==='Diamond Goblin'){
-      events.push({type:r.type, label:'Spawn', dateObj: addDays(base,28)});
-    } else if(r.type==='Gold Goblin'){
-      events.push({type:r.type, label:'Spawn', dateObj: addDays(base,12)});
-    }
-  }
-  const upcoming = events.filter(e=>e.dateObj>=now).sort((a,b)=>a.dateObj-b.dateObj);
+  const upcoming = goblinEvents().filter(e=>e.dateObj>=now).sort((a,b)=>a.dateObj-b.dateObj);
   el.innerHTML = upcoming.length ? upcoming.map(e=>`
     <div class="upgrade-item">
-      <span class="upgrade-name">${escapeHtml(e.type)} — ${e.label}</span>
+      <span class="upgrade-name">${goblinMark(e.type, e.kind, goblinEventLabel(e))} ${escapeHtml(e.type)} — ${e.kind==='chance'?'Chance':'Guaranteed'}</span>
       <span class="upgrade-score">${formatDate(e.dateObj)}</span>
     </div>
   `).join('') : '<div class="empty-note">No upcoming goblin spawns logged.</div>';
@@ -4650,8 +4821,8 @@ function cardCell(cardName, isOnyx){
   const owned = isCardOwned(cardName, isOnyx);
   const color = owned ? 'var(--uncommon)' : 'var(--danger)';
   const label = owned ? 'owned' : 'missing';
-  const onyxTag = isOnyx ? ` <span style="color:var(--onyx);font-size:10.5px;">(Onyx)</span>` : '';
-  return `${escapeHtml(cardName)}${onyxTag} <span style="font-size:10.5px;color:${color};font-family:'IBM Plex Mono',monospace;">(${label})</span>`;
+  // The dot marks the tier, so the "(Onyx)" suffix that used to sit here is gone.
+  return `${rarityDot(cardName, isOnyx)}${escapeHtml(cardName)} <span style="font-size:10.5px;color:${color};font-family:'IBM Plex Mono',monospace;">(${label})</span>`;
 }
 
 async function loadSchedule(){
