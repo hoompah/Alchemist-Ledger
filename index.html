@@ -113,8 +113,7 @@
 
   /* Overview */
   /* A name is not a number — it should not use the numeric display face. */
-  .num-text{font-family:'IBM Plex Sans',sans-serif;font-weight:600;
-    font-size:16px;color:var(--text);line-height:1.3;overflow-wrap:anywhere;}
+  
 
   .two-col{
     display:grid;grid-template-columns: 1.1fr 1fr;gap:20px;margin-top:20px;
@@ -128,15 +127,16 @@
   .panel-desc{color:var(--muted);font-size:13px;padding:0 20px 14px;margin:0;}
 
   /* rarity bars */
-  .rarity-list{padding:0 20px 20px;display:flex;flex-direction:column;gap:12px;}
-  .rarity-row{display:flex;align-items:center;gap:12px;font-size:13px;}
+  .rarity-list{padding:0 20px 20px;display:flex;flex-direction:column;gap:9px;}
+  .rarity-row{display:flex;align-items:center;gap:12px;font-size:13px;min-height:26px;}
   .rarity-dot{width:9px;height:9px;border-radius:50%;flex:none;}
-  .rarity-name{width:92px;flex:none;color:var(--text);}
+  .rarity-name{width:74px;flex:none;color:var(--text);}
   .rarity-bar-track{flex:1;height:8px;background:var(--panel-2);border-radius:4px;overflow:hidden;}
   /* span is inline by default, so height and width were both ignored */
   .rarity-bar-fill{display:block;height:100%;border-radius:4px;min-width:2px;
     transition:width .5s ease;}
-  .rarity-count{width:70px;text-align:right;font-family:'IBM Plex Mono',monospace;color:var(--muted);font-size:11.5px;flex:none;}
+  .rarity-count{width:86px;text-align:right;font-family:'IBM Plex Mono',monospace;
+    color:var(--muted);font-size:11.5px;flex:none;font-variant-numeric:tabular-nums;}
 
   .upgrade-list{padding:0 20px 20px;display:flex;flex-direction:column;gap:10px;}
   .upgrade-item{
@@ -587,6 +587,132 @@
   .rarity-missing strong{color:var(--text);}
   .rarity-missing em{color:var(--onyx);font-style:normal;}
 
+
+
+  /* One style for every "nothing here yet" message. */
+  .empty-note{
+    color:var(--muted);font-size:12px;line-height:1.5;
+    padding:11px 13px;background:var(--panel-2);
+    border:1px solid var(--border);border-radius:8px;
+  }
+  body.m .empty-note{font-size:11.5px;padding:10px 12px;}
+
+
+  /* Pack Tracker is three short columns — a stacked card per row put the label
+     and value at opposite edges of the screen. It stays a table on mobile. */
+  body.m #packBody{display:table-row-group;}
+  body.m #packBody tr{
+    display:table-row;background:none;border:none;border-radius:0;
+    padding:0;margin:0;
+  }
+  body.m #packBody td{
+    display:table-cell;height:auto;padding:10px 8px;
+    border-bottom:1px solid rgba(255,255,255,.05);
+    vertical-align:middle;text-align:left;
+  }
+  body.m #packBody td::before{content:none;}
+  body.m #packBody td:first-child{
+    font-size:13px;font-weight:400;border-bottom:1px solid rgba(255,255,255,.05);
+    padding-bottom:10px;margin-bottom:0;width:36px;color:var(--muted);
+    font-family:'IBM Plex Mono',monospace;
+  }
+  body.m #packBody td:last-child{
+    border-top:none;margin-top:0;padding-top:10px;width:44px;text-align:right;
+  }
+  body.m #packBody td:last-child .del-btn{
+    width:auto;padding:8px 10px;border:none;font-size:15px;
+  }
+  body.m #packBody td:last-child .del-btn::after{content:none;}
+  body.m #packTable thead{display:table-header-group;}
+  body.m #packTable thead th{
+    padding:8px;font-size:9.5px;position:static;background:var(--panel);
+  }
+  body.m #packTableWrap{overflow-x:auto;}
+  /* headers are visible here, so the mobile sort bar would duplicate them */
+  body.m #packTableWrap{margin-top:0;}
+  #packTableWrap .msort, .msort:has(+ #packTableWrap){display:none !important;}
+
+
+
+  .icon-btn.warn{color:var(--danger);border-color:rgba(217,104,95,.4);}
+  .icon-btn.on{background:var(--gold);color:var(--panel);border-color:var(--gold);}
+
+  /* ---- reference deck slots: four across, not four stacked ---- */
+  #refSlotChips, #refSlotChipsOverview{
+    display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:0 20px 14px;
+  }
+  .slot-chip{
+    display:flex;flex-direction:column;align-items:center;gap:3px;
+    background:var(--panel-2);border:1px solid var(--border);border-radius:9px;
+    padding:10px 6px;cursor:pointer;font-family:inherit;color:var(--muted);
+    font-weight:400;min-width:0;
+  }
+  .slot-chip svg{width:18px;height:18px;fill:none;stroke:currentColor;
+    stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;}
+  .slot-name{font-size:11.5px;color:var(--text);white-space:nowrap;}
+  .slot-sub{font-size:9.5px;opacity:.75;white-space:nowrap;overflow:hidden;
+    text-overflow:ellipsis;max-width:100%;}
+  .slot-chip.active{border-color:var(--gold);color:var(--gold);background:rgba(216,184,119,.08);}
+  .slot-chip.active .slot-name{color:var(--gold);}
+  body.m #refSlotChips, body.m #refSlotChipsOverview{gap:6px;padding:0 12px 12px;}
+  body.m .slot-chip{padding:9px 4px;}
+  body.m .slot-name{font-size:10.5px;}
+  body.m .slot-sub{font-size:9px;}
+
+  /* Next Pack name matches the other figure boxes. */
+  .num-text{font-family:'Cormorant Garamond',serif;font-weight:700;
+    font-size:20px;line-height:1.1;color:var(--text);overflow-wrap:anywhere;}
+
+  /* ---- schedule calendar ---- */
+  .cal-head{display:flex;align-items:center;gap:10px;padding:0 20px 12px;}
+  .cal-month{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:700;flex:1;}
+  .cal-nav,.cal-today{
+    background:var(--panel-2);border:1px solid var(--border);color:var(--muted);
+    border-radius:8px;cursor:pointer;font-family:inherit;font-weight:400;
+  }
+  .cal-nav{width:32px;height:32px;font-size:18px;line-height:1;}
+  .cal-today{padding:7px 12px;font-size:11.5px;}
+  .cal-nav:hover,.cal-today:hover{color:var(--gold);border-color:var(--gold-soft);}
+  .cal-grid{
+    display:grid;grid-template-columns:repeat(7,1fr);gap:4px;padding:0 20px 14px;
+  }
+  .cal-dow{
+    text-align:center;color:var(--muted);font-size:10.5px;
+    text-transform:uppercase;letter-spacing:.6px;padding-bottom:4px;
+  }
+  .cal-cell{
+    min-height:62px;border:1px solid var(--border);border-radius:7px;
+    padding:5px 6px;background:var(--panel);overflow:hidden;
+    display:flex;flex-direction:column;gap:2px;
+  }
+  .cal-blank{border:none;background:none;min-height:0;}
+  .cal-day{font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--muted);}
+  .cal-cell.past{opacity:.45;}
+  .cal-cell.today{border-color:var(--gold);}
+  .cal-cell.today .cal-day{color:var(--gold);font-weight:600;}
+  .cal-cell.has-pack{background:var(--panel-2);cursor:pointer;}
+  .cal-cell.has-pack:hover{border-color:var(--gold-soft);}
+  .cal-cell.sel{border-color:var(--gold);background:rgba(216,184,119,.10);}
+  .cal-pack{
+    font-size:9.5px;line-height:1.25;color:var(--text);
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  }
+  .cal-more{font-size:9.5px;color:var(--gold);}
+  .cal-detail{display:none;margin:0 20px 16px;padding:12px 14px;
+    background:var(--panel-2);border:1px solid var(--border);border-radius:9px;}
+  .cal-detail.open{display:block;}
+  .cal-detail-head{font-size:13px;font-weight:600;margin-bottom:8px;}
+  .cal-detail-row{padding:7px 0;border-top:1px solid var(--border);}
+  .cal-detail-name{font-size:13px;font-weight:600;color:var(--gold);}
+  .cal-detail-cards{display:flex;flex-direction:column;gap:3px;margin-top:4px;
+    font-size:11.5px;color:var(--muted);}
+  .cal-detail-cards .missing{color:var(--danger);font-style:normal;margin-left:6px;}
+  body.m .cal-grid{gap:3px;padding:0 12px 12px;}
+  body.m .cal-cell{min-height:48px;padding:4px;}
+  body.m .cal-pack{font-size:8.5px;}
+  body.m .cal-head{padding:0 12px 10px;}
+  body.m .cal-detail{margin:0 12px 14px;}
+
   /* ---- pack suggestions: one line each, detail on tap ---- */
   .pack-row{
     background:var(--panel-2);border:1px solid var(--border);
@@ -709,7 +835,10 @@
     }
   body.m .mini-input.qty{ width:100% !important; }
   body.m .result-count{ margin-left:0 !important; }
-  body.m /* Touch-friendly tap targets (44px is Apple's guideline) */ .add-btn, .reset-btn{ padding:12px 16px; font-size:14px; width:100%; }
+  /* Primary actions go full width for the tap target; secondary ones keep
+     their own size so they do not out-shout the content. */
+  body.m .add-btn{ padding:11px 16px; font-size:13px; width:100%; }
+  body.m .reset-btn{ padding:10px 14px; font-size:11.5px; }
   body.m /* ...except header actions, which stay compact side-by-side */ header.top .add-btn, header.top .reset-btn{ width:auto; padding:9px 12px; font-size:13px; }
   body.m header.top > div:last-child{ justify-content:flex-start !important; width:100%; }
   body.m .toggle-chip{ padding:10px 16px; text-align:center; }
@@ -819,7 +948,7 @@
           <button class="menu-item" id="densityBtn">
             <svg viewBox="0 0 24 24"><path d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
             <span id="densityLabel">Compact rows</span></button>
-          <div class="menu-foot" id="versionTag">build 66 · builder fix</div>
+          <div class="menu-foot" id="versionTag">build 70 · library</div>
         </div>
       </div>
       <input type="file" id="importDataInput" accept="application/json" style="display:none;">
@@ -863,7 +992,7 @@
       <div class="metric-strip" id="collectionStrip">
         <div class="metric"><div class="metric-val" id="deckSizeStat">—</div><div class="metric-lbl">Cards in deck</div></div>
         <div class="metric"><div class="metric-val" id="ownedStat">—</div><div class="metric-lbl">Cards owned<span id="ownedSub"></span></div></div>
-        <div class="metric"><div class="metric-val" id="avgModStat">—</div><div class="metric-lbl">Avg. combo mod</div></div>
+        <div class="metric"><div class="metric-val" id="avgModStat">—</div><div class="metric-lbl">Combo coverage<span id="avgModSub"></span></div></div>
       </div>
     </div>
 
@@ -906,7 +1035,21 @@
       <p class="panel-title">My Library</p>
       <p class="panel-desc">Your collection. Add pulls and set quantity, level, fusion and Onyx. Saved automatically, and used by every other tab.</p>
 
-      <div class="add-row-form" id="addRowForm">
+      <!-- Entry, bulk edit and warnings fold away so the collection leads. -->
+      <div class="controls" id="libToolbar">
+        <span class="result-count" id="libToolbarCount"></span>
+        <button class="icon-btn" id="addToggle" title="Add a card" aria-label="Add a card">
+          <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+        </button>
+        <button class="icon-btn" id="bulkToggleBtn" title="Bulk edit" aria-label="Bulk edit">
+          <svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg>
+        </button>
+        <button class="icon-btn warn" id="capNoteToggle" title="Deck cap warnings" aria-label="Deck cap warnings" style="display:none;">
+          <svg viewBox="0 0 24 24"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9 1.8 18a2 2 0 001.7 3h17a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"/></svg>
+        </button>
+      </div>
+
+      <div class="add-row-form" id="addRowForm" style="display:none;">
         <!-- Type-ahead beats a 139-item dropdown on a phone: two or three
              characters narrow it to a handful of large tap targets. -->
         <div style="position:relative;flex:1;min-width:200px;">
@@ -931,10 +1074,7 @@
       </div>
       <div id="recentChips" style="display:none;padding:0 20px 12px;"></div>
 
-      <div class="add-row-form" style="padding-top:0;">
-        <button class="reset-btn" id="bulkToggleBtn">Bulk edit</button>
-        <span class="result-count" id="bulkStatus" style="color:var(--gold);margin-left:0;"></span>
-      </div>
+      <div style="padding:0 20px 6px;"><span class="result-count" id="bulkStatus" style="color:var(--gold);margin-left:0;"></span></div>
 
       <div id="bulkPanel" style="display:none;margin:0 20px 14px;padding:14px;background:var(--panel-2);border:1px solid var(--border);border-radius:10px;">
         <div class="builder-controls" style="padding:0 0 8px;">
@@ -1035,7 +1175,7 @@
           <select id="bMode">
             <option value="defense" selected>Defense</option>
             <option value="attack">Attack</option>
-            <option value="both">Attack + Defense</option>
+            <option value="both">Sum</option>
             <option value="heroic">Heroic</option>
           </select>
         </label>
@@ -1141,7 +1281,7 @@
               <th data-key="name" data-table="deck">Card <span class="arrow"></span></th>
               <th data-key="fused" data-table="deck">Fused <span class="arrow"></span></th>
               <th data-key="combos_num" data-table="deck"><span id="comboColHead">Combos</span> <span class="arrow"></span></th>
-              <th data-key="mod" data-table="deck">Combo Mode Mod <span class="arrow"></span></th>
+              <th data-key="mod" data-table="deck">Combo coverage <span class="arrow"></span></th>
             </tr>
           </thead>
           <tbody id="deckBody"></tbody>
@@ -1162,7 +1302,7 @@
             <option value="best" selected>Best deck from library</option>
             <option value="attack">Saved: Attack</option>
             <option value="defense">Saved: Defense</option>
-            <option value="both">Saved: Attack + Defense</option>
+            <option value="both">Saved: Sum</option>
             <option value="heroic">Saved: Heroic</option>
           </select>
         </label>
@@ -1171,7 +1311,7 @@
           <select id="sMode">
             <option value="defense" selected>Defense</option>
             <option value="attack">Attack</option>
-            <option value="both">Attack + Defense</option>
+            <option value="both">Sum</option>
             <option value="heroic">Heroic</option>
           </select>
         </label>
@@ -1268,11 +1408,12 @@
       <p class="panel-desc" id="packTypeHint" style="color:var(--gold);"></p>
 
       <div class="controls" style="padding-top:6px;">
+        <input type="text" class="search-input" id="packSearch" placeholder="Search logged packs…">
         <span class="result-count" id="packCount"></span>
         <span class="result-count" id="packAvgNumber" style="margin-left:12px;"></span>
       </div>
-      <div class="table-wrap">
-        <table>
+      <div class="table-wrap" id="packTableWrap">
+        <table id="packTable">
           <thead>
             <tr>
               <th data-key="seq" data-table="pack">#<span class="arrow"></span></th>
@@ -1293,7 +1434,17 @@
       <p class="panel-title">Pack Schedule</p>
       <p class="panel-desc">Every scheduled pack and the cards it yields. Anything missing from My Library is flagged. Rows are editable.</p>
 
-      <div class="add-row-form" id="scheduleAddForm">
+      <!-- Adding entries is occasional, so it folds away behind an icon. -->
+      <div class="controls">
+        <input type="text" class="search-input" id="scheduleSearch" placeholder="Search packs or cards…">
+        <span class="result-count" id="scheduleCount"></span>
+        <button class="icon-btn" id="schedAddToggle" title="Add a scheduled pack" aria-label="Add a scheduled pack">
+          <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+        </button>
+        <button class="reset-btn" id="schedViewToggle">Table view</button>
+      </div>
+
+      <div class="add-row-form" id="scheduleAddForm" style="display:none;">
         <input type="text" class="mini-input" id="schedName" placeholder="Pack name">
         <input type="date" class="mini-input" id="schedDate">
         <input type="text" class="mini-input" id="schedOcc" placeholder="OCC card">
@@ -1301,13 +1452,13 @@
         <button class="add-btn" id="schedAddBtn">+ Add entry</button>
       </div>
 
-      <div class="controls">
-        <input type="text" class="search-input" id="scheduleSearch" placeholder="Search packs or cards…">
+      <!-- These filters act on the table, so they appear with it. -->
+      <div class="controls" id="schedTableFilters" style="display:none;">
         <label class="mini-check"><input type="checkbox" id="scheduleMissingOnly"> Show missing cards only</label>
         <label class="mini-check"><input type="checkbox" id="scheduleUpcomingOnly"> Upcoming only</label>
-        <span class="result-count" id="scheduleCount"></span>
       </div>
-      <div class="table-wrap">
+      <div id="schedCalendar"></div>
+      <div class="table-wrap" id="schedTableWrap" style="display:none;">
         <table>
           <thead>
             <tr>
@@ -1417,10 +1568,14 @@ const PACK_SCHEDULE = [{"name":"Cloaked","date":"2026-01-01","occ":"Void","gcc":
 // modes for convenience; Heroic is a format, so it has no implied mode and is
 // only ever targeted explicitly.
 const REF_SLOTS = [
-  {key:'attack',  label:'Attack',           mode:'attack'},
-  {key:'defense', label:'Defense',          mode:'defense'},
-  {key:'both',    label:'Attack + Defense', mode:'both'},
-  {key:'heroic',  label:'Heroic',           mode:'heroic'},
+  {key:'attack',  label:'Attack',  mode:'attack',
+   icon:'<path d="M14 3l7 7-4 1-1 4-7-7z"/><path d="M9 11l-6 6M3 17v4h4"/>'},
+  {key:'defense', label:'Defense', mode:'defense',
+   icon:'<path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/>'},
+  {key:'both',    label:'Sum',     mode:'both',
+   icon:'<path d="M6 5h12l-7 7 7 7H6"/>'},
+  {key:'heroic',  label:'Heroic',  mode:'heroic',
+   icon:'<path d="M12 2l2.4 5.5 6 .5-4.5 4 1.3 5.9L12 15l-5.2 2.9L8.1 12l-4.5-4 6-.5z"/>'},
 ];
 let referenceDecks = {
   attack:  {deck:[], score:0, savedAt:null},
@@ -1484,15 +1639,17 @@ function renderRefSlotChips(){
     el.innerHTML = REF_SLOTS.map(s=>{
       const r = referenceDecks[s.key];
       const age = relativeAge(r.savedAt);
-      const sub = r.deck.length
-        ? `${r.deck.length} cards · ${Math.round(r.score).toLocaleString()}${age?` · ${age}`:''}`
-        : 'empty';
-      return `<div class="toggle-chip ref-slot-chip ${s.key===activeRefSlot?'active':''}" data-slot="${s.key}">
-        ${escapeHtml(s.label)} <span style="opacity:.7;font-size:11px;">(${sub})</span>
-      </div>`;
+      // Compact and side by side; four stacked full-width chips wasted a panel.
+      const sub = r.deck.length ? `${r.deck.length} cards${age?` · ${age}`:''}` : 'empty';
+      return `<button type="button" class="slot-chip ${s.key===activeRefSlot?'active':''}"
+                data-slot="${s.key}" title="${escapeHtml(s.label)} — ${sub}">
+        <svg viewBox="0 0 24 24">${s.icon}</svg>
+        <span class="slot-name">${escapeHtml(s.label)}</span>
+        <span class="slot-sub">${escapeHtml(sub)}</span>
+      </button>`;
     }).join('');
   });
-  document.querySelectorAll('.ref-slot-chip').forEach(el=>el.addEventListener('click', ()=>{
+  document.querySelectorAll('.slot-chip').forEach(el=>el.addEventListener('click', ()=>{
     activeRefSlot = el.dataset.slot;
     saveReferenceDecks();
     renderRefSlotChips();
@@ -1611,13 +1768,19 @@ function renderOverview(){
 
   // Owned count is computed from My Library every render, so it tracks edits.
   const ownedNow = myLibrary.filter(r=>r.qty>0).length;
-  const catalogueTotal = Object.values(DATA.rarity_all).reduce((a,b)=>a+b, 0);
+  const catalogueTotal = CMB.names.length + ONYX_ELIGIBLE.size;  // was a stale snapshot
   document.getElementById('ownedStat').textContent = ownedNow;
   document.getElementById('ownedSub').textContent = 'of ' + catalogueTotal + ' catalogued';
 
+  // Share of the deck each card forms a QUALIFYING combo with — one that meets
+  // the minimum combo value set when the deck was built. Distinct from the dead
+  // figure, which counts pairs with no combo at all at any value.
   const mods = ref.deck.map(d=>d.mod).filter(m=>m!=null);
   const avgMod = mods.length ? mods.reduce((a,b)=>a+b,0)/mods.length : 0;
   document.getElementById('avgModStat').textContent = (avgMod*100).toFixed(1)+'%';
+  const sub = document.getElementById('avgModSub');
+  if(sub) sub.textContent = ref.comboThreshold != null
+    ? `pairs at ≥${ref.comboThreshold}` : 'qualifying pairs';
   renderRefSlotChips();
 
   // top upgrades: pulled from the latest suggestion analysis (My Library vs. full database)
@@ -1897,7 +2060,7 @@ function renderPackAdvice(settings, deckRows, sourceLabel){
   if(!box || !list) return;
   const res = computePackAdvice(settings, deckRows, 10);
   if(!res.list.length){
-    list.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:6px 0;">No pack improves this deck — every card on offer is weaker than what you already run.</div>';
+    list.innerHTML = '<div class="empty-note">No pack improves this deck — every card on offer is weaker than what you already run.</div>';
     box.style.display = 'block';
     return;
   }
@@ -2529,6 +2692,16 @@ function renderMyLibrary(){
       if(typeof av === 'string') return dir*av.localeCompare(bv);
       return dir*((av??0)-(bv??0));
     });
+  } else {
+    // Default order: rarity, then name, then fused, then quantity — so the same
+    // card's variants sit together and the strongest tier leads.
+    const tierRank = {Onyx:0, Rare:1, Uncommon:2, Common:3};
+    rows = [...rows].sort((a,b)=>
+      (tierRank[a.onyx?'Onyx':CMB.ccRarity[a.name]] ?? 9) - (tierRank[b.onyx?'Onyx':CMB.ccRarity[b.name]] ?? 9)
+      || a.name.localeCompare(b.name)
+      || (b.fused?1:0) - (a.fused?1:0)
+      || (b.qty||0) - (a.qty||0)
+    );
   }
 
   document.getElementById('myLibCount').textContent = rows.length + ' entries';
@@ -2543,9 +2716,13 @@ function renderMyLibrary(){
     capEl.innerHTML = `<strong>Over the deck cap:</strong> ` +
       over.map(([n,c])=>`${escapeHtml(n)} ×${c}`).join(', ') +
       `. Only ${MAX_PER_NAME} per deck, Onyx and non-Onyx counted together — extras are ignored.`;
-    capEl.style.display = 'block';
+    capEl.style.display = 'none';
+    const capBtn = document.getElementById('capNoteToggle');
+    if(capBtn) capBtn.style.display = 'inline-flex';
   } else {
     capEl.style.display = 'none';
+    const capBtn = document.getElementById('capNoteToggle');
+    if(capBtn){ capBtn.style.display = 'none'; capBtn.classList.remove('on'); }
   }
   document.getElementById('myLibBody').innerHTML = rows.map(r=>`
     <tr data-id="${r.id}">
@@ -2676,6 +2853,32 @@ document.getElementById('densityBtn').addEventListener('click', ()=>{
   });
 })();
 
+// Calendar leads; the editable table stays available behind a toggle.
+(function(){
+  const btn = document.getElementById('schedViewToggle');
+  const cal = document.getElementById('schedCalendar');
+  const tbl = document.getElementById('schedTableWrap');
+  if(!btn || !cal || !tbl) return;
+  const filters = document.getElementById('schedTableFilters');
+  btn.addEventListener('click', ()=>{
+    const showTable = tbl.style.display === 'none';
+    tbl.style.display = showTable ? '' : 'none';
+    cal.style.display = showTable ? 'none' : '';
+    if(filters) filters.style.display = showTable ? '' : 'none';
+    btn.textContent = showTable ? 'Calendar view' : 'Table view';
+  });
+  const addBtn = document.getElementById('schedAddToggle');
+  const addForm = document.getElementById('scheduleAddForm');
+  if(addBtn && addForm){
+    addBtn.addEventListener('click', ()=>{
+      const open = addForm.style.display === 'none';
+      addForm.style.display = open ? '' : 'none';
+      addBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+      if(open) document.getElementById('schedName').focus();
+    });
+  }
+})();
+
 // ---------- Settings menu ----------
 (function(){
   const btn = document.getElementById('settingsBtn');
@@ -2794,6 +2997,23 @@ window.addEventListener('scroll', ()=>{
   toTop.style.display = window.scrollY > 600 ? 'block' : 'none';
 });
 toTop.addEventListener('click', ()=>window.scrollTo({top:0, behavior:'smooth'}));
+
+// ---------- Library toolbar ----------
+// Add form and cap warnings are occasional, so they open on demand.
+(function(){
+  for(const [btnId, panelId] of [['addToggle','addRowForm'], ['capNoteToggle','myLibCapNote']]){
+    const btn = document.getElementById(btnId), panel = document.getElementById(panelId);
+    if(!btn || !panel) continue;
+    btn.addEventListener('click', ()=>{
+      const open = panel.style.display === 'none';
+      panel.style.display = open ? '' : 'none';
+      btn.classList.toggle('on', open);
+      if(open && panelId === 'addRowForm'){
+        const f = document.getElementById('addSearch'); if(f) f.focus();
+      }
+    });
+  }
+})();
 
 // ---------- Mobile card entry ----------
 // A 139-item native select is a long scroll wheel on a phone. Type-ahead cuts
@@ -3570,7 +3790,13 @@ async function generateBestDeck(){
   lastBuilderMetrics = met;
   const capPart = settings.maxUnfused != null ? ` · cap ${settings.maxUnfused} unfused` : '';
 
-  // These four lines were lost in an earlier edit, which left the result panel
+  // Each slot's synergy contribution — the sum of its pairings with the rest of
+  // the deck. The table renders this, so without it every row throws.
+  for(const slot of deck){
+    slot.contrib = marginalScore(slot, deck.filter(o=>o!==slot), settings);
+  }
+
+  // These lines were lost in an earlier edit, which left the result panel
   // hidden and the save control unpopulated.
   lastBuilderResult = deck;
   lastBuilderMode = settings.mode;
@@ -3768,7 +3994,7 @@ function renderGoblinUpcoming(){
       <span class="upgrade-name">${escapeHtml(e.type)} — ${e.label}</span>
       <span class="upgrade-score">${formatDate(e.dateObj)}</span>
     </div>
-  `).join('') : '<div class="upgrade-item" style="color:var(--muted);">No upcoming goblin spawns logged.</div>';
+  `).join('') : '<div class="empty-note">No upcoming goblin spawns logged.</div>';
 }
 
 function handleGoblinCardChange(id){
@@ -3916,13 +4142,18 @@ async function savePackLog(){
 function renderPackLog(){
   const key = packSort.key, dir = packSort.dir;
   // Ids are issued sequentially, so their numeric part is the logging order.
+  const q = (document.getElementById('packSearch')?.value || '').trim().toLowerCase();
   const rows = packLog.map((r,i)=>({...r, seq: parseInt(String(r.id).slice(1)) || i}))
+    // match the pack name or its number, the two things worth looking up
+    .filter(r=> !q ||
+      String(r.type||'').toLowerCase().includes(q) ||
+      String(r.packNumber??'').toLowerCase().includes(q))
     .sort((a,b)=>{
       let av=a[key], bv=b[key];
       if(typeof av === 'string') return dir*av.localeCompare(bv);
       return dir*((av??0)-(bv??0));
     });
-  document.getElementById('packCount').textContent = rows.length + ' packs';
+  document.getElementById('packCount').textContent = rows.length + ' packs' + (q ? ' of ' + packLog.length : '');
   const validNumbers = rows.map(r=>r.packNumber).filter(n=> n!=null && n!=='' && !isNaN(n));
   const avgEl = document.getElementById('packAvgNumber');
   if(validNumbers.length){
@@ -3980,7 +4211,7 @@ function renderNextPack(){
     .sort((a,b)=>a.dateObj-b.dateObj);
 
   if(!upcoming.length){
-    el.innerHTML = '<div class="upgrade-item" style="color:var(--muted);">No upcoming packs in the schedule.</div>';
+    el.innerHTML = '<div class="empty-note">No upcoming packs in the schedule.</div>';
     return;
   }
   const next = upcoming[0];
@@ -4065,7 +4296,118 @@ function ensureScheduleIds(){
   scheduleIdCounter = max+1;
 }
 
+// ================= SCHEDULE CALENDAR =================
+// 158 rows in a table is a lot of scrolling to answer "what is coming up".
+// A month grid answers that at a glance; detail opens on tap.
+let schedMonth = null;   // Date pinned to the first of the shown month
+
+function schedEntriesByDay(){
+  const map = new Map();
+  for(const e of packSchedule){
+    if(!e.date) continue;
+    const d = new Date(e.date + 'T00:00:00');
+    if(isNaN(d)) continue;
+    const key = e.date;
+    if(!map.has(key)) map.set(key, []);
+    map.get(key).push(e);
+  }
+  return map;
+}
+
+function renderSchedCalendar(){
+  const host = document.getElementById('schedCalendar');
+  if(!host) return;
+
+  const byDay = schedEntriesByDay();
+  if(!schedMonth){
+    // open on the first month that still has something ahead of it
+    const today = new Date(new Date().toDateString());
+    const future = [...byDay.keys()].map(k=>new Date(k+'T00:00:00'))
+      .filter(d=>d>=today).sort((a,b)=>a-b);
+    const anchor = future[0] || new Date();
+    schedMonth = new Date(anchor.getFullYear(), anchor.getMonth(), 1);
+  }
+
+  const y = schedMonth.getFullYear(), m = schedMonth.getMonth();
+  const first = new Date(y, m, 1);
+  const daysInMonth = new Date(y, m+1, 0).getDate();
+  const lead = (first.getDay() + 6) % 7;          // weeks start Monday
+  const today = new Date(new Date().toDateString());
+  const monthName = first.toLocaleDateString(undefined, {month:'long', year:'numeric'});
+
+  let cells = '';
+  for(let i=0;i<lead;i++) cells += '<div class="cal-cell cal-blank"></div>';
+  for(let d=1; d<=daysInMonth; d++){
+    const date = new Date(y, m, d);
+    const key = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const entries = byDay.get(key) || [];
+    const isToday = date.getTime() === today.getTime();
+    const past = date < today;
+    cells += `
+      <div class="cal-cell${entries.length?' has-pack':''}${isToday?' today':''}${past?' past':''}"
+           ${entries.length?`data-date="${key}"`:''}>
+        <span class="cal-day">${d}</span>
+        ${entries.slice(0,2).map(e=>`<span class="cal-pack">${escapeHtml(e.name||'')}</span>`).join('')}
+        ${entries.length>2?`<span class="cal-more">+${entries.length-2}</span>`:''}
+      </div>`;
+  }
+
+  host.innerHTML = `
+    <div class="cal-head">
+      <button type="button" class="cal-nav" data-step="-1">‹</button>
+      <span class="cal-month">${escapeHtml(monthName)}</span>
+      <button type="button" class="cal-nav" data-step="1">›</button>
+      <button type="button" class="cal-today">Today</button>
+    </div>
+    <div class="cal-grid">
+      ${['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map(d=>`<div class="cal-dow">${d}</div>`).join('')}
+      ${cells}
+    </div>
+    <div id="calDetail" class="cal-detail"></div>`;
+
+  host.querySelectorAll('.cal-nav').forEach(b=>b.addEventListener('click', ()=>{
+    schedMonth = new Date(y, m + parseInt(b.dataset.step), 1);
+    renderSchedCalendar();
+  }));
+  host.querySelector('.cal-today').addEventListener('click', ()=>{
+    schedMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+    renderSchedCalendar();
+  });
+  host.querySelectorAll('.cal-cell[data-date]').forEach(c=>{
+    c.addEventListener('click', ()=>{
+      host.querySelectorAll('.cal-cell').forEach(o=>o.classList.remove('sel'));
+      c.classList.add('sel');
+      showCalDetail(byDay.get(c.dataset.date) || [], c.dataset.date);
+    });
+  });
+}
+
+function showCalDetail(entries, dateKey){
+  const box = document.getElementById('calDetail');
+  if(!box) return;
+  const d = new Date(dateKey + 'T00:00:00');
+  box.innerHTML = `
+    <div class="cal-detail-head">${escapeHtml(d.toLocaleDateString(undefined,{weekday:'long', day:'numeric', month:'long', year:'numeric'}))}</div>
+    ${entries.map(e=>{
+      const occ = e.occ || '—', gcc = e.gcc || '—';
+      const occMissing = e.occ && !isCardOwned(e.occ, true);
+      const gccMissing = e.gcc && !isCardOwned(e.gcc, false);
+      return `
+      <div class="cal-detail-row">
+        <div class="cal-detail-name">${escapeHtml(e.name||'')}</div>
+        <div class="cal-detail-cards">
+          <span>${rarityDot(occ, true)}OCC ${escapeHtml(occ)}
+            ${occMissing?'<em class="missing">missing</em>':''}</span>
+          <span>${rarityDot(gcc, false)}GCC ${escapeHtml(gcc)}
+            ${gccMissing?'<em class="missing">missing</em>':''}</span>
+        </div>
+      </div>`;
+    }).join('')}`;
+  box.classList.add('open');
+}
+
 function renderSchedule(){
+  if(typeof renderSchedCalendar === 'function') setTimeout(renderSchedCalendar, 0);
   const q = document.getElementById('scheduleSearch').value.trim().toLowerCase();
   const missingOnly = document.getElementById('scheduleMissingOnly').checked;
   const upcomingOnly = document.getElementById('scheduleUpcomingOnly').checked;
@@ -4798,6 +5140,7 @@ function syncDeckSizeToMode(){
   }
 }
 document.getElementById('bMode').addEventListener('change', syncDeckSizeToMode);
+document.getElementById('packSearch').addEventListener('input', renderPackLog);
 document.getElementById('bDeckSize').addEventListener('input', ()=>{
   const n = parseInt(document.getElementById('bDeckSize').value);
   if(!isNaN(n) && n > 0 && lastSeenMode) deckSizeByMode[lastSeenMode] = n;
