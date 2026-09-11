@@ -1067,7 +1067,7 @@
           <button class="menu-item" id="densityBtn">
             <svg viewBox="0 0 24 24"><path d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
             <span id="densityLabel">Compact rows</span></button>
-          <div class="menu-foot" id="versionTag">build 73 · self-combo</div>
+          <div class="menu-foot" id="versionTag">build 75 · library rarity</div>
         </div>
       </div>
       <input type="file" id="importDataInput" accept="application/json" style="display:none;">
@@ -1234,6 +1234,7 @@
         <table class="as-table">
           <thead>
             <tr>
+              <th data-key="rarityRank" data-table="mylib">Rarity <span class="arrow"></span></th>
               <th data-key="name" data-table="mylib">Card <span class="arrow"></span></th>
               <th data-key="onyx" data-table="mylib">Onyx <span class="arrow"></span></th>
               <th data-key="level" data-table="mylib">Level <span class="arrow"></span></th>
@@ -3121,7 +3122,10 @@ let myLibSort = {key:null, dir:1};
 function renderMyLibrary(){
   const q = document.getElementById('myLibSearch').value.trim().toLowerCase();
   let rows = myLibrary.filter(r=> r.name.toLowerCase().includes(q))
-    .map(r=>({...r, selfCombo: selfCombines(r.name)}));
+    .map(r=>({...r,
+      selfCombo: selfCombines(r.name),
+      rarityRank: TIER_RANK[r.onyx ? 'Onyx' : tierOf(r.name)] ?? 9,
+    }));
 
   if(myLibSort.key){
     const key = myLibSort.key, dir = myLibSort.dir;
@@ -3165,6 +3169,7 @@ function renderMyLibrary(){
   }
   document.getElementById('myLibBody').innerHTML = rows.map(r=>`
     <tr data-id="${r.id}">
+      <td>${rarityLabel(r.onyx ? 'Onyx' : tierOf(r.name))}</td>
       <td class="card-name">${rarityDot(r.name, r.onyx)}${escapeHtml(r.name)}</td>
       <td><input type="checkbox" class="lib-onyx" data-id="${r.id}" ${r.onyx?'checked':''}></td>
       <td>
@@ -3476,7 +3481,8 @@ toTop.addEventListener('click', ()=>window.scrollTo({top:0, behavior:'smooth'}))
 // another, so every operation is keyed on name + onyx + fused and capped
 // independently. The 3-per-deck limit is applied later, when a deck is built.
 // Cards obtained through Portal.
-const PORTAL_CARDS = ['Bear','Monster','Space','Leader','Food','Life','Science','Toy','Wind','Villain'];
+const PORTAL_CARDS = ['Bear','Monster','Space','Leader','Food','Life','Science','Toy','Wind','Villain',
+  'Weapon','Time','Energy'];
 
 function baseCatalogue(){
   return Object.entries(CMB.ccRarity)
