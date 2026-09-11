@@ -577,6 +577,16 @@
   body.m .builder-field span, body.m .field span{ font-size:11.5px; }
 
 
+
+  .rarity-missing{
+    display:none;margin:-4px 0 8px 22px;padding:8px 11px;
+    background:var(--panel-2);border:1px solid var(--border);border-radius:8px;
+    color:var(--muted);font-size:11.5px;line-height:1.6;
+  }
+  .rarity-missing.open{display:block;}
+  .rarity-missing strong{color:var(--text);}
+  .rarity-missing em{color:var(--onyx);font-style:normal;}
+
   /* ---- pack suggestions: one line each, detail on tap ---- */
   .pack-row{
     background:var(--panel-2);border:1px solid var(--border);
@@ -809,7 +819,7 @@
           <button class="menu-item" id="densityBtn">
             <svg viewBox="0 0 24 24"><path d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
             <span id="densityLabel">Compact rows</span></button>
-          <div class="menu-foot" id="versionTag">build 64 · pack list</div>
+          <div class="menu-foot" id="versionTag">build 66 · builder fix</div>
         </div>
       </div>
       <input type="file" id="importDataInput" accept="application/json" style="display:none;">
@@ -3123,27 +3133,57 @@ const CATALOGUE_TOTALS = (()=>{
 function renderCollectionRarity(){
   const el = document.getElementById('rarityList');
   if(!el) return;
-  // Count distinct cards held in each tier. An Onyx copy counts as Onyx, and
-  // the same card owned in both forms counts once in each.
+  // Count distinct cards held in each tier. A card held only in Onyx form counts
+  // under Onyx, not its base tier — which is why a tier can sit one short while
+  // the card is technically in your collection. The missing names are listed on
+  // tap so that is visible rather than a mystery.
   const owned = {Onyx:new Set(), Rare:new Set(), Uncommon:new Set(), Common:new Set()};
+  const onyxOnly = new Set();
   for(const row of myLibrary){
     if(!(row.qty>0)) continue;
     const tier = row.onyx ? 'Onyx' : CMB.ccRarity[row.name];
     if(owned[tier]) owned[tier].add(row.name);
   }
+  for(const row of myLibrary){
+    if(!(row.qty>0) || !row.onyx) continue;
+    const base = CMB.ccRarity[row.name];
+    if(base && owned[base] && !owned[base].has(row.name)) onyxOnly.add(row.name);
+  }
+
+  const catalogue = {Onyx:[], Rare:[], Uncommon:[], Common:[]};
+  for(const name of CMB.names){
+    if(ONYX_ELIGIBLE.has(name)) catalogue.Onyx.push(name);
+    const t = CMB.ccRarity[name];
+    if(catalogue[t]) catalogue[t].push(name);
+  }
+
   el.innerHTML = RARITY_ORDER.map(r=>{
     const t = CATALOGUE_TOTALS[r]||0;
     const o = owned[r] ? owned[r].size : 0;
     const pct = t ? Math.min(100, (o/t)*100) : 0;
+    const missing = (catalogue[r]||[]).filter(n=>!owned[r].has(n));
+    const note = missing.map(n=>
+      onyxOnly.has(n) ? `${escapeHtml(n)} <em>(you have the Onyx form)</em>` : escapeHtml(n)
+    ).join(', ');
     return `
-      <div class="rarity-row">
+      <div class="rarity-row rarity-toggle" data-tier="${r}" ${missing.length?'style="cursor:pointer"':''}>
         <span class="rarity-dot" style="background:${RARITY_COLORS[r]}"></span>
         <span class="rarity-name">${rarityLabel(r)}</span>
         <span class="rarity-bar-track"><span class="rarity-bar-fill" style="width:${pct.toFixed(1)}%;background:${RARITY_COLORS[r]}"></span></span>
         <span class="rarity-count">${o} / ${t}</span>
       </div>
+      ${missing.length ? `<div class="rarity-missing" data-for="${r}">
+        <strong>${missing.length} missing:</strong> ${note}
+      </div>` : ''}
     `;
   }).join('');
+
+  el.querySelectorAll('.rarity-toggle').forEach(row=>{
+    row.addEventListener('click', ()=>{
+      const box = el.querySelector(`.rarity-missing[data-for="${row.dataset.tier}"]`);
+      if(box) box.classList.toggle('open');
+    });
+  });
 }
 
 function renderBuilderRarity(deck){
@@ -3530,10 +3570,25 @@ async function generateBestDeck(){
   lastBuilderMetrics = met;
   const capPart = settings.maxUnfused != null ? ` · cap ${settings.maxUnfused} unfused` : '';
 
+  // These four lines were lost in an earlier edit, which left the result panel
+  // hidden and the save control unpopulated.
+  lastBuilderResult = deck;
+  lastBuilderMode = settings.mode;
+  lastBuilderSettings = settings;
+  document.getElementById('builderResultPanel').style.display = '';
+
+  // Default the save target to the slot matching this mode, if one exists.
+  const sel = document.getElementById('saveSlotTarget');
+  const preferred = (REF_SLOTS.find(r=>r.mode===settings.mode) || {}).key || 'heroic';
+  sel.innerHTML = REF_SLOTS.map(r=>
+    `<option value="${r.key}" ${r.key===preferred?'selected':''}>Save to ${escapeHtml(r.label)}</option>`
+  ).join('');
+
   document.getElementById('resultSummaryWrap').innerHTML =
     metricsHTML(met, {note: `${deck.length} cards · ${met.live} live pairs of ${met.pairs}${capPart} · optimised for ${slotLabel(settings.mode)}`});
 
   renderBuilderTable();
+  renderBuilderRarity(deck);
 }
 
 let lastBuilderResult = null;
