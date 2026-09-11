@@ -387,12 +387,12 @@
   body.m tbody{display:block;}
   body.m tbody tr{
     display:block;background:var(--panel-2);border:1px solid var(--border);
-    border-radius:10px;padding:4px 12px 8px;margin-bottom:8px;
+    border-radius:10px;padding:2px 11px 5px;margin-bottom:6px;
   }
   body.m tbody td{
     display:flex;align-items:center;justify-content:space-between;
     gap:10px;border:none;
-    height:38px;padding:0;box-sizing:border-box;   /* fixed, not min-height */
+    height:32px;padding:0;box-sizing:border-box;   /* fixed, not min-height */
   }
   body.m tbody td::before{
     content:attr(data-label);color:var(--muted);
@@ -401,12 +401,16 @@
   }
   body.m tbody td[data-label=""]::before{content:none;}
 
-  /* card name reads as the title */
+  /* card name reads as the title.
+     The cell has three flex children — the ::before label, the rarity dot and
+     the name text — so space-between stranded the dot in the middle of the row.
+     Push the label left and let the dot sit against the name on the right. */
   body.m tbody td:first-child{
-    height:auto;min-height:38px;font-size:14px;font-weight:600;
-    padding-bottom:7px;margin-bottom:2px;border-bottom:1px solid var(--border);
+    height:auto;min-height:32px;font-size:14px;font-weight:600;
+    padding-bottom:6px;margin-bottom:2px;border-bottom:1px solid var(--border);
+    justify-content:flex-end;text-align:right;
   }
-  body.m tbody td:first-child::before{font-weight:400;}
+  body.m tbody td:first-child::before{font-weight:400;margin-right:auto;}
 
   /* every control shares one height and one right-hand column */
   body.m tbody td select,
@@ -415,26 +419,26 @@
   body.m tbody td input[type="date"],
   body.m tbody td .reset-btn,
   body.m tbody td .add-btn{
-    height:30px;padding:0 9px;box-sizing:border-box;
+    height:27px;padding:0 8px;box-sizing:border-box;
     flex:0 1 auto;max-width:60%;margin-left:auto;
   }
-  body.m tbody td .stepper{margin-left:auto;height:30px;}
-  body.m tbody td .stepper input{height:30px;width:42px;padding:0;}
-  body.m tbody td .step-btn{width:34px;height:30px;}
+  body.m tbody td .stepper{margin-left:auto;height:27px;}
+  body.m tbody td .stepper input{height:27px;width:38px;padding:0;}
+  body.m tbody td .step-btn{width:31px;height:27px;}
 
   /* Native checkboxes render iOS blue, which fought the palette and sized
      differently from every other control. */
   body.m tbody td input[type="checkbox"]{
     appearance:none;-webkit-appearance:none;
-    width:22px;height:22px;margin:0;flex:0 0 auto;
-    border:1px solid var(--border);border-radius:6px;background:var(--panel);
+    width:20px;height:20px;margin:0;flex:0 0 auto;
+    border:1px solid var(--border);border-radius:5px;background:var(--panel);
     position:relative;cursor:pointer;
   }
   body.m tbody td input[type="checkbox"]:checked{
     background:var(--gold);border-color:var(--gold);
   }
   body.m tbody td input[type="checkbox"]:checked::after{
-    content:"";position:absolute;left:7px;top:3px;
+    content:"";position:absolute;left:6px;top:2px;
     width:5px;height:10px;border:solid var(--panel);
     border-width:0 2px 2px 0;transform:rotate(45deg);
   }
@@ -446,15 +450,15 @@
 
   /* delete sits at the foot as a full-width action */
   body.m tbody td:last-child{
-    height:auto;padding-top:8px;margin-top:4px;
+    height:auto;padding-top:5px;margin-top:2px;
     border-top:1px solid var(--border);
   }
   body.m tbody td:last-child::before{content:none;}
   body.m tbody td:last-child .del-btn{
-    flex:1 1 auto;width:100%;height:34px;padding:0;
+    flex:1 1 auto;width:100%;height:30px;padding:0;
     display:flex;align-items:center;justify-content:center;gap:7px;
     border:1px solid var(--border);border-radius:8px;
-    color:var(--muted);font-size:13px;
+    color:var(--muted);font-size:12.5px;
   }
   body.m tbody td:last-child .del-btn::after{content:"Remove";}
   body.m tbody td:last-child .del-btn[data-armed="1"]::after{content:none;}
@@ -462,9 +466,9 @@
 
   /* compact: pair short rows two-up, keep control rows full width */
   body.compact.m tbody tr{
-    display:grid;grid-template-columns:1fr 1fr;gap:0 10px;padding:4px 11px 7px;
+    display:grid;grid-template-columns:1fr 1fr;gap:0 10px;padding:2px 10px 4px;margin-bottom:5px;
   }
-  body.compact.m tbody td{height:32px;font-size:12px;}
+  body.compact.m tbody td{height:28px;font-size:12px;}
   body.compact.m tbody td::before{font-size:9.5px;}
   body.compact.m tbody td:first-child,
   body.compact.m tbody td:last-child{grid-column:1 / -1;}
@@ -1038,9 +1042,6 @@
       <!-- Entry, bulk edit and warnings fold away so the collection leads. -->
       <div class="controls" id="libToolbar">
         <span class="result-count" id="libToolbarCount"></span>
-        <button class="icon-btn" id="addToggle" title="Add a card" aria-label="Add a card">
-          <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
-        </button>
         <button class="icon-btn" id="bulkToggleBtn" title="Bulk edit" aria-label="Bulk edit">
           <svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg>
         </button>
@@ -1048,31 +1049,6 @@
           <svg viewBox="0 0 24 24"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9 1.8 18a2 2 0 001.7 3h17a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"/></svg>
         </button>
       </div>
-
-      <div class="add-row-form" id="addRowForm" style="display:none;">
-        <!-- Type-ahead beats a 139-item dropdown on a phone: two or three
-             characters narrow it to a handful of large tap targets. -->
-        <div style="position:relative;flex:1;min-width:200px;">
-          <input type="text" class="mini-input" id="addSearch" autocomplete="off"
-                 placeholder="Type a card name…" style="width:100%;">
-          <div id="addResults" style="display:none;position:absolute;z-index:40;left:0;right:0;top:100%;
-               margin-top:4px;max-height:280px;overflow-y:auto;background:var(--panel-2);
-               border:1px solid var(--border);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.4);"></div>
-        </div>
-        <select class="mini-input" id="addName" style="display:none;"></select>
-        <label class="mini-check"><input type="checkbox" id="addOnyx"> Onyx</label>
-        <select class="mini-input" id="addLevel">
-          <option value="1">Lv 1</option><option value="2">Lv 2</option><option value="3">Lv 3</option><option value="4">Lv 4</option><option value="5" selected>Lv 5</option>
-        </select>
-        <label class="mini-check"><input type="checkbox" id="addFused"> Fused</label>
-        <div class="stepper" data-target="addQty">
-          <button type="button" class="step-btn" data-step="-1">−</button>
-          <input type="number" class="mini-input qty" id="addQty" value="1" min="1" max="3" readonly>
-          <button type="button" class="step-btn" data-step="1">+</button>
-        </div>
-        <button class="add-btn" id="addBtn">+ Add card</button>
-      </div>
-      <div id="recentChips" style="display:none;padding:0 20px 12px;"></div>
 
       <div style="padding:0 20px 6px;"><span class="result-count" id="bulkStatus" style="color:var(--gold);margin-left:0;"></span></div>
 
@@ -1137,6 +1113,7 @@
         <span class="result-count" id="myLibCount"></span>
       </div>
       <div id="myLibCapNote" style="display:none;margin:0 20px 12px;padding:10px 14px;background:var(--panel-2);border:1px solid var(--danger);border-radius:8px;color:var(--text);font-size:12.5px;line-height:1.5;"></div>
+      <div id="myLibError" style="display:none;margin:0 20px 12px;padding:10px 14px;background:var(--panel-2);border:1px solid var(--danger);border-radius:8px;color:var(--text);font-size:12.5px;line-height:1.5;"></div>
       <div id="myLibUnknownNote" style="display:none;margin:0 20px 12px;padding:10px 14px;background:var(--panel-2);border:1px solid var(--danger);border-radius:8px;color:var(--text);font-size:12.5px;line-height:1.5;"></div>
       <div class="table-wrap">
         <table>
@@ -2485,6 +2462,11 @@ function benchmarkSettings(settings){
 // Level contributes additively and is amplified by combo rarity — it is not a
 // multiplier. If either card is Onyx the pair is treated as top rarity.
 // Verified against the workbook: max attack 45, max defense 46, max sum 73.
+// UPDATE: the combo table has since moved. Brute-forcing every combo row at
+// onyx+onyx, level 5+5 now gives max attack 46, max defense 46, max sum 74
+// (the "both"/"heroic" max is hit by every Portal combo, e.g. Bear+Portal —
+// matches the real Hydrabot combo total of 74). The 45/73 figures above are
+// stale, not a formula bug; leaving the note rather than deleting the history.
 // Heroic scores on attack+defense like 'both', but is a separate mode so its
 // decks, thresholds and suggestions stay distinct from standard play.
 const MODE_FACTOR = {attack:1, defense:1, both:2, heroic:2};
@@ -2533,11 +2515,13 @@ function isSelfCombo(rowX, rowY){
   return normalizeCardName(rowX.name) === normalizeCardName(rowY.name);
 }
 
-// Note on dead combos: the reported METRICS average over live pairs only, so a
-// dead pair never drags an average down. The OPTIMIZER is different — here a
-// dead pair scores zero on purpose. Excluding it would let the builder pick a
-// card that is dead against most of the deck simply because its few live pairs
-// are strong. Dead pairs are surfaced separately as the dead-combo percentage.
+// Note on dead combos: the OPTIMIZER scores a dead pair as zero on purpose —
+// excluding it entirely would let the builder pick a card that is dead against
+// most of the deck simply because its few live pairs are strong. The reported
+// METRICS score dead pairs the same way (zero, but still counted in the
+// average's denominator), so "avg attack/defense/sum" is a true deck-wide
+// average and the dead-combo percentage shown next to it explains any gap
+// between that average and the live-pair strength alone.
 function pairScore(rowX, rowY, settings){
   const raw = comboValue(rowX, rowY, settings.mode, {ignoreLevel: settings.ignoreLevel});
   if(raw == null) return 0;
@@ -2550,8 +2534,21 @@ function pairScore(rowX, rowY, settings){
 }
 // ================= DECK METRICS =================
 // Replaces the single composite score. A total rewards deck size and hides what
-// is actually happening; these five say it plainly. Averages are taken over
-// LIVE pairs only, so they stay independent of the dead-combo figure.
+// is actually happening; these five say it plainly.
+//
+// Two rules keep these numbers honest, and both were previously broken:
+//  1. Averages divide by ALL pairs (a dead pair contributes 0), the same
+//     denominator as deadPct. Dividing by live pairs only quietly dropped
+//     zero-value dead pairs from the denominator and inflated the average.
+//  2. The reported values are RAW combo values — no fusion buff, no copy
+//     reduction. Those are optimizer weighting knobs, not real values, and
+//     folding them in put the average off the real scale (a no-Onyx deck could
+//     report a sum above 58, the true no-Onyx maximum). The optimizer still
+//     uses them via pairScore/totalScore.
+//
+// `settings` is therefore only read for `mode`; it is kept in the signature
+// because every call site passes it. Overview and the Deck tab already called
+// this neutrally, so all tabs now report the same figure for the same deck.
 function deckMetrics(slots, settings){
   const n = slots.length;
   const pairs = n>1 ? n*(n-1)/2 : 0;
@@ -2570,16 +2567,16 @@ function deckMetrics(slots, settings){
       const adj=(rr===1||rr===2)?-1:0;
       const lv=Math.round((Math.min(5,a.level||5)+Math.min(5,b.level||5))/2);
       const term=(lv+adj)*cr;
-      // fusion and duplicate falloff still apply, so the numbers reflect the
-      // deck as it will actually play
-      const fusedCount=(a.fused?1:0)+(b.fused?1:0);
-      const fMult=1+(fusedCount/2)*((settings.fusionBuff||1)-1);
-      const cr_=settings.copyReduction||1;
-      const damp = (normalizeCardName(a.name)===normalizeCardName(b.name))
-        ? 1
-        : Math.pow(cr_,Math.max(0,(a.copyIndex||1)-1))*Math.pow(cr_,Math.max(0,(b.copyIndex||1)-1));
-      atk += (ba+term)*fMult*damp;
-      def += (bd+term)*fMult*damp;
+      // Report the REAL combo value. The fusion buff and copy-reduction damping
+      // are optimizer weighting knobs — they tell the builder to favour fused
+      // cards and discount duplicate copies — not actual in-game values.
+      // Multiplying them in here pushed the reported average off the real value
+      // scale entirely (fusion buff 1.5 alone can inflate a pair by 50%, so a
+      // no-Onyx deck could report a sum above 58, which is the highest sum any
+      // no-Onyx combo in the table can actually reach). They stay in pairScore/
+      // totalScore, which is what the optimizer ranks on.
+      atk += (ba+term);
+      def += (bd+term);
     }
   }
   const unfused = slots.filter(c=>!c.fused).length;
@@ -2587,9 +2584,9 @@ function deckMetrics(slots, settings){
     cards: n,
     pairs,
     live,
-    avgAttack:  live ? atk/live : 0,
-    avgDefense: live ? def/live : 0,
-    avgSum:     live ? (atk+def)/live : 0,
+    avgAttack:  pairs ? atk/pairs : 0,
+    avgDefense: pairs ? def/pairs : 0,
+    avgSum:     pairs ? (atk+def)/pairs : 0,
     deadPct:    pairs ? ((pairs-live)/pairs)*100 : 0,
     unfusedPct: n ? (unfused/n)*100 : 0,
   };
@@ -2654,7 +2651,6 @@ async function loadLibrary(){
     }
   }catch(e){ /* key not found or storage unavailable — keep seed */ }
   renderMyLibrary();
-  populateAddNameOptions();
   runSuggestionAnalysis();
 }
 async function saveLibrary(){
@@ -2662,12 +2658,6 @@ async function saveLibrary(){
   try{
     await Store.set('my-library', JSON.stringify(myLibrary));
   }catch(e){ /* no persistent storage available in this environment — edits stay for this session only */ }
-}
-
-function populateAddNameOptions(){
-  const sel = document.getElementById('addName');
-  const names = [...CMB.names].sort();
-  sel.innerHTML = names.map(n=>`<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join('');
 }
 
 function goblinCardOptionsHTML(selected){
@@ -2796,9 +2786,37 @@ function renderMyLibrary(){
   // Overview reads live from myLibrary, so refresh it whenever the library re-renders.
   renderOverview();
 }
+// ---------- Onyx eligibility guard ----------
+// Not every card has an Onyx variant. Nothing used to check this, so an Onyx
+// row could be created for a card that has none — it then scored as top rarity
+// in every pairing and silently inflated the deck.
+function onyxExists(name){
+  const base = String(name||'').replace(/:Onyx$/,'');
+  if(ONYX_ELIGIBLE.has(base)) return true;
+  const k = [...ONYX_ELIGIBLE].find(x=>normalizeCardName(x)===normalizeCardName(base));
+  return !!k;
+}
+// Transient error shown above the library table. Reuses the existing note slot.
+let libErrorTimer = null;
+function showLibError(msg){
+  const el = document.getElementById('myLibError');
+  if(!el) return;
+  el.innerHTML = msg;
+  el.style.display = 'block';
+  clearTimeout(libErrorTimer);
+  libErrorTimer = setTimeout(()=>{ el.style.display = 'none'; }, 6000);
+}
+
 function updateLibRow(id, patch){
   const row = myLibrary.find(r=>r.id===id);
-  if(row) Object.assign(row, patch);
+  if(!row) return;
+  // Refuse to mark a card Onyx when no Onyx version of it exists.
+  if(patch.onyx === true && !onyxExists(row.name)){
+    showLibError(`<strong>${escapeHtml(row.name)}</strong> has no Onyx version — leaving it unchanged.`);
+    renderMyLibrary();
+    return;
+  }
+  Object.assign(row, patch);
   saveLibrary();
   queueSuggestionAnalysis();
 }
@@ -2999,138 +3017,18 @@ window.addEventListener('scroll', ()=>{
 toTop.addEventListener('click', ()=>window.scrollTo({top:0, behavior:'smooth'}));
 
 // ---------- Library toolbar ----------
-// Add form and cap warnings are occasional, so they open on demand.
+// Cap warnings are occasional, so they open on demand.
 (function(){
-  for(const [btnId, panelId] of [['addToggle','addRowForm'], ['capNoteToggle','myLibCapNote']]){
+  for(const [btnId, panelId] of [['capNoteToggle','myLibCapNote']]){
     const btn = document.getElementById(btnId), panel = document.getElementById(panelId);
     if(!btn || !panel) continue;
     btn.addEventListener('click', ()=>{
       const open = panel.style.display === 'none';
       panel.style.display = open ? '' : 'none';
       btn.classList.toggle('on', open);
-      if(open && panelId === 'addRowForm'){
-        const f = document.getElementById('addSearch'); if(f) f.focus();
-      }
     });
   }
 })();
-
-// ---------- Mobile card entry ----------
-// A 139-item native select is a long scroll wheel on a phone. Type-ahead cuts
-// it to a few large tap targets, and steppers avoid summoning the keyboard.
-let recentCards = [];
-try{ recentCards = JSON.parse(localStorage.getItem('alchemists-ledger:recent') || '[]'); }catch(e){}
-
-function ownedCount(name){
-  return myLibrary.filter(r=>r.name===name).reduce((a,r)=>a+r.qty,0);
-}
-
-function renderResults(q){
-  const box = document.getElementById('addResults');
-  const term = normalizeCardName(q);
-  if(!term){ box.style.display='none'; return; }
-  // Prefix matches first — typing "fi" should surface Fire before Sci-Fi.
-  const all = CMB.names.filter(n=>normalizeCardName(n).includes(term));
-  all.sort((a,b)=>{
-    const pa = normalizeCardName(a).startsWith(term) ? 0 : 1;
-    const pb = normalizeCardName(b).startsWith(term) ? 0 : 1;
-    return pa-pb || a.localeCompare(b);
-  });
-  const hits = all.slice(0, 8);
-  if(!hits.length){
-    box.innerHTML = '<div class="res-item"><span class="nm" style="color:var(--muted)">No card matches</span></div>';
-    box.style.display='block'; return;
-  }
-  box.innerHTML = hits.map((n,i)=>{
-    const owned = ownedCount(n);
-    const bits = [];
-    if(ONYX_ELIGIBLE.has(n)) bits.push('Onyx exists');
-    if(getCombo(n,n)) bits.push('self-fuses');
-    if(owned) bits.push('own '+owned);
-    return `<div class="res-item${i===0?' sel':''}" data-name="${escapeHtml(n)}">
-      <span class="nm">${escapeHtml(n)}</span>
-      <span class="meta">${bits.join(' · ')}</span></div>`;
-  }).join('');
-  box.style.display='block';
-  box.querySelectorAll('.res-item[data-name]').forEach(el=>{
-    el.addEventListener('click', ()=>pickCard(el.dataset.name));
-  });
-}
-
-function pickCard(name){
-  document.getElementById('addName').value = name;
-  document.getElementById('addSearch').value = name;
-  document.getElementById('addResults').style.display='none';
-}
-
-function renderRecent(){
-  const el = document.getElementById('recentChips');
-  if(!el) return;
-  if(!recentCards.length){ el.style.display='none'; return; }
-  el.innerHTML = '<span style="font-size:11.5px;color:var(--muted);margin-right:8px;">Recent:</span>' +
-    recentCards.slice(0,8).map(n=>`<span class="chip" data-name="${escapeHtml(n)}">${escapeHtml(n)}</span>`).join('');
-  el.style.display='block';
-  el.querySelectorAll('.chip').forEach(c=>c.addEventListener('click', ()=>pickCard(c.dataset.name)));
-}
-
-function noteRecent(name){
-  recentCards = [name, ...recentCards.filter(n=>n!==name)].slice(0,12);
-  try{ localStorage.setItem('alchemists-ledger:recent', JSON.stringify(recentCards)); }catch(e){}
-  renderRecent();
-}
-
-(function wireSearch(){
-  const inp = document.getElementById('addSearch');
-  const box = document.getElementById('addResults');
-  inp.addEventListener('input', ()=>renderResults(inp.value));
-  inp.addEventListener('focus', ()=>{ if(inp.value) renderResults(inp.value); });
-  inp.addEventListener('keydown', e=>{
-    const items=[...box.querySelectorAll('.res-item[data-name]')];
-    if(!items.length) return;
-    const cur=items.findIndex(i=>i.classList.contains('sel'));
-    if(e.key==='ArrowDown'||e.key==='ArrowUp'){
-      e.preventDefault();
-      const nx=(cur + (e.key==='ArrowDown'?1:-1) + items.length) % items.length;
-      items.forEach(i=>i.classList.remove('sel'));
-      items[nx].classList.add('sel');
-      items[nx].scrollIntoView({block:'nearest'});
-    } else if(e.key==='Enter'){
-      e.preventDefault();
-      pickCard(items[Math.max(0,cur)].dataset.name);
-    }
-  });
-  document.addEventListener('click', e=>{
-    if(!e.target.closest('#addResults') && e.target!==inp) box.style.display='none';
-  });
-})();
-
-// Steppers keep the numeric keyboard from covering the form.
-document.querySelectorAll('.stepper').forEach(st=>{
-  const inp = document.getElementById(st.dataset.target);
-  st.querySelectorAll('.step-btn').forEach(b=>b.addEventListener('click', ()=>{
-    const min = parseInt(inp.min)||0, max = parseInt(inp.max)||99;
-    inp.value = Math.max(min, Math.min(max, (parseInt(inp.value)||min) + parseInt(b.dataset.step)));
-    inp.dispatchEvent(new Event('change', {bubbles:true}));
-  }));
-});
-
-document.getElementById('addBtn').addEventListener('click', ()=>{
-  const name = document.getElementById('addName').value;
-  const onyx = document.getElementById('addOnyx').checked;
-  const level = parseInt(document.getElementById('addLevel').value);
-  const fused = document.getElementById('addFused').checked;
-  const qty = Math.min(MAX_QTY, Math.max(1, parseInt(document.getElementById('addQty').value)||1));
-  if(!name) return;
-  const existing = myLibrary.find(r=>r.name===name && r.onyx===onyx && r.level===level && r.fused===fused);
-  if(existing){
-    existing.qty = Math.min(MAX_QTY, existing.qty + qty);
-  } else {
-    myLibrary.push({id:'r'+(libIdCounter++), name, onyx, level, fused, qty});
-  }
-  saveLibrary();
-  renderMyLibrary();
-  runSuggestionAnalysis();
-});
 
 // ================= BULK EDIT =================
 // Onyx/non-Onyx and fused/unfused are separate holdings that never replace one
@@ -3200,9 +3098,19 @@ function bulkSelection(){
 }
 
 function bulkPlan(){
-  const {items, unknown} = bulkSelection();
+  const sel = bulkSelection();
+  const unknown = sel.unknown;
   const mode = document.getElementById('bulkMode').value;
   const key = i => `${i.name}|${i.onyx}|${i.fused}`;
+
+  // Requests for an Onyx card that has no Onyx version are dropped, not added.
+  // Removals are left alone so an existing bad row can still be cleaned up.
+  const badOnyx = [];
+  const items = [];
+  for(const it of sel.items){
+    if(it.onyx && mode !== 'remove' && !onyxExists(it.name)){ badOnyx.push(it.name); continue; }
+    items.push(it);
+  }
 
   const existing = new Map();
   myLibrary.forEach(r=>{
@@ -3222,7 +3130,7 @@ function bulkPlan(){
     }
   }
   const delta = changes.reduce((a,c)=>a + (c.to - c.from), 0);
-  return {items, changes, unknown, mode, delta};
+  return {items, changes, unknown, badOnyx:[...new Set(badOnyx)], mode, delta};
 }
 
 function describeVariant(c){
@@ -3230,7 +3138,7 @@ function describeVariant(c){
 }
 
 function renderBulkPreview(){
-  const {items, changes, unknown, mode, delta} = bulkPlan();
+  const {items, changes, unknown, badOnyx, mode, delta} = bulkPlan();
   const el = document.getElementById('bulkPreview');
   const applyBtn = document.getElementById('bulkApplyBtn');
 
@@ -3243,6 +3151,7 @@ function renderBulkPreview(){
 
   let html = parts.join(' · ');
   if(unknown.length) html += `<div style="color:var(--danger);margin-top:4px;">Not in the database: ${unknown.map(escapeHtml).join(', ')}</div>`;
+  if(badOnyx.length) html += `<div style="color:var(--danger);margin-top:4px;">No Onyx version exists — skipped: ${badOnyx.map(escapeHtml).join(', ')}</div>`;
   if(changes.length){
     const sample = changes.slice(0,8).map(c=>`${escapeHtml(describeVariant(c))} ${c.from}→${c.to}`).join(', ');
     html += `<div style="color:var(--muted);margin-top:4px;">${sample}${changes.length>8?`, +${changes.length-8} more`:''}</div>`;
@@ -3252,7 +3161,10 @@ function renderBulkPreview(){
 }
 
 function applyBulk(){
-  const {changes} = bulkPlan();
+  const {changes, badOnyx} = bulkPlan();
+  if(badOnyx.length){
+    showLibError(`No Onyx version exists for: <strong>${badOnyx.map(escapeHtml).join(', ')}</strong> — skipped.`);
+  }
   if(!changes.length) return;
 
   for(const c of changes){
@@ -3815,6 +3727,14 @@ async function generateBestDeck(){
 
   renderBuilderTable();
   renderBuilderRarity(deck);
+
+  // Onyx / Fused / Unfused counts for the Recommended Deck summary strip.
+  // These three elements exist in the markup but were never written to.
+  const onyxCount = deck.filter(s=>s.onyx).length;
+  const fusedCount = deck.filter(s=>s.fused).length;
+  document.getElementById('statOnyx').textContent = onyxCount;
+  document.getElementById('statFused').textContent = fusedCount;
+  document.getElementById('statUnfused').textContent = countUnfused(deck);
 }
 
 let lastBuilderResult = null;
@@ -4017,6 +3937,10 @@ function handleGoblinCardChange(id){
 
 function addCardToMyLibrary(name, onyx){
   const level = 5, fused = false;
+  if(onyx && !onyxExists(name)){
+    showLibError(`<strong>${escapeHtml(name)}</strong> has no Onyx version — not added.`);
+    return;
+  }
   const existing = myLibrary.find(r=>r.name===name && r.onyx===onyx && r.level===level && r.fused===fused);
   if(existing){
     existing.qty = Math.min(MAX_QTY, existing.qty + 1);
@@ -5100,7 +5024,6 @@ loadPackLog();
 loadSchedule();
 loadReferenceDecks();
 populatePackTypeOptions();
-renderRecent();
 applyDensity();
 applyView();
 syncSuggControls();
