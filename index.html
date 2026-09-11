@@ -641,6 +641,27 @@
   .icon-btn.warn{color:var(--danger);border-color:rgba(217,104,95,.4);}
   .icon-btn.on{background:var(--gold);color:var(--panel);border-color:var(--gold);}
 
+
+  /* Reference Deck is four short columns; a stacked card per row separated each
+     label from its value across the full width. It stays a table on mobile. */
+  body.m #deckBody{display:table-row-group;}
+  body.m #deckBody tr{display:table-row;background:none;border:none;
+    border-radius:0;padding:0;margin:0;}
+  body.m #deckBody td{
+    display:table-cell;height:auto;padding:9px 6px;vertical-align:middle;
+    border-bottom:1px solid rgba(255,255,255,.05);text-align:left;font-size:12px;
+  }
+  body.m #deckBody td::before{content:none;}
+  body.m #deckBody td:first-child{
+    font-size:11px;font-weight:400;color:var(--muted);width:52px;
+    padding-bottom:9px;margin-bottom:0;border-bottom:1px solid rgba(255,255,255,.05);
+  }
+  body.m #deckBody td:last-child{border-top:none;margin-top:0;padding-top:9px;text-align:right;}
+  body.m #deckTable thead{display:table-header-group;}
+  body.m #deckTable thead th{padding:8px 6px;font-size:9.5px;position:static;background:var(--panel);}
+  body.m #deckTableWrap{overflow-x:auto;}
+  body.m #deckTableWrap .bar, body.m #deckBody .progress-track{min-width:44px;max-width:64px;}
+
   /* ---- reference deck slots: four across, not four stacked ---- */
   #refSlotChips, #refSlotChipsOverview{
     display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:0 20px 14px;
@@ -830,10 +851,33 @@
       padding:10px 14px 13px; font-size:14px;
     }
   body.m .two-col{ grid-template-columns:1fr !important; }
-  body.m /* Forms and controls stack full-width for easy tapping */ .add-row-form, .controls, .builder-controls{
-      flex-direction:column; align-items:stretch; gap:10px;
-      padding-left:14px; padding-right:14px;
-    }
+  /* Stacking every field full-width made a short form fill the screen, and it
+     pushed toolbar icons into a vertical column. Fields go two-up in a grid;
+     rows that are just buttons or icons stay horizontal. */
+  body.m .add-row-form, body.m .builder-controls{
+    display:grid; grid-template-columns:1fr 1fr; gap:10px;
+    align-items:end; padding-left:14px; padding-right:14px;
+  }
+  body.m .add-row-form > .add-btn,
+  body.m .builder-controls > .add-btn,
+  body.m .add-row-form > div[style*="position:relative"]{
+    grid-column:1 / -1;
+  }
+  body.m .builder-field, body.m .field{min-width:0;}
+  /* checkboxes are short — two share a row rather than each taking half */
+  body.m .add-row-form > .mini-check{
+    align-self:center;font-size:12px;padding:6px 0;
+  }
+  body.m .add-row-form > .stepper{justify-self:end;}
+  body.m .builder-field input, body.m .builder-field select,
+  body.m .field input, body.m .field select{width:100%;}
+  body.m .controls{
+    display:flex; flex-wrap:wrap; align-items:center; gap:8px;
+    padding-left:14px; padding-right:14px;
+  }
+  body.m .controls > .search-input{flex:1 1 100%;}
+  body.m .controls > .icon-btn{flex:0 0 auto;}
+  body.m .controls > .reset-btn{flex:0 0 auto;}
   body.m .search-input, .mini-input, select.filter, .builder-field, .builder-field input, .builder-field select{
       width:100% !important; min-width:0;
     }
@@ -952,7 +996,7 @@
           <button class="menu-item" id="densityBtn">
             <svg viewBox="0 0 24 24"><path d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
             <span id="densityLabel">Compact rows</span></button>
-          <div class="menu-foot" id="versionTag">build 70 · library</div>
+          <div class="menu-foot" id="versionTag">build 72 · form layout</div>
         </div>
       </div>
       <input type="file" id="importDataInput" accept="application/json" style="display:none;">
@@ -1167,9 +1211,14 @@
         <label class="builder-field">
           <span>Min combo value</span>
           <input type="number" id="bComboThreshold" value="35" min="0" max="99">
-        </label>        <label class="builder-field">
+        </label>
+        <label class="builder-field">
           <span>Max unfused</span>
           <input type="number" id="bMaxUnfused" placeholder="any" min="0" max="60">
+        </label>
+        <label class="builder-field">
+          <span>Max dead combos %</span>
+          <input type="number" id="bMaxDead" placeholder="any" min="0" max="100" step="1">
         </label>
         <button class="add-btn" id="generateBtn" style="align-self:flex-end;">Generate deck</button>
       </div>
@@ -1212,7 +1261,7 @@
               <th data-key="onyx" data-table="builder">Onyx <span class="arrow"></span></th>
               <th data-key="fused" data-table="builder">Fused <span class="arrow"></span></th>
               <th data-key="level" data-table="builder">Level <span class="arrow"></span></th>
-              <th data-key="contrib" data-table="builder">Synergy contribution <span class="arrow"></span></th>
+              <th data-key="selfCombo" data-table="builder">Self-fuse <span class="arrow"></span></th>
             </tr>
           </thead>
           <tbody id="builderBody"></tbody>
@@ -1251,10 +1300,11 @@
         <input type="text" class="search-input" id="deckSearch" placeholder="Search deck cards…">
         <span class="result-count" id="deckCount"></span>
       </div>
-      <div class="table-wrap">
-        <table>
+      <div class="table-wrap" id="deckTableWrap">
+        <table id="deckTable">
           <thead>
             <tr>
+              <th data-key="rarityRank" data-table="deck">Rarity <span class="arrow"></span></th>
               <th data-key="name" data-table="deck">Card <span class="arrow"></span></th>
               <th data-key="fused" data-table="deck">Fused <span class="arrow"></span></th>
               <th data-key="combos_num" data-table="deck"><span id="comboColHead">Combos</span> <span class="arrow"></span></th>
@@ -1848,9 +1898,21 @@ function renderDeckRarity(){
   }).join('') + (unknown ? `<div style="color:var(--muted);font-size:11.5px;">${unknown} card${unknown===1?'':'s'} of unknown tier</div>` : '');
 }
 
+// Tier of a deck entry, whose name may carry a ":Onyx" suffix.
+function tierOf(name){
+  if(/:Onyx$/.test(String(name))) return 'Onyx';
+  const base = String(name).replace(/:Onyx$/,'');
+  return CMB.ccRarity[base]
+    || CMB.ccRarity[Object.keys(CMB.ccRarity).find(x=>normalizeCardName(x)===normalizeCardName(base))||'']
+    || null;
+}
+const TIER_RANK = {Onyx:0, Rare:1, Uncommon:2, Common:3};
+
 function renderDeck(){
   const q = document.getElementById('deckSearch').value.trim().toLowerCase();
-  let rows = activeRef().deck.filter(d=> d.name.toLowerCase().includes(q) || d.card.toLowerCase().includes(q));
+  let rows = activeRef().deck
+    .filter(d=> d.name.toLowerCase().includes(q) || d.card.toLowerCase().includes(q))
+    .map(d=>({...d, rarityRank: TIER_RANK[tierOf(d.name)] ?? 9}));
   rows.sort((a,b)=>{
     let av=a[deckSort.key], bv=b[deckSort.key];
     if(deckSort.key==='fused'){ av=a.fused?1:0; bv=b.fused?1:0; }
@@ -1888,6 +1950,7 @@ function renderDeck(){
   }
   document.getElementById('deckBody').innerHTML = rows.map(d=>`
     <tr>
+      <td>${rarityLabel(tierOf(d.name))}</td>
       <td class="card-name">${rarityDot(d.name, /:Onyx$/.test(d.name))}${escapeHtml(d.card)}</td>
       <td>${d.fused? '<span class="badge fused">Fused</span>' : '<span class="badge unfused">Unfused</span>'}</td>
       <td>${progressCell(d.combos_num, d.combos_den)}</td>
@@ -1910,7 +1973,7 @@ function renderUpgradeList(){
       <span class="upgrade-score">+${u.gain.toFixed(1)}</span>
     </div>
   `;
-  }).join('') : '<div class="upgrade-item" style="color:var(--muted);">Run the analysis in the Suggestions tab to see upgrades here.</div>';
+  }).join('') : '<div class="empty-note">Run the analysis in the Suggestions tab to see upgrades here.</div>';
 }
 
 // ---------- Suggestions (dynamic My Library analysis) ----------
@@ -3343,22 +3406,57 @@ function renderBuilderRarity(deck){
 function updateComboThresholdHint(){
   const thr = Math.max(0, parseInt(document.getElementById('bComboThreshold').value) || 0);
   const mode = document.getElementById('bMode').value;
-  const N = CMB.names;
-  let hits = 0;
-  for(const row of CMB.cmb){
-    const x = {name:N[row[0]], onyx:false, level:5, copyIndex:1};
-    const y = {name:N[row[1]], onyx:false, level:5, copyIndex:1};
-    const v = comboValue(x, y, mode);
-    if(v != null && v >= thr) hits++;
-  }
-  const pct = (hits / CMB.cmb.length) * 100;
   const el = document.getElementById('comboThresholdHint');
+  if(!el) return;
   const label = SUM_MODES.has(mode) ? 'attack+defense' : mode;
-  if(hits === 0){
-    el.innerHTML = `<span style="color:var(--danger)">No level-5 ${label} combo reaches ${thr}</span> — nothing will count. Onyx pairs score higher, but check the threshold.`;
-  } else {
-    el.textContent = `${pct.toFixed(0)}% of combos reach ${label} ≥ ${thr} at level 5.`;
+
+  // Judge the threshold against the cards you can actually play. The old hint
+  // only tested non-Onyx pairs at level 5, so it reported "nothing reaches 39"
+  // while your Onyx pairs were comfortably clearing it.
+  const rows = myLibrary.filter(r=>r.qty>0);
+  if(rows.length){
+    const best = new Map();
+    for(const r of rows){
+      const cur = best.get(r.name);
+      if(!cur || (r.onyx && !cur.onyx) || (r.onyx===cur.onyx && (r.level||5) > cur.level))
+        best.set(r.name, {onyx:!!r.onyx, level:r.level||5});
+    }
+    const list = [...best.entries()].map(([name,v])=>({name, onyx:v.onyx, level:v.level, copyIndex:1}));
+    let hits = 0, pairs = 0, top = 0;
+    for(let i=0;i<list.length;i++){
+      for(let j=i+1;j<list.length;j++){
+        const v = comboValue(list[i], list[j], mode);
+        if(v == null) continue;
+        pairs++;
+        if(v > top) top = v;
+        if(v >= thr) hits++;
+      }
+    }
+    if(!pairs){ el.textContent = 'Add cards to My Library to gauge this threshold.'; return; }
+    const pct = (hits/pairs)*100;
+    el.innerHTML = hits === 0
+      ? `<span style="color:var(--danger)">None of your pairs reach ${label} ${thr}</span> — your best is ${top}. Lower the threshold or level up.`
+      : `${pct.toFixed(0)}% of your pairs reach ${label} ≥ ${thr}. Your best is ${top}.`;
+    return;
   }
+
+  // No library yet: fall back to the catalogue, and report the Onyx ceiling too
+  // so the figure is not mistaken for an absolute limit.
+  const N = CMB.names;
+  let hitsPlain = 0, topPlain = 0, topOnyx = 0;
+  for(const row of CMB.cmb){
+    const a = N[row[0]], b = N[row[1]];
+    const plain = comboValue({name:a,onyx:false,level:5,copyIndex:1},
+                             {name:b,onyx:false,level:5,copyIndex:1}, mode);
+    const onyx  = comboValue({name:a,onyx:true,level:5,copyIndex:1},
+                             {name:b,onyx:true,level:5,copyIndex:1}, mode);
+    if(plain != null){ if(plain >= thr) hitsPlain++; if(plain > topPlain) topPlain = plain; }
+    if(onyx  != null && onyx > topOnyx) topOnyx = onyx;
+  }
+  const pct = (hitsPlain / CMB.cmb.length) * 100;
+  el.innerHTML = thr > topOnyx
+    ? `<span style="color:var(--danger)">No combo reaches ${label} ${thr}</span> — the ceiling is ${topOnyx} with two Onyx at level 5.`
+    : `${pct.toFixed(0)}% of plain level-5 combos reach ${label} ≥ ${thr}. With Onyx the ceiling is ${topOnyx}.`;
 }
 ['bComboThreshold','bMode'].forEach(id=>{
   const el = document.getElementById(id);
@@ -3518,6 +3616,14 @@ function expandCandidates(settings){
 
 // One greedy build plus swap-refinement. `seed` > 0 randomises the opening
 // picks so repeated runs explore different basins.
+// A ceiling on the share of pairs with no combo at all. Blank means no limit.
+function maxDeadSetting(){
+  const el = document.getElementById('bMaxDead');
+  if(!el || el.value === '') return null;
+  const n = parseFloat(el.value);
+  return (isNaN(n) || n < 0) ? null : n;
+}
+
 // Blank or negative means no constraint.
 function maxUnfusedSetting(){
   const raw = document.getElementById('bMaxUnfused').value;
@@ -3541,6 +3647,21 @@ async function buildOnce(inputCandidates, deckSize, settings, seed, onTick){
   let unfused = 0;
 
   const allowed = (c) => !capped || c.fused || unfused < cap;
+
+  // Optional ceiling on dead pairs. A card is refused if seating it would push
+  // the share of no-combo pairs past the limit, which keeps coverage honest
+  // rather than letting a few strong pairings hide a poorly connected deck.
+  const deadCap = settings.maxDeadPct;
+  function deadOK(cand){
+    if(deadCap == null || deck.length < 2) return true;
+    let dead = 0;
+    for(let i=0;i<deck.length;i++)
+      for(let j=i+1;j<deck.length;j++)
+        if(!getCombo(deck[i].name, deck[j].name)) dead++;
+    for(const d of deck) if(!getCombo(cand.name, d.name)) dead++;
+    const n = deck.length + 1;
+    return (dead / (n*(n-1)/2)) * 100 <= deadCap;
+  }
 
   // Running contribution of each candidate to the current deck. Updating this
   // incrementally turns the greedy phase from O(n^2 m) into O(n m), which is
@@ -3571,7 +3692,7 @@ async function buildOnce(inputCandidates, deckSize, settings, seed, onTick){
     for(let i=0;i<candidates.length;i++){
       if(!allowed(candidates[i])) continue;
       const s = deck.length===0 ? 0 : contrib[i];
-      if(s > bestScore){ bestScore = s; bestIdx = i; }
+      if(s > bestScore && deadOK(candidates[i])){ bestScore = s; bestIdx = i; }
     }
     if(bestIdx < 0) break;
     take(bestIdx);
@@ -3661,6 +3782,7 @@ async function generateBestDeck(){
     copyReduction: parseFloat(document.getElementById('bCopyReduction').value)||0.9,
     maxUnfused: maxUnfusedSetting(),
     comboThreshold: Math.max(0, parseInt(document.getElementById('bComboThreshold').value) || 0),
+    maxDeadPct: maxDeadSetting(),
   };
 
   let candidates = expandCandidates(settings);
@@ -3742,11 +3864,13 @@ let lastBuilderScore = 0;
 let lastBuilderMetrics = null;
 let lastBuilderMode = null;
 let lastBuilderSettings = null;
-let builderSort = {key:'contrib', dir:-1};
+let builderSort = {key:'name', dir:1};
 function renderBuilderTable(){
   if(!lastBuilderResult) return;
   const key = builderSort.key, dir = builderSort.dir;
-  const rows = [...lastBuilderResult].sort((a,b)=>{
+  const rows = [...lastBuilderResult]
+    .map(s=>({...s, selfCombo: selfCombines(s.name)}))
+    .sort((a,b)=>{
     let av = a[key], bv = b[key];
     if(typeof av === 'boolean'){ av = av?1:0; bv = bv?1:0; }
     if(typeof av === 'string') return dir*av.localeCompare(bv);
@@ -3759,7 +3883,9 @@ function renderBuilderTable(){
       <td>${s.onyx? '<span class="rarity-pill"><span class="dot" style="background:var(--onyx)"></span>Onyx</span>' : '—'}</td>
       <td>${s.fused? '<span class="badge fused">Fused</span>' : '<span class="badge unfused">Unfused</span>'}</td>
       <td>${s.level}</td>
-      <td style="font-family:'IBM Plex Mono',monospace;color:var(--gold)">${s.contrib.toFixed(1)}</td>
+      <td>${s.selfCombo
+        ? '<span class="badge fused" title="Combos with a copy of itself — duplicates are not penalised">Yes</span>'
+        : '<span style="color:var(--muted);font-size:12px;">—</span>'}</td>
     </tr>
   `).join('');
 }
