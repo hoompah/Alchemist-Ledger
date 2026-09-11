@@ -1144,8 +1144,8 @@
     </div>
 
     <div class="panel">
-      <p class="panel-title">Top Upgrades</p>
-      <p class="panel-desc">Highest-scoring cards you aren't running.</p>
+      <p class="panel-title">Packs Worth Opening</p>
+      <p class="panel-desc">Upcoming packs ranked by how much they would improve the deck you're analysing.</p>
       <div class="upgrade-list" id="upgradeList"></div>
     </div>
 
@@ -1473,10 +1473,6 @@
           <span>Analyse against</span>
           <select id="sSource" style="width:190px;">
             <option value="best" selected>Best deck from library</option>
-            <option value="attack">Saved: Attack</option>
-            <option value="defense">Saved: Defense</option>
-            <option value="both">Saved: Sum</option>
-            <option value="heroic">Saved: Heroic</option>
           </select>
         </label>
         <label class="builder-field" id="sModeField">
@@ -1968,7 +1964,7 @@ function renderOverview(){
     ? `pairs at ≥${ref.comboThreshold}` : 'qualifying pairs';
   renderRefSlotChips();
 
-  // top upgrades: pulled from the latest suggestion analysis (My Library vs. full database)
+  // packs worth opening: pulled from the latest pack-advice run
   renderUpgradeList();
 
   renderCollectionRarity();
@@ -2325,20 +2321,47 @@ function removeCustomCard(idx){
   });
 })();
 
+let lastPackAdvice = null;
+
 function renderUpgradeList(){
-  const upgrades = lastSuggestions.slice(0,6);
-  document.getElementById('upgradeList').innerHTML = upgrades.length ? upgrades.map(u=>{
-    const src = nextPackSource(u.name, u.onyx);
-    const srcNote = src
-      ? `<div style="font-size:11px;color:var(--muted);margin-top:2px;">${escapeHtml(src.pack)} · ${formatDate(src.dateObj)}</div>`
-      : '';
+  const el = document.getElementById('upgradeList');
+  if(!el) return;
+
+  // Three states worth telling apart: nothing to analyse, analysed but no pack
+  // helps, and a real ranking. The old copy collapsed all of them into one
+  // instruction to go and run something.
+  const hasLibrary = myLibrary.some(r=>r.qty>0);
+  if(!hasLibrary){
+    el.innerHTML = '<div class="empty-note">Add cards in My Library and this fills in automatically.</div>';
+    return;
+  }
+  if(!lastPackAdvice){
+    el.innerHTML = '<div class="empty-note">Working out which packs help most…</div>';
+    return;
+  }
+  if(!lastPackAdvice.list.length){
+    el.innerHTML = '<div class="empty-note">No upcoming pack beats what you already run.</div>';
+    return;
+  }
+
+  const key = lastPackAdvice.key;
+  const keyLabel = {atk:'Atk', def:'Def', sum:'Sum'}[key] || 'Sum';
+
+  el.innerHTML = lastPackAdvice.list.slice(0,5).map((r,i)=>{
+    const when = r.next ? formatDate(r.next.dateObj) : 'no date scheduled';
+    const delta = r.delta[key];
+    // Name the cards that earn the ranking, so the row is actionable on its own.
+    const cards = (r.cards||[]).slice(0,2)
+      .map(c=>`${rarityDot(c.label, c.onyx)}${escapeHtml(c.label)}`).join(', ');
+    const more = (r.cards||[]).length > 2 ? ` +${r.cards.length-2}` : '';
     return `
     <div class="upgrade-item">
-      <span class="upgrade-name">${rarityDot(u.name, u.onyx)}${escapeHtml(u.name)}${srcNote}</span>
-      <span class="upgrade-score">+${u.gain.toFixed(1)}</span>
-    </div>
-  `;
-  }).join('') : '<div class="empty-note">Run the analysis in the Suggestions tab to see upgrades here.</div>';
+      <span class="upgrade-name">${escapeHtml(r.pack)}
+        <div style="font-size:11px;color:var(--muted);margin-top:2px;">${escapeHtml(when)}${cards?' · ':''}${cards}${more}</div>
+      </span>
+      <span class="upgrade-score">${delta>=0?'+':''}${delta.toFixed(1)} ${keyLabel}</span>
+    </div>`;
+  }).join('');
 }
 
 // ---------- Suggestions (dynamic My Library analysis) ----------
@@ -2464,6 +2487,10 @@ function renderPackAdvice(settings, deckRows, sourceLabel){
   const list = document.getElementById('packAdviceList');
   if(!box || !list) return;
   const res = computePackAdvice(settings, deckRows, 10);
+  // The Overview's pack list reads this rather than recomputing; recomputing
+  // there could disagree with what Suggestions shows.
+  lastPackAdvice = res;
+  renderUpgradeList();
   if(!res.list.length){
     list.innerHTML = '<div class="empty-note">No pack improves this deck — every card on offer is weaker than what you already run.</div>';
     box.style.display = 'block';
@@ -2521,8 +2548,10 @@ async function computeSuggestions(){
 
   const settings = {
     // A saved deck was built for its own mode, so score it that way.
-    // Each saved slot carries the mode it was built for.
-    mode: (usingSaved && (REF_SLOTS.find(r=>r.key===source)||{}).mode)
+    // The slot's stored comboMode wins: the Custom slot's mode is set by hand
+    // and would otherwise fall back to the static REF_SLOTS default.
+    mode: (usingSaved && (savedSlot.comboMode
+            || (REF_SLOTS.find(r=>r.key===source)||{}).mode))
       || document.getElementById('sMode').value,
     // Mirror the Deck Builder's tuning, or suggestions would rank cards under
     // different assumptions than the deck they're meant to improve.
@@ -2714,6 +2743,7 @@ async function runSuggestionAnalysis(){
     document.getElementById('packAdvice').style.display = 'none';
     document.getElementById('suggLastUpdated').textContent = '';
     lastSuggestions = [];
+    lastPackAdvice = null;
     document.getElementById('suggBody').innerHTML = '';
     document.getElementById('suggFusable').style.display = 'none';
     document.getElementById('suggPairs').style.display = 'none';
@@ -2732,12 +2762,15 @@ async function runSuggestionAnalysis(){
   // Which pack to open next, measured against this same deck.
   try{
     renderPackAdvice({
-      mode: (usingSaved && (REF_SLOTS.find(r=>r.key===source)||{}).mode) || document.getElementById('sMode').value,
+      mode: (usingSaved && (referenceDecks[source]?.comboMode
+              || (REF_SLOTS.find(r=>r.key===source)||{}).mode))
+            || document.getElementById('sMode').value,
       fusionBuff: parseFloat(document.getElementById('bFusionBuff').value)||1.5,
       copyReduction: parseFloat(document.getElementById('bCopyReduction').value)||0.9,
     }, deck, against);
   }catch(e){
     console.warn('[Ledger] pack advice failed', e);
+    lastPackAdvice = null;
     document.getElementById('packAdvice').style.display='none';
   }
 
@@ -2821,6 +2854,17 @@ function renderSugg(){
   }).join('');
 }
 document.getElementById('recalcSuggBtn').addEventListener('click', runSuggestionAnalysis);
+
+// The slot list was hardcoded here, so the Custom slot never appeared. Building
+// it from REF_SLOTS means any slot added later shows up without another edit.
+function populateSuggSourceOptions(){
+  const sel = document.getElementById('sSource');
+  if(!sel) return;
+  const keep = sel.value || 'best';
+  sel.innerHTML = `<option value="best">Best deck from library</option>` +
+    REF_SLOTS.map(s=>`<option value="${s.key}">Saved: ${escapeHtml(s.label)}</option>`).join('');
+  sel.value = [...sel.options].some(o=>o.value===keep) ? keep : 'best';
+}
 
 // A saved deck already fixes its mode and size, so those controls only apply
 // when analysing a freshly-built deck.
@@ -5657,6 +5701,7 @@ loadPackLog();
 loadSchedule();
 loadReferenceDecks();
 populatePackTypeOptions();
+populateSuggSourceOptions();
 applyDensity();
 applyView();
 syncSuggControls();
