@@ -754,9 +754,12 @@
   body.m .slot-name{font-size:9.5px;letter-spacing:-.1px;}
   body.m .slot-sub{font-size:8px;}
 
-  /* Next Pack name matches the other figure boxes. */
+  /* Next Pack name matches the other figure boxes. The mobile override below
+     is the point: without it .metric-val dropped to 16px and this stayed at
+     20px, so the pack name read larger than every figure beside it. */
   .num-text{font-family:'Cormorant Garamond',serif;font-weight:700;
     font-size:20px;line-height:1.1;color:var(--text);overflow-wrap:anywhere;}
+  body.m .num-text{font-size:16px;}
 
   /* ---- schedule calendar ---- */
   .cal-head{display:flex;align-items:center;gap:10px;padding:0 20px 12px;}
