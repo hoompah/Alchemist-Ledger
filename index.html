@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>Alchemist's Ledger — Deck Dashboard</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -392,7 +392,7 @@
   body.m tbody td{
     display:flex;align-items:center;justify-content:space-between;
     gap:10px;border:none;
-    height:42px;padding:0;box-sizing:border-box;   /* fixed, not min-height */
+    height:38px;padding:0;box-sizing:border-box;   /* fixed, not min-height */
   }
   body.m tbody td::before{
     content:attr(data-label);color:var(--muted);
@@ -415,12 +415,12 @@
   body.m tbody td input[type="date"],
   body.m tbody td .reset-btn,
   body.m tbody td .add-btn{
-    height:34px;padding:0 9px;box-sizing:border-box;
+    height:30px;padding:0 9px;box-sizing:border-box;
     flex:0 1 auto;max-width:60%;margin-left:auto;
   }
-  body.m tbody td .stepper{margin-left:auto;height:34px;}
-  body.m tbody td .stepper input{height:34px;width:44px;padding:0;}
-  body.m tbody td .step-btn{width:36px;height:34px;}
+  body.m tbody td .stepper{margin-left:auto;height:30px;}
+  body.m tbody td .stepper input{height:30px;width:42px;padding:0;}
+  body.m tbody td .step-btn{width:34px;height:30px;}
 
   /* Native checkboxes render iOS blue, which fought the palette and sized
      differently from every other control. */
@@ -569,6 +569,52 @@
     object-fit:cover;align-self:center;margin-right:4px;
   }
 
+  /* form controls outside tables — one shape, matching the 13px text */
+  body.m .mini-input, body.m .search-input,
+  body.m .builder-field input, body.m .builder-field select,
+  body.m .field input, body.m .field select,
+  body.m .msort select{ padding:9px 11px; height:auto; }
+  body.m .builder-field span, body.m .field span{ font-size:11.5px; }
+
+
+  /* ---- pack suggestions: one line each, detail on tap ---- */
+  .pack-row{
+    background:var(--panel-2);border:1px solid var(--border);
+    border-radius:9px;margin-bottom:6px;overflow:hidden;
+  }
+  .pack-head{
+    display:flex;align-items:center;gap:10px;width:100%;
+    background:none;border:none;color:var(--text);font-family:inherit;
+    padding:10px 12px;cursor:pointer;text-align:left;font-weight:400;
+  }
+  .pack-rank{
+    font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--muted);
+    min-width:16px;flex:0 0 auto;
+  }
+  .pack-name{flex:1;min-width:0;font-size:13px;font-weight:600;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .pack-when{
+    display:block;font-weight:400;font-size:10.5px;color:var(--muted);
+    font-family:'IBM Plex Mono',monospace;margin-top:1px;
+  }
+  .pack-delta{flex:0 0 auto;text-align:right;font-size:13px;}
+  .pack-delta-lbl{display:block;font-size:9.5px;color:var(--muted);letter-spacing:.4px;}
+  .pack-caret{flex:0 0 auto;color:var(--muted);transition:transform .18s ease;font-size:16px;}
+  .pack-row.open .pack-caret{transform:rotate(90deg);}
+  .pack-body{display:none;padding:0 12px 10px 38px;}
+  .pack-row.open .pack-body{display:block;}
+  .pack-deltas{
+    display:flex;flex-wrap:wrap;gap:4px 14px;font-size:11px;color:var(--muted);
+    padding:6px 0 8px;border-top:1px solid var(--border);
+  }
+  .pack-card{
+    display:flex;justify-content:space-between;gap:10px;
+    font-size:11.5px;padding:3px 0;color:var(--text);
+  }
+  .pack-card-out{color:var(--muted);white-space:nowrap;}
+  body.m .pack-body{padding-left:12px;}
+  body.m .pack-card{flex-direction:column;gap:0;padding:4px 0;}
+
   /* ---- rarity dot shown beside every card name ---- */
   .rdot{
     display:inline-block;width:9px;height:9px;border-radius:50%;
@@ -658,11 +704,10 @@
   body.m header.top > div:last-child{ justify-content:flex-start !important; width:100%; }
   body.m .toggle-chip{ padding:10px 16px; text-align:center; }
   body.m .add-row-form input[type="checkbox"]{ width:20px; height:20px; }
-  /* iOS zooms the page on focus for any text field under 16px, so editable
-     fields cannot go smaller. Rather than leave selects and read-only fields
-     at a different size, every control on mobile shares 16px — consistent with
-     each other, which is what reads as tidy, and no zoom. */
-  body.m input, body.m select, body.m textarea{ font-size:16px; }
+  /* Controls match the 13px used everywhere else. Only editable text fields can
+     trigger the iOS focus-zoom, and maximum-scale on the viewport holds that
+     off — selects and read-only fields never zoom at any size. */
+  body.m input, body.m select, body.m textarea{ font-size:13px; }
   body.m /* Tables scroll sideways rather than squashing */ .table-wrap{ padding-left:14px; padding-right:14px; }
   body.m table{ min-width:520px; }
   body.m thead th{ padding:9px 10px; }   /* tbody td is set by the card layout */
@@ -764,7 +809,7 @@
           <button class="menu-item" id="densityBtn">
             <svg viewBox="0 0 24 24"><path d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
             <span id="densityLabel">Compact rows</span></button>
-          <div class="menu-foot" id="versionTag">build 62 · control sizing</div>
+          <div class="menu-foot" id="versionTag">build 64 · pack list</div>
         </div>
       </div>
       <input type="file" id="importDataInput" accept="application/json" style="display:none;">
@@ -1099,7 +1144,7 @@
   <section id="suggestions">
     <div class="panel">
       <p class="panel-title">Suggestions</p>
-      <p class="panel-desc">Ranks what to pull next, measured against a saved deck or the best your library can build. Each card is scored both as a new copy and as a fusion with one you own — the better route is shown.</p>
+      <p class="panel-desc">Which pack to open next, measured against a saved deck or the best your library can build. Tap a pack for the cards it yields and what they replace.</p>
       <div class="builder-controls" style="padding-top:6px;">
         <label class="builder-field">
           <span>Analyse against</span>
@@ -1129,13 +1174,14 @@
       <div id="suggStatus" style="padding:0 20px 4px;color:var(--muted);font-size:12.5px;"></div>
       <div id="suggFusable" style="display:none;margin:0 20px 12px;padding:10px 14px;background:var(--panel-2);border:1px solid var(--gold-soft);border-radius:8px;color:var(--text);font-size:12.5px;line-height:1.5;"></div>
       <div id="suggPairs" style="display:none;margin:0 20px 12px;padding:10px 14px;background:var(--panel-2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:12.5px;line-height:1.5;"></div>
-      <div class="panel" id="packAdvice" style="display:none;margin:0 20px 14px;background:var(--panel-2);">
-        <p class="panel-title" style="font-size:17px;">Best packs to open next</p>
-        <p class="panel-desc">Each pack scored by how much its cards would add to your current library.</p>
-        <div id="packAdviceList" style="padding:0 20px 16px;"></div>
+      <div id="packAdvice" style="display:none;">
+        <div id="packAdviceList" style="padding:0 20px 10px;"></div>
       </div>
-      <div id="suggLastUpdated" style="padding:0 20px 14px;color:var(--gold);font-size:11.5px;font-family:'IBM Plex Mono',monospace;"></div>
-      <div class="table-wrap">
+      <div id="suggLastUpdated" style="padding:0 20px 10px;color:var(--gold);font-size:11.5px;font-family:'IBM Plex Mono',monospace;"></div>
+      <div style="padding:0 20px 14px;">
+        <button class="reset-btn" id="toggleCardDetail">Show card-level detail</button>
+      </div>
+      <div class="table-wrap" id="suggTableWrap" style="display:none;">
         <table>
           <thead>
             <tr>
@@ -1813,8 +1859,14 @@ function computePackAdvice(settings, deckRows, limit){
     }
 
     if(!taken.length) continue;
+    // when this pack is next scheduled, so the advice is actionable
+    const upcoming = packSchedule
+      .filter(e=>normalizeCardName(e.name||'')===normalizeCardName(pack))
+      .map(e=>({...e, dateObj:new Date(e.date+'T00:00:00')}))
+      .filter(e=>!isNaN(e.dateObj) && e.dateObj >= new Date(new Date().toDateString()))
+      .sort((a,b)=>a.dateObj-b.dateObj);
     const after = deckMetrics(working, settings);
-    out.push({pack, cards: taken,
+    out.push({pack, cards: taken, next: upcoming[0] || null,
               gain: pairSum(working) - base,
               delta: {
                 atk: after.avgAttack - baseMet.avgAttack,
@@ -1833,37 +1885,54 @@ function renderPackAdvice(settings, deckRows, sourceLabel){
   const box = document.getElementById('packAdvice');
   const list = document.getElementById('packAdviceList');
   if(!box || !list) return;
-  const res = computePackAdvice(settings, deckRows, 8);
-  const desc = box.querySelector('.panel-desc');
-  if(desc){
-    const lab = {atk:'average attack', def:'average defense', sum:'average sum'}[res.key] || 'average sum';
-    desc.textContent = `Scored against ${sourceLabel} (${res.deckSize} cards), ranked by ${lab}. Each pack is judged on everything it yields, seated in turn.`;
-  }
+  const res = computePackAdvice(settings, deckRows, 10);
   if(!res.list.length){
-    list.innerHTML = '<div style="color:var(--muted);font-size:13px;">No pack improves this deck. Every card on offer is weaker than what you already run.</div>';
+    list.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:6px 0;">No pack improves this deck — every card on offer is weaker than what you already run.</div>';
     box.style.display = 'block';
     return;
   }
-  list.innerHTML = res.list.map((r,i)=>`
-    <div style="display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);">
-      <span class="upgrade-rank">${i+1}</span>
-      <span style="flex:1;min-width:0;">
-        <span style="font-weight:600;">${escapeHtml(r.pack)}</span>
-        <span style="display:block;color:var(--muted);font-size:11.5px;line-height:1.55;margin-top:2px;">
-          ${r.cards.map(c=>
-            `${escapeHtml(c.label)} <span style="opacity:.65">replaces ${escapeHtml(c.out)}</span>${c.isNew?'':' <em>(owned)</em>'}`
-          ).join('<br>')}
+  const keyLabel = {atk:'Atk', def:'Def', sum:'Sum'}[res.key] || 'Sum';
+
+  // One line per pack, detail folded away. Ten packs at seven rows each filled
+  // several screens; collapsed they fit one.
+  list.innerHTML = res.list.map((r,i)=>{
+    const head = r.delta[res.key];
+    const when = r.next ? formatDate(r.next.dateObj) : '';
+    return `
+    <div class="pack-row" data-idx="${i}">
+      <button type="button" class="pack-head">
+        <span class="pack-rank">${i+1}</span>
+        <span class="pack-name">${escapeHtml(r.pack)}
+          ${when ? `<span class="pack-when">${escapeHtml(when)}</span>` : ''}
         </span>
-        <span style="display:flex;gap:14px;margin-top:6px;font-size:11px;flex-wrap:wrap;">
-          <span style="color:var(--muted)">Atk ${deltaHTML(r.delta.atk)}</span>
-          <span style="color:var(--muted)">Sum ${deltaHTML(r.delta.sum)}</span>
-          <span style="color:var(--muted)">Def ${deltaHTML(r.delta.def)}</span>
-          <span style="color:var(--muted)">Dead ${deltaHTML(r.delta.dead, {lowerIsBetter:true, suffix:'%'})}</span>
-          <span style="color:var(--muted)">Unfused ${deltaHTML(r.delta.unfused, {lowerIsBetter:true, suffix:'%', dp:0})}</span>
-        </span>
-      </span>
-    </div>
-  `).join('');
+        <span class="pack-delta">${deltaHTML(head)}<span class="pack-delta-lbl">${keyLabel}</span></span>
+        <span class="pack-caret">›</span>
+      </button>
+      <div class="pack-body">
+        <div class="pack-deltas">
+          <span>Atk ${deltaHTML(r.delta.atk)}</span>
+          <span>Sum ${deltaHTML(r.delta.sum)}</span>
+          <span>Def ${deltaHTML(r.delta.def)}</span>
+          <span>Dead ${deltaHTML(r.delta.dead,{lowerIsBetter:true,suffix:'%'})}</span>
+          <span>Unfused ${deltaHTML(r.delta.unfused,{lowerIsBetter:true,suffix:'%',dp:0})}</span>
+        </div>
+        ${r.cards.map(c=>`
+          <div class="pack-card">
+            <span>${escapeHtml(c.label)}${c.isNew?'':' <em>(owned)</em>'}</span>
+            <span class="pack-card-out">replaces ${escapeHtml(c.out)}</span>
+          </div>`).join('')}
+      </div>
+    </div>`;
+  }).join('');
+
+  list.querySelectorAll('.pack-head').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const row = btn.closest('.pack-row');
+      const open = row.classList.toggle('open');
+      // one open at a time keeps the list scannable
+      if(open) list.querySelectorAll('.pack-row.open').forEach(o=>{ if(o!==row) o.classList.remove('open'); });
+    });
+  });
   box.style.display = 'block';
 }
 
@@ -2584,6 +2653,18 @@ document.getElementById('densityBtn').addEventListener('click', ()=>{
   try{ localStorage.setItem('alchemists-ledger:density', compact ? 'compact' : 'comfortable'); }catch(e){}
   applyDensity();
 });
+
+// Card-level detail is secondary now that packs lead; keep it available.
+(function(){
+  const btn = document.getElementById('toggleCardDetail');
+  const wrap = document.getElementById('suggTableWrap');
+  if(!btn || !wrap) return;
+  btn.addEventListener('click', ()=>{
+    const open = wrap.style.display === 'none';
+    wrap.style.display = open ? '' : 'none';
+    btn.textContent = open ? 'Hide card-level detail' : 'Show card-level detail';
+  });
+})();
 
 // ---------- Settings menu ----------
 (function(){
