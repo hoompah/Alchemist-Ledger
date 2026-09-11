@@ -559,7 +559,18 @@
   .metric-lbl span{display:block;color:var(--gold);}
   .metric-note{grid-column:1 / -1;color:var(--muted);font-size:11.5px;line-height:1.5;}
   body.m .metric-strip,
-  body.m #collectionStrip{grid-template-columns:repeat(3,1fr);gap:8px;padding:0 14px 12px;}
+  body.m #collectionStrip{grid-template-columns:repeat(6,1fr);gap:8px;padding:0 14px 12px;}
+  body.m .metric-strip > .metric{grid-column:span 2;}
+  /* A row that ends up short left a visible hole. Widen the trailing boxes so
+     the row is always filled. The extra :nth-last-child variants cover strips
+     that also carry a .metric-note as their final child. */
+  body.m .metric-strip > .metric:first-child:nth-last-child(2),
+  body.m .metric-strip > .metric:first-child:nth-last-child(2) ~ .metric{grid-column:span 3;}
+  body.m .metric-strip > .metric:nth-child(4):nth-last-child(2),
+  body.m .metric-strip > .metric:nth-child(5):nth-last-child(1),
+  body.m .metric-strip > .metric:nth-child(4):nth-last-child(3),
+  body.m .metric-strip > .metric:nth-child(5):nth-last-child(2){grid-column:span 3;}
+  body.m .metric-strip > .metric:first-child:last-child{grid-column:span 6;}
   body.m .metric{padding:9px 10px;}
   body.m .metric-val{font-size:16px;}
 
@@ -637,6 +648,62 @@
   #packTableWrap .msort, .msort:has(+ #packTableWrap){display:none !important;}
 
 
+
+  /* ---- tables that stay tables on mobile ----
+     My Library, Deck Builder and Suggestions are wide, but one stacked card per
+     row separates every label from its value and makes scanning a list of cards
+     slow. They keep a real grid and scroll sideways instead. */
+  body.m .as-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+  body.m table.as-table{min-width:max-content;}
+  body.m table.as-table thead{display:table-header-group;}
+  body.m table.as-table thead th{
+    padding:8px 7px;font-size:9.5px;position:static;
+    background:var(--panel);white-space:nowrap;
+  }
+  body.m table.as-table tbody{display:table-row-group;}
+  body.m table.as-table tbody tr{
+    display:table-row;background:none;border:none;border-radius:0;padding:0;margin:0;
+  }
+  body.m table.as-table tbody td{
+    display:table-cell;height:auto;padding:7px;vertical-align:middle;
+    border-bottom:1px solid rgba(255,255,255,.05);
+    text-align:left;font-size:12px;white-space:nowrap;
+  }
+  body.m table.as-table tbody td::before{content:none;}
+  body.m table.as-table tbody td:first-child{
+    font-size:12px;font-weight:500;padding-bottom:7px;margin-bottom:0;
+    text-align:left;border-bottom:1px solid rgba(255,255,255,.05);
+  }
+  body.m table.as-table tbody td:last-child{border-top:none;margin-top:0;padding-top:7px;}
+  /* controls shrink to sit inside a real cell */
+  body.m table.as-table tbody td select,
+  body.m table.as-table tbody td input[type="text"],
+  body.m table.as-table tbody td input[type="number"]{
+    height:26px;max-width:none;margin-left:0;padding:0 6px;font-size:12px;
+  }
+  body.m table.as-table tbody td .stepper{margin-left:0;height:26px;}
+  body.m table.as-table tbody td .stepper input{height:26px;width:34px;}
+  body.m table.as-table tbody td .step-btn{width:26px;height:26px;font-size:16px;}
+  body.m table.as-table tbody td input[type="checkbox"]{width:18px;height:18px;}
+  body.m table.as-table tbody td input[type="checkbox"]:checked::after{
+    left:5px;top:2px;width:4px;height:9px;
+  }
+  body.m table.as-table tbody td .del-btn{
+    width:auto;height:26px;flex:0 0 auto;padding:0 8px;font-size:11px;
+  }
+  body.m table.as-table tbody td:last-child .del-btn::after{content:none;}
+  /* headers are visible and tappable here, so the stacked sort bar duplicates them */
+  body.m .as-table-wrap .msort,
+  body.m .msort:has(+ .as-table-wrap){display:none !important;}
+
+  /* the per-row remove button only appears while editing a custom deck */
+  .deck-edit-cell{display:none;width:38px;text-align:right;}
+  body.editing-deck .deck-edit-cell{display:table-cell;}
+  body.editing-deck .del-btn.cd-remove{
+    width:26px;height:26px;padding:0;font-size:13px;line-height:1;
+    display:inline-flex;align-items:center;justify-content:center;
+  }
+  body.editing-deck .del-btn.cd-remove::after{content:none;}
 
   .icon-btn.warn{color:var(--danger);border-color:rgba(217,104,95,.4);}
   .icon-btn.on{background:var(--gold);color:var(--panel);border-color:var(--gold);}
@@ -1034,7 +1101,7 @@
   <section id="overview" class="active">
     <div class="panel">
       <p class="panel-title">Deck Metrics <span id="totalScoreLabel" class="title-note"></span></p>
-      <p class="panel-desc">Averages over pairs that actually combo.</p>
+      <p class="panel-desc">Averages across every pair in the deck; a pair with no combo counts as zero.</p>
       <div id="overviewMetrics"></div>
       <!-- Collection figures share the metric styling so every box matches. -->
       <div class="metric-strip" id="collectionStrip">
@@ -1159,8 +1226,8 @@
       <div id="myLibCapNote" style="display:none;margin:0 20px 12px;padding:10px 14px;background:var(--panel-2);border:1px solid var(--danger);border-radius:8px;color:var(--text);font-size:12.5px;line-height:1.5;"></div>
       <div id="myLibError" style="display:none;margin:0 20px 12px;padding:10px 14px;background:var(--panel-2);border:1px solid var(--danger);border-radius:8px;color:var(--text);font-size:12.5px;line-height:1.5;"></div>
       <div id="myLibUnknownNote" style="display:none;margin:0 20px 12px;padding:10px 14px;background:var(--panel-2);border:1px solid var(--danger);border-radius:8px;color:var(--text);font-size:12.5px;line-height:1.5;"></div>
-      <div class="table-wrap">
-        <table>
+      <div class="table-wrap as-table-wrap">
+        <table class="as-table">
           <thead>
             <tr>
               <th data-key="name" data-table="mylib">Card <span class="arrow"></span></th>
@@ -1252,8 +1319,8 @@
       </div>
       <p class="panel-title" style="font-size:16px;">Rarity Breakdown</p>
       <div class="rarity-list" id="builderRarityList"></div>
-      <div class="table-wrap">
-        <table>
+      <div class="table-wrap as-table-wrap">
+        <table class="as-table">
           <thead>
             <tr>
               <th data-key="name" data-table="builder">Card <span class="arrow"></span></th>
@@ -1291,6 +1358,36 @@
         </div>
       </div>
     </div>
+    <div class="panel" id="customDeckPanel" style="margin-bottom:20px;">
+      <p class="panel-title">Build a Custom Deck
+        <span class="title-note" id="customDeckSlotNote"></span>
+      </p>
+      <p class="panel-desc">Add or remove cards by hand in the active slot. Coverage and metrics recalculate on every change.</p>
+      <div class="builder-controls" style="padding-top:6px;">
+        <label class="builder-field" style="flex:1 1 180px;">
+          <span>Card</span>
+          <input type="text" id="cdName" list="cdNameList" placeholder="Type a card name…" autocomplete="off">
+          <datalist id="cdNameList"></datalist>
+        </label>
+        <label class="builder-field">
+          <span>Level</span>
+          <select id="cdLevel">
+            <option value="1">1</option><option value="2">2</option>
+            <option value="3">3</option><option value="4">4</option>
+            <option value="5" selected>5</option>
+          </select>
+        </label>
+        <label class="mini-check" style="align-self:flex-end;padding-bottom:8px;">
+          <input type="checkbox" id="cdOnyx"> Onyx
+        </label>
+        <label class="mini-check" style="align-self:flex-end;padding-bottom:8px;">
+          <input type="checkbox" id="cdFused"> Fused
+        </label>
+        <button class="add-btn" id="cdAddBtn" style="align-self:flex-end;">Add card</button>
+        <button class="reset-btn" id="cdEditToggle" style="align-self:flex-end;">Show remove buttons</button>
+      </div>
+      <div id="cdStatus" style="padding:0 20px 16px;color:var(--muted);font-size:12.5px;"></div>
+    </div>
     <div class="panel">
       <p class="panel-title" id="deckPanelTitle">Current Deck</p>
       <p class="panel-desc">Cards, fusion state, and combo coverage.</p>
@@ -1307,8 +1404,10 @@
               <th data-key="rarityRank" data-table="deck">Rarity <span class="arrow"></span></th>
               <th data-key="name" data-table="deck">Card <span class="arrow"></span></th>
               <th data-key="fused" data-table="deck">Fused <span class="arrow"></span></th>
+              <th data-key="selfCombo" data-table="deck">Self-fuse <span class="arrow"></span></th>
               <th data-key="combos_num" data-table="deck"><span id="comboColHead">Combos</span> <span class="arrow"></span></th>
               <th data-key="mod" data-table="deck">Combo coverage <span class="arrow"></span></th>
+              <th class="deck-edit-cell"></th>
             </tr>
           </thead>
           <tbody id="deckBody"></tbody>
@@ -1358,8 +1457,8 @@
       <div style="padding:0 20px 14px;">
         <button class="reset-btn" id="toggleCardDetail">Show card-level detail</button>
       </div>
-      <div class="table-wrap" id="suggTableWrap" style="display:none;">
-        <table>
+      <div class="table-wrap as-table-wrap" id="suggTableWrap" style="display:none;">
+        <table class="as-table">
           <thead>
             <tr>
               <th data-key="rank" data-table="sugg">Rank <span class="arrow"></span></th>
@@ -1911,11 +2010,17 @@ const TIER_RANK = {Onyx:0, Rare:1, Uncommon:2, Common:3};
 function renderDeck(){
   const q = document.getElementById('deckSearch').value.trim().toLowerCase();
   let rows = activeRef().deck
+    .map((d,i)=>({...d, _idx:i}))
     .filter(d=> d.name.toLowerCase().includes(q) || d.card.toLowerCase().includes(q))
-    .map(d=>({...d, rarityRank: TIER_RANK[tierOf(d.name)] ?? 9}));
+    .map(d=>({
+      ...d,
+      rarityRank: TIER_RANK[tierOf(d.name)] ?? 9,
+      selfCombo: selfCombines(String(d.name||'').replace(/:Onyx$/,'')),
+    }));
   rows.sort((a,b)=>{
     let av=a[deckSort.key], bv=b[deckSort.key];
     if(deckSort.key==='fused'){ av=a.fused?1:0; bv=b.fused?1:0; }
+    if(deckSort.key==='selfCombo'){ av=a.selfCombo?1:0; bv=b.selfCombo?1:0; }
     if(typeof av === 'string') return deckSort.dir*av.localeCompare(bv);
     return deckSort.dir*((av??-1)-(bv??-1));
   });
@@ -1939,6 +2044,9 @@ function renderDeck(){
   const titleEl = document.getElementById('deckPanelTitle');
   if(titleEl) titleEl.textContent = slotLabel(activeRefSlot) + ' Deck';
 
+  const cdNote = document.getElementById('customDeckSlotNote');
+  if(cdNote) cdNote.textContent = `editing the ${slotLabel(activeRefSlot)} slot`;
+
   // Label the coverage column with the criteria the deck was actually saved under.
   const headEl = document.getElementById('comboColHead');
   if(headEl){
@@ -1953,12 +2061,166 @@ function renderDeck(){
       <td>${rarityLabel(tierOf(d.name))}</td>
       <td class="card-name">${rarityDot(d.name, /:Onyx$/.test(d.name))}${escapeHtml(d.card)}</td>
       <td>${d.fused? '<span class="badge fused">Fused</span>' : '<span class="badge unfused">Unfused</span>'}</td>
+      <td>${d.selfCombo ? '<span class="badge fused" title="This card combos with a second copy of itself">Self-fuse</span>' : '<span style="color:var(--muted)">—</span>'}</td>
       <td>${progressCell(d.combos_num, d.combos_den)}</td>
       <td style="font-family:'IBM Plex Mono',monospace;color:var(--gold)">${d.mod!=null ? (d.mod*100).toFixed(1)+'%' : '—'}</td>
+      <td class="deck-edit-cell"><button class="del-btn cd-remove" data-idx="${d._idx}" title="Remove from deck">✕</button></td>
     </tr>
   `).join('');
 }
 document.getElementById('deckSearch').addEventListener('input', renderDeck);
+
+// ================= CUSTOM DECK EDITOR =================
+// A saved slot was previously write-only from the builder. This edits the
+// active slot by hand and recomputes everything the builder would have stored,
+// so a hand-built deck is judged on exactly the same basis as a generated one.
+
+// Deck entries store the Onyx flag inside the name; the scoring code wants it split out.
+function refDeckSlots(deck){
+  return deck.map(d=>({
+    name: String(d.name||'').replace(/:Onyx$/,''),
+    onyx: /:Onyx$/.test(String(d.name||'')) || !!d.onyx,
+    fused: !!d.fused,
+    level: d.level || 5,
+    copyIndex: d.copyIndex || 1,
+  }));
+}
+
+// Recompute coverage, score and metrics for a slot after a manual edit.
+function recomputeRefSlot(slotKey){
+  const ref = referenceDecks[slotKey];
+  if(!ref) return;
+  const mode = ref.comboMode || (REF_SLOTS.find(r=>r.key===slotKey)||{}).mode || 'both';
+  const thr = ref.comboThreshold != null ? ref.comboThreshold : 0;
+  const slots = refDeckSlots(ref.deck);
+
+  // Copy numbers drive the optimizer's duplicate falloff, so keep them in step.
+  const seen = new Map();
+  slots.forEach((s,i)=>{
+    const k = s.name;
+    const n = (seen.get(k) || 0) + 1;
+    seen.set(k, n);
+    s.copyIndex = n;
+    ref.deck[i].copyIndex = n;
+  });
+
+  ref.deck.forEach((d,i)=>{
+    const me = slots[i];
+    const others = slots.filter((_,j)=>j!==i);
+    const covered = others.filter(o=>{
+      const v = comboValue(me, o, mode);
+      return v != null && v >= thr;
+    }).length;
+    d.combos_num = covered;
+    d.combos_den = others.length;
+    d.mod = others.length ? covered/others.length : 0;
+    d.card = `${me.name}${me.onyx?':Onyx':''} (${me.level})${me.fused?'ƒ':''}`;
+  });
+
+  const settings = {mode, fusionBuff:1.5, copyReduction:0.9, comboThreshold:thr};
+  ref.score = Math.round(totalScore(slots, settings));
+  ref.metrics = deckMetrics(slots, {mode, fusionBuff:1, copyReduction:1});
+  ref.comboMode = mode;
+  ref.comboThreshold = thr;
+  ref.deckSize = ref.deck.length;
+  ref.savedAt = new Date().toISOString();
+}
+
+function cdStatus(msg, danger){
+  const el = document.getElementById('cdStatus');
+  if(!el) return;
+  el.innerHTML = msg;
+  el.style.color = danger ? 'var(--danger)' : 'var(--muted)';
+}
+
+function refreshAfterDeckEdit(){
+  saveReferenceDecks();
+  renderRefSlotChips();
+  renderOverview();
+  renderDeck();
+  runSuggestionAnalysis();
+}
+
+function addCustomCard(){
+  const raw = document.getElementById('cdName').value.trim();
+  if(!raw){ cdStatus('Type a card name first.', true); return; }
+
+  // Accept any casing or punctuation the catalogue uses.
+  const canonical = CMB.names.find(n=>normalizeCardName(n)===normalizeCardName(raw));
+  if(!canonical){ cdStatus(`<strong>${escapeHtml(raw)}</strong> is not in the database.`, true); return; }
+
+  const onyx = document.getElementById('cdOnyx').checked;
+  if(onyx && !onyxExists(canonical)){
+    cdStatus(`<strong>${escapeHtml(canonical)}</strong> has no Onyx version — not added.`, true);
+    return;
+  }
+
+  const ref = referenceDecks[activeRefSlot];
+  if(!ref){ cdStatus('No active deck slot.', true); return; }
+
+  // The 3-per-name deck limit counts Onyx and non-Onyx together.
+  const sameName = ref.deck.filter(d=>
+    normalizeCardName(String(d.name||'').replace(/:Onyx$/,'')) === normalizeCardName(canonical)
+  ).length;
+  if(sameName >= MAX_PER_NAME){
+    cdStatus(`Already ${sameName} copies of <strong>${escapeHtml(canonical)}</strong> — ${MAX_PER_NAME} is the limit.`, true);
+    return;
+  }
+
+  const level = parseInt(document.getElementById('cdLevel').value) || 5;
+  const fused = document.getElementById('cdFused').checked;
+
+  ref.deck.push({
+    card: `${canonical}${onyx?':Onyx':''} (${level})${fused?'ƒ':''}`,
+    name: onyx ? canonical+':Onyx' : canonical,
+    fused, level,
+    combos_num: 0, combos_den: 0, mod: 0,
+  });
+
+  recomputeRefSlot(activeRefSlot);
+  refreshAfterDeckEdit();
+  document.getElementById('cdName').value = '';
+  document.getElementById('cdName').focus();
+  cdStatus(`Added <strong>${escapeHtml(canonical)}</strong>${onyx?' (Onyx)':''} · ${ref.deck.length} cards in deck.`);
+}
+
+function removeCustomCard(idx){
+  const ref = referenceDecks[activeRefSlot];
+  if(!ref || idx==null || !ref.deck[idx]) return;
+  const gone = ref.deck[idx];
+  ref.deck.splice(idx, 1);
+  recomputeRefSlot(activeRefSlot);
+  refreshAfterDeckEdit();
+  cdStatus(`Removed <strong>${escapeHtml(String(gone.name||'').replace(/:Onyx$/,''))}</strong> · ${ref.deck.length} cards left.`);
+}
+
+(function wireCustomDeck(){
+  const list = document.getElementById('cdNameList');
+  if(list) list.innerHTML = [...CMB.names].sort()
+    .map(n=>`<option value="${escapeHtml(n)}"></option>`).join('');
+
+  const addBtn = document.getElementById('cdAddBtn');
+  if(addBtn) addBtn.addEventListener('click', addCustomCard);
+
+  const nameInput = document.getElementById('cdName');
+  if(nameInput) nameInput.addEventListener('keydown', e=>{
+    if(e.key === 'Enter'){ e.preventDefault(); addCustomCard(); }
+  });
+
+  const toggle = document.getElementById('cdEditToggle');
+  if(toggle) toggle.addEventListener('click', ()=>{
+    const on = document.body.classList.toggle('editing-deck');
+    toggle.textContent = on ? 'Hide remove buttons' : 'Show remove buttons';
+  });
+
+  // Rows are re-rendered constantly, so delegate rather than rebind.
+  const body = document.getElementById('deckBody');
+  if(body) body.addEventListener('click', e=>{
+    const btn = e.target.closest('.cd-remove');
+    if(!btn) return;
+    removeCustomCard(parseInt(btn.dataset.idx));
+  });
+})();
 
 function renderUpgradeList(){
   const upgrades = lastSuggestions.slice(0,6);
