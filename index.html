@@ -1067,7 +1067,7 @@
           <button class="menu-item" id="densityBtn">
             <svg viewBox="0 0 24 24"><path d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
             <span id="densityLabel">Compact rows</span></button>
-          <div class="menu-foot" id="versionTag">build 76 · builder constraints</div>
+          <div class="menu-foot" id="versionTag">build 77 · threshold fix</div>
         </div>
       </div>
       <input type="file" id="importDataInput" accept="application/json" style="display:none;">
@@ -1282,7 +1282,7 @@
         </label>
         <label class="builder-field">
           <span>Min combo value</span>
-          <input type="number" id="bComboThreshold" value="35" min="0" max="99">
+          <input type="number" id="bComboThreshold" value="0" min="0" max="99">
         </label>
         <label class="builder-field">
           <span>Max unfused</span>
@@ -2975,10 +2975,12 @@ function isSelfCombo(rowX, rowY){
 function pairScore(rowX, rowY, settings){
   const raw = comboValue(rowX, rowY, settings.mode, {ignoreLevel: settings.ignoreLevel});
   if(raw == null) return 0;
-  // "Lowest combo worth counting": a pair below this is treated as worthless,
-  // so the builder stops trading a strong pairing for several weak ones. This
-  // was previously read only for the coverage column and never reached here.
-  if(settings.comboThreshold && raw < settings.comboThreshold) return 0;
+  // "Lowest combo worth counting". Zeroing sub-threshold pairs outright proved
+  // too blunt: at 35 in defense mode it erased 98% of pairs, leaving the
+  // optimiser no gradient and producing worse decks than no threshold at all.
+  // Discounting instead keeps qualifying pairs dominant while preserving enough
+  // signal to order everything below them.
+  if(settings.comboThreshold && raw < settings.comboThreshold) return raw * 0.15;
   const fusedCount = (rowX.fused?1:0)+(rowY.fused?1:0);
   const fusionMult = 1 + (fusedCount/2)*(settings.fusionBuff-1);
   if(isSelfCombo(rowX, rowY)) return raw*fusionMult;
