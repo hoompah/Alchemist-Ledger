@@ -517,7 +517,7 @@
   }
   /* Every figure box is the same shape; the grid equalises heights per row. */
   .metric-strip{
-    display:grid;grid-template-columns:repeat(5,1fr);gap:10px;
+    display:grid;grid-template-columns:repeat(6,1fr);gap:10px;
     padding:0 20px 16px;align-items:stretch;
   }
   #collectionStrip{grid-template-columns:repeat(3,1fr);}
@@ -1067,7 +1067,7 @@
           <button class="menu-item" id="densityBtn">
             <svg viewBox="0 0 24 24"><path d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
             <span id="densityLabel">Compact rows</span></button>
-          <div class="menu-foot" id="versionTag">build 77 · threshold fix</div>
+          <div class="menu-foot" id="versionTag">build 79 · hand value</div>
         </div>
       </div>
       <input type="file" id="importDataInput" accept="application/json" style="display:none;">
@@ -2972,21 +2972,27 @@ function isSelfCombo(rowX, rowY){
 // average's denominator), so "avg attack/defense/sum" is a true deck-wide
 // average and the dead-combo percentage shown next to it explains any gap
 // between that average and the live-pair strength alone.
+// Just clears the highest achievable combo value (74), so a qualifying pair
+// always outranks a non-qualifying one while the gap stays proportionate. A
+// much larger bonus made avoiding dead pairs overwhelm the value objective.
+const QUALIFY_BONUS = 80;
+
 function pairScore(rowX, rowY, settings){
   const raw = comboValue(rowX, rowY, settings.mode, {ignoreLevel: settings.ignoreLevel});
   if(raw == null) return 0;
-  // "Lowest combo worth counting". Zeroing sub-threshold pairs outright proved
-  // too blunt: at 35 in defense mode it erased 98% of pairs, leaving the
-  // optimiser no gradient and producing worse decks than no threshold at all.
-  // Discounting instead keeps qualifying pairs dominant while preserving enough
-  // signal to order everything below them.
-  if(settings.comboThreshold && raw < settings.comboThreshold) return raw * 0.15;
+
+  // "Lowest combo worth counting" is a PRIORITY, not a filter. Pairs meeting the
+  // threshold are taken first; once none are left the builder falls through to
+  // the next best available, rather than treating them as worthless.
+  const qualifies = settings.comboThreshold ? raw >= settings.comboThreshold : false;
+  const value = qualifies ? raw + QUALIFY_BONUS : raw;
+
   const fusedCount = (rowX.fused?1:0)+(rowY.fused?1:0);
   const fusionMult = 1 + (fusedCount/2)*(settings.fusionBuff-1);
-  if(isSelfCombo(rowX, rowY)) return raw*fusionMult;
+  if(isSelfCombo(rowX, rowY)) return value*fusionMult;
   const dampenX = Math.pow(settings.copyReduction, Math.max(0, rowX.copyIndex-1));
   const dampenY = Math.pow(settings.copyReduction, Math.max(0, rowY.copyIndex-1));
-  return raw*fusionMult*dampenX*dampenY;
+  return value*fusionMult*dampenX*dampenY;
 }
 // ================= DECK METRICS =================
 // Replaces the single composite score. A total rewards deck size and hides what
@@ -3005,6 +3011,32 @@ function pairScore(rowX, rowY, settings){
 // `settings` is therefore only read for `mode`; it is kept in the signature
 // because every call site passes it. Overview and the Deck tab already called
 // this neutrally, so all tabs now report the same figure for the same deck.
+// Expected value of the best pair available in a five-card hand. Sampled
+// rather than enumerated — the exact figure needs every 5-subset, which is
+// far too many for a 28-card deck.
+function bestPairInHand(slots, mode, trials){
+  const n = slots.length;
+  if(n < 2) return 0;
+  const runs = trials || 1200;
+  let total = 0;
+  for(let t=0;t<runs;t++){
+    const idx = [];
+    while(idx.length < Math.min(5, n)){
+      const r = Math.floor(Math.random()*n);
+      if(!idx.includes(r)) idx.push(r);
+    }
+    let best = 0;
+    for(let i=0;i<idx.length;i++){
+      for(let j=i+1;j<idx.length;j++){
+        const v = comboValue(slots[idx[i]], slots[idx[j]], mode);
+        if(v != null && v > best) best = v;
+      }
+    }
+    total += best;
+  }
+  return total/runs;
+}
+
 function deckMetrics(slots, settings){
   const n = slots.length;
   const pairs = n>1 ? n*(n-1)/2 : 0;
@@ -3045,6 +3077,12 @@ function deckMetrics(slots, settings){
     avgSum:     pairs ? (atk+def)/pairs : 0,
     deadPct:    pairs ? ((pairs-live)/pairs)*100 : 0,
     unfusedPct: n ? (unfused/n)*100 : 0,
+    // What you actually get at the table: draw five, play the best pair you
+    // hold. The averages above weigh every pair equally, so they cannot see
+    // that duplicates crowd a hand — which is the whole point of copy
+    // reduction. Without this, a deck stacked with copies looks better on
+    // paper while playing worse.
+    handValue: bestPairInHand(slots, settings.mode),
   };
 }
 
@@ -3068,6 +3106,7 @@ function metricsHTML(m, opts){
     ['Avg defense', m.avgDefense.toFixed(1), 'var(--teal)'],
     ['Dead combos', m.deadPct.toFixed(1)+'%', m.deadPct>0 ? 'var(--danger)' : 'var(--text)'],
     ['Unfused',     m.unfusedPct.toFixed(0)+'%', 'var(--text)'],
+    ['Best in hand', (m.handValue||0).toFixed(1), 'var(--onyx)'],
   ];
   return `<div class="metric-strip">` + cells.map(([lab,val,col])=>
     `<div class="metric"><div class="metric-val" style="color:${col}">${val}</div>
