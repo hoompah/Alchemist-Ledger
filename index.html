@@ -1067,7 +1067,7 @@
           <button class="menu-item" id="densityBtn">
             <svg viewBox="0 0 24 24"><path d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
             <span id="densityLabel">Compact rows</span></button>
-          <div class="menu-foot" id="versionTag">build 79 · hand value</div>
+          <div class="menu-foot" id="versionTag">build 81 · deterministic</div>
         </div>
       </div>
       <input type="file" id="importDataInput" accept="application/json" style="display:none;">
@@ -2371,6 +2371,7 @@ function refDeckToSlots(deck){
 // which pack should you open next, judged against a specific deck rather than
 // the collection as a whole. A pack helps only if its cards would earn a slot.
 function computePackAdvice(settings, deckRows, limit){
+  if(!Array.isArray(deckRows)) return {list:[], base:0, deckSize:0, baseMet:null, key:'sum'};
   if(!deckRows || deckRows.length < 2) return {list:[], base:0, deckSize:0};
 
   const deck = deckRows.map(d=>({
@@ -2724,7 +2725,7 @@ async function runSuggestionAnalysis(){
     return;
   }
   statusEl.textContent = 'Analysing…';
-  const { suggestions, readyToFuse, usingSaved, source, topPairs } = await computeSuggestions();
+  const { deck, suggestions, readyToFuse, usingSaved, source, topPairs } = await computeSuggestions();
   if(token !== suggRunToken) return;   // a newer run superseded this one
   lastSuggestions = suggestions.map((s,i)=>({...s, rank:i+1}));
 
@@ -3011,6 +3012,35 @@ function pairScore(rowX, rowY, settings){
 // `settings` is therefore only read for `mode`; it is kept in the signature
 // because every call site passes it. Overview and the Deck tab already called
 // this neutrally, so all tabs now report the same figure for the same deck.
+// Deterministic pseudo-random source. The builder uses random restarts and the
+// hand metric samples hands, so with Math.random the same library and settings
+// produced a different deck every run. A seeded generator keeps results
+// reproducible while preserving the variety the restarts are there to provide.
+function makeRng(seed){
+  let s = (seed >>> 0) || 0x2F6E2B1;
+  return function(){
+    s ^= s << 13; s >>>= 0;
+    s ^= s >> 17;
+    s ^= s << 5;  s >>>= 0;
+    return s / 4294967296;
+  };
+}
+
+// Stable seed for a given library and settings, so identical inputs give
+// identical output but different inputs still explore differently.
+function seedFor(settings, extra){
+  let hash = 2166136261;
+  const str = (myLibrary || []).map(r=>`${r.name}|${r.onyx?1:0}|${r.fused?1:0}|${r.level}|${r.qty}`).join(';')
+    + '#' + [settings.mode, settings.fusionBuff, settings.copyReduction,
+             settings.comboThreshold, settings.maxUnfused, settings.maxDeadPct].join(',')
+    + '#' + (extra || '');
+  for(let i=0;i<str.length;i++){
+    hash ^= str.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+  return hash >>> 0;
+}
+
 // Expected value of the best pair available in a five-card hand. Sampled
 // rather than enumerated — the exact figure needs every 5-subset, which is
 // far too many for a 28-card deck.
@@ -3018,11 +3048,19 @@ function bestPairInHand(slots, mode, trials){
   const n = slots.length;
   if(n < 2) return 0;
   const runs = trials || 1200;
+  // Seeded from the deck itself, so the same deck always reports the same
+  // figure rather than drifting a few tenths between renders.
+  let h = 2166136261;
+  for(const c of slots){
+    const k = c.name + (c.onyx?'O':'') + (c.fused?'F':'') + c.level;
+    for(let i=0;i<k.length;i++){ h ^= k.charCodeAt(i); h = Math.imul(h, 16777619); }
+  }
+  const rng = makeRng(h >>> 0);
   let total = 0;
   for(let t=0;t<runs;t++){
     const idx = [];
     while(idx.length < Math.min(5, n)){
-      const r = Math.floor(Math.random()*n);
+      const r = Math.floor(rng()*n);
       if(!idx.includes(r)) idx.push(r);
     }
     let best = 0;
@@ -4067,7 +4105,7 @@ function countUnfused(deck){
   return n;
 }
 
-async function buildOnce(inputCandidates, deckSize, settings, seed, onTick){
+async function buildOnce(inputCandidates, deckSize, settings, seed, onTick, rng){
   let candidates = [...inputCandidates];
   let deck = [];
   const targetSize = Math.min(deckSize, candidates.length);
@@ -4114,7 +4152,7 @@ async function buildOnce(inputCandidates, deckSize, settings, seed, onTick){
       const pool = [];
       for(let i=0;i<candidates.length;i++) if(allowed(candidates[i])) pool.push(i);
       if(!pool.length) break;
-      take(pool[Math.floor(Math.random()*pool.length)]);
+      take(pool[Math.floor((rng ? rng() : Math.random())*pool.length)]);
       continue;
     }
     let bestIdx = -1, bestScore = -Infinity;
@@ -4181,7 +4219,8 @@ async function computeOptimalDeck(inputCandidates, deckSize, settings, restarts)
   let best = null, bestScore = -Infinity;
   for(let r=0; r<n; r++){
     // r === 0 is the deterministic greedy build; later rounds perturb the start.
-    const deck = await buildOnce(inputCandidates, deckSize, settings, r===0 ? 0 : Math.min(r, 4));
+    const deck = await buildOnce(inputCandidates, deckSize, settings,
+      r===0 ? 0 : Math.min(r, 4), null, makeRng(seedFor(settings, 'r'+r)));
     const sc = totalScore(deck, settings);
     if(sc > bestScore){ bestScore = sc; best = deck; }
   }
@@ -4208,7 +4247,9 @@ async function computeOptimalDeckAsync(inputCandidates, deckSize, settings, rest
           await nextFrame();
         }
       : null;
-    const deck = await buildOnce(inputCandidates, deckSize, settings, r===0 ? 0 : Math.min(r, 4), tick);
+    // Seeded per restart: reproducible across runs, still varied between restarts.
+    const deck = await buildOnce(inputCandidates, deckSize, settings,
+      r===0 ? 0 : Math.min(r, 4), tick, makeRng(seedFor(settings, 'r'+r)));
     const sc = totalScore(deck, settings);
     if(sc > bestScore){ bestScore = sc; best = deck; }
   }
