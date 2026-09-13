@@ -1067,7 +1067,7 @@
           <button class="menu-item" id="densityBtn">
             <svg viewBox="0 0 24 24"><path d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
             <span id="densityLabel">Compact rows</span></button>
-          <div class="menu-foot" id="versionTag">build 75 · library rarity</div>
+          <div class="menu-foot" id="versionTag">build 76 · builder constraints</div>
         </div>
       </div>
       <input type="file" id="importDataInput" accept="application/json" style="display:none;">
@@ -2975,6 +2975,10 @@ function isSelfCombo(rowX, rowY){
 function pairScore(rowX, rowY, settings){
   const raw = comboValue(rowX, rowY, settings.mode, {ignoreLevel: settings.ignoreLevel});
   if(raw == null) return 0;
+  // "Lowest combo worth counting": a pair below this is treated as worthless,
+  // so the builder stops trading a strong pairing for several weak ones. This
+  // was previously read only for the coverage column and never reached here.
+  if(settings.comboThreshold && raw < settings.comboThreshold) return 0;
   const fusedCount = (rowX.fused?1:0)+(rowY.fused?1:0);
   const fusionMult = 1 + (fusedCount/2)*(settings.fusionBuff-1);
   if(isSelfCombo(rowX, rowY)) return raw*fusionMult;
@@ -4096,9 +4100,24 @@ async function buildOnce(inputCandidates, deckSize, settings, seed, onTick){
       const currentContrib = marginalScore(deck[i], withoutI, settings);
       const unfusedWithoutI = countUnfused(withoutI);
       let bestGain = 1e-9, bestJ = -1;
+      // Dead pairs in the rest of the deck, so a swap can be judged against
+      // the cap. Without this the greedy phase honoured the limit and the
+      // refinement pass quietly broke it again.
+      let deadRest = 0;
+      if(deadCap != null){
+        for(let a=0;a<withoutI.length;a++)
+          for(let b=a+1;b<withoutI.length;b++)
+            if(!getCombo(withoutI[a].name, withoutI[b].name)) deadRest++;
+      }
+      const pairsFull = deck.length*(deck.length-1)/2;
       for(let j=0;j<candidates.length;j++){
         const cand = candidates[j];
         if(capped && !cand.fused && unfusedWithoutI >= cap) continue;
+        if(deadCap != null){
+          let dead = deadRest;
+          for(const o of withoutI) if(!getCombo(cand.name, o.name)) dead++;
+          if(pairsFull && (dead/pairsFull)*100 > deadCap) continue;
+        }
         const gain = marginalScore(cand, withoutI, settings) - currentContrib;
         if(gain > bestGain){ bestGain = gain; bestJ = j; }
       }
