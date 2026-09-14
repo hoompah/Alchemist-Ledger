@@ -517,10 +517,13 @@
   }
   /* Every figure box is the same shape; the grid equalises heights per row. */
   .metric-strip{
-    display:grid;grid-template-columns:repeat(6,1fr);gap:10px;
-    padding:0 20px 16px;align-items:stretch;
+    /* auto-fit means the row always fills, whatever the metric count — the old
+       nth-child rules were hand-tuned for exactly five and broke at six. */
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(150px, 1fr));
+    gap:10px;padding:0 20px 16px;align-items:stretch;
   }
-  #collectionStrip{grid-template-columns:repeat(3,1fr);}
+  
   #resultSummaryWrap .metric-strip{padding:0;}
   .metric{
     background:var(--panel-2);border:1px solid var(--border);
@@ -535,19 +538,6 @@
   .metric-lbl{color:var(--muted);font-size:10.5px;margin-top:5px;line-height:1.3;}
   .metric-lbl span{display:block;color:var(--gold);}
   .metric-note{grid-column:1 / -1;color:var(--muted);font-size:11.5px;line-height:1.5;}
-  body.m .metric-strip,
-  body.m #collectionStrip{grid-template-columns:repeat(6,1fr);gap:8px;padding:0 14px 12px;}
-  body.m .metric-strip > .metric{grid-column:span 2;}
-  /* A row that ends up short left a visible hole. Widen the trailing boxes so
-     the row is always filled. The extra :nth-last-child variants cover strips
-     that also carry a .metric-note as their final child. */
-  body.m .metric-strip > .metric:first-child:nth-last-child(2),
-  body.m .metric-strip > .metric:first-child:nth-last-child(2) ~ .metric{grid-column:span 3;}
-  body.m .metric-strip > .metric:nth-child(4):nth-last-child(2),
-  body.m .metric-strip > .metric:nth-child(5):nth-last-child(1),
-  body.m .metric-strip > .metric:nth-child(4):nth-last-child(3),
-  body.m .metric-strip > .metric:nth-child(5):nth-last-child(2){grid-column:span 3;}
-  body.m .metric-strip > .metric:first-child:last-child{grid-column:span 6;}
   body.m .metric{padding:9px 10px;}
   body.m .metric-val{font-size:16px;}
 
@@ -712,6 +702,12 @@
   .sc-icon svg{
     width:15px;height:15px;fill:none;stroke:currentColor;
     stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;
+  }
+
+
+  body.m .metric-strip{
+    grid-template-columns:repeat(auto-fit, minmax(96px, 1fr));
+    gap:8px;padding:0 14px 12px;
   }
 
   /* ---- reference deck slots: five across on one row, not wrapped ---- */
@@ -1067,7 +1063,7 @@
           <button class="menu-item" id="densityBtn">
             <svg viewBox="0 0 24 24"><path d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
             <span id="densityLabel">Compact rows</span></button>
-          <div class="menu-foot" id="versionTag">build 81 · deterministic</div>
+          <div class="menu-foot" id="versionTag">build 84 · trim metrics</div>
         </div>
       </div>
       <input type="file" id="importDataInput" accept="application/json" style="display:none;">
@@ -1110,7 +1106,6 @@
       <!-- Collection figures share the metric styling so every box matches. -->
       <div class="metric-strip" id="collectionStrip">
         <div class="metric"><div class="metric-val" id="deckSizeStat">—</div><div class="metric-lbl">Cards in deck</div></div>
-        <div class="metric"><div class="metric-val" id="ownedStat">—</div><div class="metric-lbl">Cards owned<span id="ownedSub"></span></div></div>
         <div class="metric"><div class="metric-val" id="avgModStat">—</div><div class="metric-lbl">Combo coverage<span id="avgModSub"></span></div></div>
       </div>
     </div>
@@ -1919,12 +1914,6 @@ function renderOverview(){
     ? `${slotLabel(activeRefSlot)} · ${pct.toFixed(0)}% of best possible`
     : '';
   document.getElementById('deckSizeStat').textContent = ref.deck.length;
-
-  // Owned count is computed from My Library every render, so it tracks edits.
-  const ownedNow = myLibrary.filter(r=>r.qty>0).length;
-  const catalogueTotal = CMB.names.length + ONYX_ELIGIBLE.size;  // was a stale snapshot
-  document.getElementById('ownedStat').textContent = ownedNow;
-  document.getElementById('ownedSub').textContent = 'of ' + catalogueTotal + ' catalogued';
 
   // Share of the deck each card forms a QUALIFYING combo with — one that meets
   // the minimum combo value set when the deck was built. Distinct from the dead
@@ -3047,7 +3036,7 @@ function seedFor(settings, extra){
 function bestPairInHand(slots, mode, trials){
   const n = slots.length;
   if(n < 2) return 0;
-  const runs = trials || 1200;
+  const runs = trials || 4000;
   // Seeded from the deck itself, so the same deck always reports the same
   // figure rather than drifting a few tenths between renders.
   let h = 2166136261;
@@ -3144,7 +3133,7 @@ function metricsHTML(m, opts){
     ['Avg defense', m.avgDefense.toFixed(1), 'var(--teal)'],
     ['Dead combos', m.deadPct.toFixed(1)+'%', m.deadPct>0 ? 'var(--danger)' : 'var(--text)'],
     ['Unfused',     m.unfusedPct.toFixed(0)+'%', 'var(--text)'],
-    ['Best in hand', (m.handValue||0).toFixed(1), 'var(--onyx)'],
+    ['Best in hand', (m.handValue||0).toFixed(2), 'var(--onyx)'],
   ];
   return `<div class="metric-strip">` + cells.map(([lab,val,col])=>
     `<div class="metric"><div class="metric-val" style="color:${col}">${val}</div>
@@ -3943,7 +3932,7 @@ document.getElementById('replaceDeckBtn').addEventListener('click', ()=>{
   const previousDeck = JSON.parse(JSON.stringify(referenceDecks[slot].deck));
 
   const newDeck = lastBuilderResult.map(s=>{
-    const cardLabel = `${s.name}${s.onyx?':Onyx':''} (${s.level})${s.fused?'ƒ':''}`;
+    const cardLabel = `${s.name} (${s.level})`;
     const others = lastBuilderResult.filter(o=>o!==s);
     // Count only combos that meet the user's threshold for the chosen mode.
     const covered = others.filter(o=>{
