@@ -1063,7 +1063,7 @@
           <button class="menu-item" id="densityBtn">
             <svg viewBox="0 0 24 24"><path d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
             <span id="densityLabel">Compact rows</span></button>
-          <div class="menu-foot" id="versionTag">build 84 · trim metrics</div>
+          <div class="menu-foot" id="versionTag">build 87 · optional threshold</div>
         </div>
       </div>
       <input type="file" id="importDataInput" accept="application/json" style="display:none;">
@@ -1277,7 +1277,7 @@
         </label>
         <label class="builder-field">
           <span>Min combo value</span>
-          <input type="number" id="bComboThreshold" value="0" min="0" max="99">
+          <input type="number" id="bComboThreshold" placeholder="any" min="0" max="99">
         </label>
         <label class="builder-field">
           <span>Max unfused</span>
@@ -1398,7 +1398,7 @@
         </label>
         <label class="builder-field">
           <span>Min combo value</span>
-          <input type="number" id="cdThreshold" min="0" max="99" value="35">
+          <input type="number" id="cdThreshold" min="0" max="99" placeholder="any">
         </label>
       </div>
       <div id="cdStatus" style="padding:0 20px 16px;color:var(--muted);font-size:12.5px;"></div>
@@ -1947,8 +1947,8 @@ function renderOverview(){
   const avgMod = mods.length ? mods.reduce((a,b)=>a+b,0)/mods.length : 0;
   document.getElementById('avgModStat').textContent = (avgMod*100).toFixed(1)+'%';
   const sub = document.getElementById('avgModSub');
-  if(sub) sub.textContent = ref.comboThreshold != null
-    ? `pairs at ≥${ref.comboThreshold}` : 'qualifying pairs';
+  if(sub) sub.textContent = ref.comboThreshold
+    ? `pairs at ≥${ref.comboThreshold}` : 'all combo pairs';
   renderRefSlotChips();
 
   // packs worth opening: pulled from the latest pack-advice run
@@ -2109,7 +2109,8 @@ function renderDeck(){
   if(cdModeEl && cdThrEl){
     const r = activeRef();
     cdModeEl.value = r.comboMode || (REF_SLOTS.find(s=>s.key===activeRefSlot)||{}).mode || 'both';
-    cdThrEl.value  = r.comboThreshold != null ? r.comboThreshold : 35;
+    // blank rather than a number, so clearing it reads as 'any'
+    cdThrEl.value  = r.comboThreshold ? r.comboThreshold : '';
   }
 
   // Label the coverage column with the criteria the deck was actually saved under.
@@ -2117,7 +2118,7 @@ function renderDeck(){
   if(headEl){
     const ref = activeRef();
     const shortMode = {attack:'Atk', defense:'Def', both:'Atk+Def'};
-    headEl.textContent = ref.comboThreshold != null
+    headEl.textContent = ref.comboThreshold
       ? `Combos ≥${ref.comboThreshold} ${shortMode[ref.comboMode] || ''}`.trim()
       : 'Combos';
   }
@@ -2496,7 +2497,9 @@ function renderPackAdvice(settings, deckRows, sourceLabel){
       <button type="button" class="pack-head">
         <span class="pack-rank">${i+1}</span>
         <span class="pack-name">${escapeHtml(r.pack)}
-          ${when ? `<span class="pack-when">${escapeHtml(when)}</span>` : ''}
+          ${when
+            ? `<span class="pack-when">${escapeHtml(when)}</span>`
+            : `<span class="pack-when" style="color:var(--muted);opacity:.7;">not in schedule</span>`}
         </span>
         <span class="pack-delta">${deltaHTML(head)}<span class="pack-delta-lbl">${keyLabel}</span></span>
         <span class="pack-caret">›</span>
@@ -3885,10 +3888,16 @@ function renderBuilderRarity(deck){
 // Report the hit rate using the real formula, at level 5 with no Onyx — the
 // common case — so the threshold's effect is visible before generating.
 function updateComboThresholdHint(){
-  const thr = Math.max(0, parseInt(document.getElementById('bComboThreshold').value) || 0);
+  const raw = document.getElementById('bComboThreshold').value;
+  const thr = Math.max(0, parseInt(raw) || 0);
   const mode = document.getElementById('bMode').value;
   const el = document.getElementById('comboThresholdHint');
   if(!el) return;
+  // Blank means no minimum, the same as the other optional caps.
+  if(raw === '' || thr === 0){
+    el.textContent = 'No minimum — every pair that combos is counted.';
+    return;
+  }
   const label = SUM_MODES.has(mode) ? 'attack+defense' : mode;
 
   // Judge the threshold against the cards you can actually play. The old hint
@@ -4170,10 +4179,23 @@ async function buildOnce(inputCandidates, deckSize, settings, seed, onTick, rng)
       continue;
     }
     let bestIdx = -1, bestScore = -Infinity;
+    // With a dead-combo cap the deck is a connectivity problem, not just a value
+    // one: taking the strongest card can leave nothing that pairs with it. When
+    // the cap is tight, weight each candidate by how many other candidates it
+    // still combos with, so the build keeps its options open.
+    const tight = deadCap != null && deadCap <= 2;
     for(let i=0;i<candidates.length;i++){
       if(!allowed(candidates[i])) continue;
-      const s = deck.length===0 ? 0 : contrib[i];
-      if(s > bestScore && deadOK(candidates[i])){ bestScore = s; bestIdx = i; }
+      if(!deadOK(candidates[i])) continue;
+      let sc = deck.length===0 ? 0 : contrib[i];
+      if(tight && deck.length > 0){
+        let reach = 0;
+        for(let j=0;j<candidates.length;j++){
+          if(j!==i && getCombo(candidates[i].name, candidates[j].name)) reach++;
+        }
+        sc += reach * 0.35;   // small nudge; value still decides between equals
+      }
+      if(sc > bestScore){ bestScore = sc; bestIdx = i; }
     }
     if(bestIdx < 0) break;
     take(bestIdx);
@@ -4271,6 +4293,21 @@ async function computeOptimalDeckAsync(inputCandidates, deckSize, settings, rest
 }
 
 generateBestDeck._token = 0;
+// A constraint can make the requested size impossible — most often a dead-combo
+// cap, since a fully connected deck needs every card to combo with every other.
+// Truncating in silence looked like a failure, so say what stopped it.
+function shortfallNote(got, want, settings){
+  if(got >= want) return '';
+  const reasons = [];
+  if(settings.maxDeadPct != null){
+    reasons.push(`no further card combos with everything already picked at ${settings.maxDeadPct}% dead`);
+  }
+  if(settings.maxUnfused != null) reasons.push(`the unfused cap of ${settings.maxUnfused} is reached`);
+  if(!reasons.length) reasons.push('your library has no more eligible cards');
+  return `<br><span style="color:var(--danger)">Stopped ${got} short of ${want}</span> — ${reasons.join(', ')}.`
+       + ` Raise the cap or lower the deck size.`;
+}
+
 async function generateBestDeck(){
   const statusEl = document.getElementById('builderStatus');
   const btn = document.getElementById('generateBtn');
@@ -4344,7 +4381,9 @@ async function generateBestDeck(){
   ).join('');
 
   document.getElementById('resultSummaryWrap').innerHTML =
-    metricsHTML(met, {note: `${deck.length} cards · ${met.live} live pairs of ${met.pairs}${capPart} · optimised for ${slotLabel(settings.mode)}`});
+    metricsHTML(met, {note:
+      `${deck.length} cards · ${met.live} live pairs of ${met.pairs}${capPart} · optimised for ${slotLabel(settings.mode)}`
+      + shortfallNote(deck.length, deckSize, settings)});
 
   renderBuilderTable();
   renderBuilderRarity(deck);
@@ -4768,14 +4807,18 @@ document.getElementById('goblinAddBtn').addEventListener('click', ()=>{
 });
 
 // ================= PACK TRACKER =================
-// Derived from PACK_CARDS rather than maintained separately. The two lists had
-// drifted apart: 'Cloaked Combat' and 'Far Away Fight' were two packs each that
-// had lost their comma, and 'Dark Ages', 'End Of World', 'Half-Half' and
-// 'Halloween' were spelled differently from the cards they point at — so those
-// packs could be picked in the log but had no card data, while 'Cloaked',
-// 'Combat', 'Far Away', 'Fight', 'Dark Age', 'End of World', 'Half Half' and
-// "Hallow's Eve" had card data but could not be picked at all.
-const PACK_TYPES = Object.keys(PACK_CARDS).sort();
+const PACK_TYPES = [
+  'Accursed','Adventure','Animation','Aquatic','Arachnid','Arms','Artifact','Atomic Aftermath','Aviary',
+  'Bloody','Booming Spike','Botanical','Bug','Canine','Carnage','Chosen Hero','Clairvoyant','Cloaked Combat',
+  'Commander','Confectionery','The Dark','Dark Ages','End Of World','Fable','Fantasy','Far Away Fight',
+  'First Aid','Frozen','Fun','Future Fight','Futuristic','Gamer','Gargantuan','Half-Half','Hope','Hypno',
+  'Innovation','Insanity','Jungle','Lunar','Machine','Martian','Melody','Meta','Millionaire','Mon',
+  'Multiplicity','Muscle','Mutant','Mythos','Oceana','Parasitic','Phantom','Pirate','Plague','Portal',
+  'Primate','Purrrfect','Rage','Rat','Regal','Sahara','Scaly','Scheming','Shrine','Skeletal','Slime',
+  'Slumber','Sports','Spycraft','Subterranean','Swift','Tiny','Tortoise','Undying','Vanity','Viking',
+  'Wingman','Wizarding','Zoom Zoom',
+  'Anniversary','Halloween','Summertide','Thanksgiving',"Valentine's",'Wintertide','Yuletide','New Years'
+];
 
 function populatePackTypeOptions(){
   const sel = document.getElementById('packType');
