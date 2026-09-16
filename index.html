@@ -1587,8 +1587,8 @@
       <div class="add-row-form" id="scheduleAddForm" style="display:none;">
         <input type="text" class="mini-input" id="schedName" placeholder="Pack name">
         <input type="date" class="mini-input" id="schedDate">
-        <input type="text" class="mini-input" id="schedOcc" placeholder="OCC card">
-        <input type="text" class="mini-input" id="schedGcc" placeholder="GCC card">
+        <input type="text" class="mini-input" id="schedOcc" placeholder="Onyx card">
+        <input type="text" class="mini-input" id="schedGcc" placeholder="Guaranteed card">
         <button class="add-btn" id="schedAddBtn">+ Add entry</button>
       </div>
 
@@ -1604,8 +1604,8 @@
             <tr>
               <th data-key="name" data-table="schedule">Pack <span class="arrow"></span></th>
               <th data-key="dateSort" data-table="schedule">Date <span class="arrow"></span></th>
-              <th data-key="occ" data-table="schedule">OCC (Onyx) <span class="arrow"></span></th>
-              <th data-key="gcc" data-table="schedule">GCC <span class="arrow"></span></th>
+              <th data-key="occ" data-table="schedule">Onyx card <span class="arrow"></span></th>
+              <th data-key="gcc" data-table="schedule">Guaranteed card <span class="arrow"></span></th>
               <th></th>
             </tr>
           </thead>
@@ -1620,7 +1620,7 @@
 
       <div id="schedBulkPanel" style="display:none;margin:0 20px 20px;padding:14px;background:var(--panel-2);border:1px solid var(--border);border-radius:10px;">
         <p style="margin:0 0 10px;font-size:12.5px;color:var(--muted);line-height:1.6;">
-          <strong>Pack Name, Date</strong> is enough — each pack always yields the same cards, so OCC and GCC are filled in automatically. Add them as third and fourth columns only to override.
+          <strong>Pack Name, Date</strong> is enough — each pack always yields the same cards, so both are filled in automatically. Add them as third and fourth columns only to override.
           Paste CSV or straight from a spreadsheet, or upload a .csv. A header row is skipped. Dates accept <code>2026-01-04</code>, <code>1/4/26</code> or <code>4 Jan 2026</code>.
         </p>
         <textarea id="schedBulkText" spellcheck="false" placeholder="Pack Name, Date&#10;Cloaked, 2026-01-01&#10;Fantasy, 2026-01-04&#10;Aviary, 1/6/26" style="width:100%;min-height:130px;background:var(--panel);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px;font-family:'IBM Plex Mono',monospace;font-size:11.5px;resize:vertical;"></textarea>
@@ -1709,6 +1709,12 @@ const SEED_LIBRARY = [];
 // and the earlier one its 2027 run, since packs land about a day earlier each year.
 // Every entry once read 2026, which put most of the schedule in the past.
 const PACK_SCHEDULE = [{"name":"Primate","date":"2026-02-11","occ":"Prehistoric","gcc":"Monkey"},{"name":"Combat","date":"2026-02-13","occ":"Villain","gcc":"War"},{"name":"Scaly","date":"2026-02-16","occ":"Turtle","gcc":"Reptile"},{"name":"Vanity","date":"2026-02-18","occ":"Cat","gcc":"Beauty"},{"name":"Regal","date":"2026-02-20","occ":"Chinchilla","gcc":"Royalty"},{"name":"Scheming","date":"2026-02-23","occ":"Leader","gcc":"Royal Game"},{"name":"Confectionery","date":"2026-02-25","occ":"Hammer","gcc":"Sweets"},{"name":"Muscle","date":"2026-02-27","occ":"Sword","gcc":"Strength"},{"name":"Fable","date":"2026-03-02","occ":"Fairy","gcc":"Fairy Tale"},{"name":"Swift","date":"2026-03-04","occ":"Energy","gcc":"Speed"},{"name":"Innovation","date":"2026-03-06","occ":"Science","gcc":"Invention"},{"name":"Canine","date":"2026-03-09","occ":"Knight","gcc":"Dog"},{"name":"Dark Age","date":"2026-03-11","occ":"Time","gcc":"Medieval"},{"name":"The Dark","date":"2026-03-13","occ":"Madness","gcc":"Darkness"},{"name":"Mon","date":"2026-03-16","occ":"Dragon","gcc":"Pocket Pet"},{"name":"Meta","date":"2026-03-18","occ":"Multiples","gcc":"Card"},{"name":"Slumber","date":"2026-03-20","occ":"Bat","gcc":"Sleep"},{"name":"Half Half","date":"2026-03-23","occ":"Mutation","gcc":"Hybrid"},{"name":"Subterranean","date":"2026-03-25","occ":"Sci-Fi","gcc":"Underground"},{"name":"Hope","date":"2026-03-27","occ":"Love","gcc":"Hopefulness"},{"name":"Bug","date":"2026-03-30","occ":"Superhero","gcc":"Insect"},{"name":"Phantom","date":"2026-04-01","occ":"Water","gcc":"Spirit"},{"name":"Arachnid","date":"2026-04-03","occ":"Affliction","gcc":"Arachnid"},{"name":"Tortoise","date":"2026-04-06","occ":"Death","gcc":"Turtle"},{"name":"First Aid","date":"2026-04-08","occ":"Life","gcc":"Healing"},{"name":"Sahara","date":"2026-04-10","occ":"Relic","gcc":"Desert"},{"name":"Millionaire","date":"2026-04-13","occ":"Human","gcc":"Wealth"},{"name":"End of World","date":"2026-04-15","occ":"Strength","gcc":"Apocalypse"},{"name":"Portal","date":"2026-04-17","occ":"Extraterrestrial","gcc":"Portal"},{"name":"Frozen","date":"2026-04-20","occ":"Sun","gcc":"Ice"},{"name":"Wizarding","date":"2026-04-22","occ":"Magic","gcc":"Wizarding School"},{"name":"Gargantuan","date":"2026-04-24","occ":"Anger","gcc":"Giant"},{"name":"Botanical","date":"2026-04-27","occ":"Invention","gcc":"Plant"},{"name":"Mutant","date":"2026-04-29","occ":"Sci-Fi","gcc":"Mutation"},{"name":"Pirate","date":"2026-05-01","occ":"Monkey","gcc":"Pirate"},{"name":"Far Away","date":"2026-05-04","occ":"Space","gcc":"Galaxy Wars"},{"name":"Melody","date":"2026-05-06","occ":"Monster","gcc":"Music"},{"name":"Shrine","date":"2026-05-08","occ":"The Chosen One","gcc":"Shrine"},{"name":"Chosen Hero","date":"2026-05-11","occ":"Knight","gcc":"The Chosen One"},{"name":"Regal","date":"2026-05-13","occ":"Chinchilla","gcc":"Royalty"},{"name":"Skeletal","date":"2026-05-15","occ":"Cursed","gcc":"Bone"},{"name":"Multiplicity","date":"2026-05-18","occ":"Metal","gcc":"Multiples"},{"name":"Muscle","date":"2026-05-20","occ":"Sword","gcc":"Strength"},{"name":"Dark Age","date":"2026-05-22","occ":"Time","gcc":"Medieval"},{"name":"Jungle","date":"2026-05-25","occ":"Prehistoric","gcc":"Jungle"},{"name":"Animation","date":"2026-05-27","occ":"Toy","gcc":"Cartoon"},{"name":"Spycraft","date":"2026-05-29","occ":"Camouflage","gcc":"Spy"},{"name":"Confectionery","date":"2026-06-01","occ":"Hammer","gcc":"Sweets"},{"name":"Commander","date":"2026-06-03","occ":"Undead","gcc":"Leader"},{"name":"Future Fight","date":"2026-06-05","occ":"War","gcc":"Future Fight"},{"name":"Cloaked","date":"2026-06-08","occ":"Void","gcc":"Camouflage"},{"name":"Fantasy","date":"2026-06-10","occ":"Fairy Tale","gcc":"Precious Ring Lore"},{"name":"Sports","date":"2026-06-12","occ":"Speed","gcc":"Sports"},{"name":"Subterranean","date":"2026-06-15","occ":"Sci-Fi","gcc":"Underground"},{"name":"Futuristic","date":"2026-06-17","occ":"Water","gcc":"Sci-Fi"},{"name":"Summertide","date":"2026-06-19","occ":"Arcade","gcc":"Summertide"},{"name":"Half Half","date":"2026-06-22","occ":"Mutation","gcc":"Hybrid"},{"name":"Hypno","date":"2026-06-24","occ":"Werewolf","gcc":"Mind Control"},{"name":"Viking","date":"2026-06-26","occ":"Horn","gcc":"Viking"},{"name":"Accursed","date":"2026-06-29","occ":"Superhero","gcc":"Cursed"},{"name":"Rat","date":"2026-07-01","occ":"Wizard","gcc":"Rodent"},{"name":"Clairvoyant","date":"2026-07-03","occ":"Insect","gcc":"Psychic"},{"name":"Aviary","date":"2026-07-06","occ":"Wind","gcc":"Bird"},{"name":"Fun","date":"2026-07-08","occ":"Bear","gcc":"Toy"},{"name":"Atomic Aftermath","date":"2026-07-10","occ":"Apocalypse","gcc":"Atomic Aftermath"},{"name":"Machine","date":"2026-07-13","occ":"Elf","gcc":"Robot"},{"name":"Parasitic","date":"2026-07-15","occ":"Knowledge","gcc":"Parasite"},{"name":"Combat","date":"2026-07-17","occ":"Villain","gcc":"War"},{"name":"Plague","date":"2026-07-20","occ":"Water Serpent","gcc":"Affliction"},{"name":"Primate","date":"2026-07-22","occ":"Prehistoric","gcc":"Monkey"},{"name":"Oceana","date":"2026-07-24","occ":"Underwater","gcc":"Fish"},{"name":"Scaly","date":"2026-07-27","occ":"Turtle","gcc":"Reptile"},{"name":"Frozen","date":"2026-07-29","occ":"Sun","gcc":"Ice"},{"name":"Meta","date":"2026-07-31","occ":"Multiples","gcc":"Card"},{"name":"Tortoise","date":"2026-08-03","occ":"Death","gcc":"Turtle"},{"name":"Carnage","date":"2026-08-05","occ":"Weapon","gcc":"Destruction"},{"name":"Regal","date":"2026-08-07","occ":"Chinchilla","gcc":"Royalty"},{"name":"Scheming","date":"2026-08-10","occ":"Leader","gcc":"Royal Game"},{"name":"Muscle","date":"2026-08-12","occ":"Sword","gcc":"Strength"},{"name":"Adventure","date":"2026-08-14","occ":"Wealth","gcc":"Adventure"},{"name":"Booming Spike","date":"2026-08-17","occ":"Demon","gcc":"Horn"},{"name":"Canine","date":"2026-08-19","occ":"Knight","gcc":"Dog"},{"name":"Innovation","date":"2026-08-21","occ":"Science","gcc":"Invention"},{"name":"Aquatic","date":"2026-08-24","occ":"Trident","gcc":"Underwater"},{"name":"Bloody","date":"2026-08-26","occ":"Earth","gcc":"Blood"},{"name":"Hope","date":"2026-08-28","occ":"Love","gcc":"Hopefulness"},{"name":"Wizarding","date":"2026-08-31","occ":"Magic","gcc":"Wizarding School"},{"name":"Slumber","date":"2026-09-02","occ":"Bat","gcc":"Sleep"},{"name":"Vanity","date":"2026-09-04","occ":"Cat","gcc":"Beauty"},{"name":"Slime","date":"2026-09-07","occ":"Poison","gcc":"Blob"},{"name":"End of World","date":"2026-09-09","occ":"Strength","gcc":"Apocalypse"},{"name":"Arachnid","date":"2026-09-11","occ":"Affliction","gcc":"Arachnid"},{"name":"Melody","date":"2026-09-14","occ":"Monster","gcc":"Music"},{"name":"Botanical","date":"2026-09-16","occ":"Invention","gcc":"Plant"},{"name":"Half Half","date":"2026-09-18","occ":"Mutation","gcc":"Hybrid"},{"name":"Fable","date":"2026-09-21","occ":"Fairy","gcc":"Fairy Tale"},{"name":"Multiplicity","date":"2026-09-23","occ":"Metal","gcc":"Multiples"},{"name":"Phantom","date":"2026-09-25","occ":"Water","gcc":"Spirit"},{"name":"Portal","date":"2026-09-28","occ":"Extraterrestrial","gcc":"Portal"},{"name":"Tiny","date":"2026-09-30","occ":"Insect","gcc":"Miniature"},{"name":"Sahara","date":"2026-10-02","occ":"Relic","gcc":"Desert"},{"name":"Rage","date":"2026-10-05","occ":"Void","gcc":"Anger"},{"name":"Swift","date":"2026-10-07","occ":"Energy","gcc":"Speed"},{"name":"Insanity","date":"2026-10-09","occ":"Knowledge","gcc":"Madness"},{"name":"Wingman","date":"2026-10-12","occ":"Superhero","gcc":"Sidekick"},{"name":"Shrine","date":"2026-10-14","occ":"The Chosen One","gcc":"Shrine"},{"name":"First Aid","date":"2026-10-16","occ":"Life","gcc":"Healing"},{"name":"The Dark","date":"2026-10-19","occ":"Madness","gcc":"Darkness"},{"name":"Undying","date":"2026-10-21","occ":"Vampire","gcc":"Immortality"},{"name":"Hallow's Eve","date":"2026-10-23","occ":"Spirit","gcc":"Halloween"},{"name":"Fight","date":"2026-10-26","occ":"Werewolf","gcc":"Martial Arts"},{"name":"Skeletal","date":"2026-10-28","occ":"Cursed","gcc":"Bone"},{"name":"Mythos","date":"2026-10-30","occ":"Food","gcc":"Myth"},{"name":"Spycraft","date":"2026-11-02","occ":"Camouflage","gcc":"Spy"},{"name":"Martian","date":"2026-11-04","occ":"Space","gcc":"Extraterrestrial"},{"name":"Future Fight","date":"2026-11-06","occ":"War","gcc":"Future Fight"},{"name":"Primate","date":"2026-11-09","occ":"Prehistoric","gcc":"Monkey"},{"name":"Pirate","date":"2026-11-11","occ":"Monkey","gcc":"Pirate"},{"name":"Millionaire","date":"2026-11-13","occ":"Human","gcc":"Wealth"},{"name":"Sports","date":"2026-11-16","occ":"Speed","gcc":"Sports"},{"name":"Gamer","date":"2026-11-18","occ":"Chinchilla","gcc":"Arcade"},{"name":"Thanksgiving","date":"2026-11-20","occ":"Bird","gcc":"Turkey Day"},{"name":"Lunar","date":"2026-11-23","occ":"Wings","gcc":"Moon"},{"name":"Anniversary","date":"2026-11-25","occ":"Sweets/Golem","gcc":"Celebration"},{"name":"Muscle","date":"2026-11-27","occ":"Sword","gcc":"Strength"},{"name":"Futuristic","date":"2026-11-30","occ":"Water","gcc":"Sci-Fi"},{"name":"Plague","date":"2026-12-02","occ":"Water Serpent","gcc":"Affliction"},{"name":"Animation","date":"2026-12-04","occ":"Toy","gcc":"Cartoon"},{"name":"Wintertide","date":"2026-12-07","occ":"Holidays","gcc":"Wintertide"},{"name":"Zoom Zoom","date":"2026-12-09","occ":"Invention","gcc":"Vehicle"},{"name":"Gargantuan","date":"2026-12-11","occ":"Anger","gcc":"Giant"},{"name":"Mon","date":"2026-12-14","occ":"Dragon","gcc":"Pocket Pet"},{"name":"Mutant","date":"2026-12-16","occ":"Sci-Fi","gcc":"Mutation"},{"name":"Yuletide","date":"2026-12-18","occ":"Pocket Pet","gcc":"Holidays"},{"name":"Tortoise","date":"2026-12-21","occ":"Death","gcc":"Turtle"},{"name":"Dark Age","date":"2026-12-23","occ":"Time","gcc":"Medieval"},{"name":"Frozen","date":"2026-12-25","occ":"Sun","gcc":"Ice"},{"name":"New Years","date":"2026-12-28","occ":"Horse/Moon","gcc":"New Years"},{"name":"Futuristic","date":"2026-12-30","occ":"Water","gcc":"Sci-Fi"},{"name":"Cloaked","date":"2027-01-01","occ":"Void","gcc":"Camouflage"},{"name":"Fantasy","date":"2027-01-04","occ":"Fairy Tale","gcc":"Precious Ring Lore"},{"name":"Aviary","date":"2027-01-06","occ":"Wind","gcc":"Bird"},{"name":"Wingman","date":"2027-01-08","occ":"Superhero","gcc":"Sidekick"},{"name":"Viking","date":"2027-01-11","occ":"Horn","gcc":"Viking"},{"name":"Aquatic","date":"2027-01-13","occ":"Trident","gcc":"Underwater"},{"name":"Machine","date":"2027-01-15","occ":"Elf","gcc":"Robot"},{"name":"Clairvoyant","date":"2027-01-18","occ":"Insect","gcc":"Psychic"},{"name":"Far Away","date":"2027-01-20","occ":"Space","gcc":"Galaxy Wars"},{"name":"Wizarding","date":"2027-01-22","occ":"Magic","gcc":"Wizarding School"},{"name":"Oceana","date":"2027-01-25","occ":"Underwater","gcc":"Fish"},{"name":"Arms","date":"2027-01-27","occ":"Vampire","gcc":"Weapon"},{"name":"Commander","date":"2027-01-29","occ":"Undead","gcc":"Leader"},{"name":"Adventure","date":"2027-02-01","occ":"Wealth","gcc":"Adventure"},{"name":"Hypno","date":"2027-02-03","occ":"Werewolf","gcc":"Mind Control"},{"name":"Valentine's","date":"2027-02-05","occ":"Precious Ring Lore","gcc":"Love"},{"name":"Slime","date":"2027-02-08","occ":"Poison","gcc":"Blob"},{"name":"Primate","date":"2027-02-10","occ":"Prehistoric","gcc":"Monkey"},{"name":"Combat","date":"2027-02-12","occ":"Villain","gcc":"War"},{"name":"Scaly","date":"2027-02-15","occ":"Turtle","gcc":"Reptile"}];
+// Bump this whenever PACK_SCHEDULE above is edited. The schedule is saved to
+// local storage on first run, and from then on the saved copy wins — so a new
+// build shipped a corrected schedule that no existing browser ever adopted.
+// A version mismatch means the shipped data is newer than what was saved, and
+// the saved copy is replaced.
+const SCHEDULE_VERSION = '2026-09-16-a';
 // ---------- Reference decks: one saved slot per optimisation mode ----------
 // A slot is a saved deck, not an optimisation mode. The first three mirror the
 // modes for convenience; Heroic is a format, so it has no implied mode and is
@@ -4802,7 +4808,7 @@ function updatePackTypeHint(){
   const upcoming = withDates.filter(r=>r.dateObj>=now).sort((a,b)=>a.dateObj-b.dateObj);
   const chosen = upcoming.length ? upcoming[0] : withDates.sort((a,b)=>b.dateObj-a.dateObj)[0];
   const when = upcoming.length ? 'Next' : 'Last';
-  hintEl.textContent = `${when} ${formatDateShort(chosen.dateObj)} · OCC ${chosen.occ||'—'} · GCC ${chosen.gcc||'—'}`;
+  hintEl.textContent = `${when} ${formatDateShort(chosen.dateObj)} · ${chosen.occ||'—'} · ${chosen.gcc||'—'}`;
 }
 
 let packLog = [];
@@ -4915,7 +4921,7 @@ function renderNextPack(){
       </div>
       <div class="metric">
         <div class="num-text">${escapeHtml(next.name)}</div>
-        <div class="metric-lbl">${formatDate(next.dateObj)} · OCC: ${escapeHtml(next.occ||'—')} · GCC: ${escapeHtml(next.gcc||'—')}</div>
+        <div class="metric-lbl">${formatDate(next.dateObj)} · ${escapeHtml(next.occ||'—')} · ${escapeHtml(next.gcc||'—')}</div>
       </div>
     </div>
   `;
@@ -4960,9 +4966,20 @@ function cardCell(cardName, isOnyx){
 }
 
 async function loadSchedule(){
+  let adopted = false;
   try{
-    const result = await Store.get('pack-schedule');
-    if(result && result.value){
+    const [result, verRes] = await Promise.all([
+      Store.get('pack-schedule'),
+      Store.get('pack-schedule-version'),
+    ]);
+    const savedVer = verRes && verRes.value ? verRes.value : null;
+    if(savedVer !== SCHEDULE_VERSION){
+      // The build ships a newer schedule than what is saved. Take the new one,
+      // otherwise a corrected schedule can never reach an existing browser.
+      adopted = !!(result && result.value);
+      await saveSchedule();
+      await Store.set('pack-schedule-version', SCHEDULE_VERSION);
+    } else if(result && result.value){
       const parsed = JSON.parse(result.value);
       if(Array.isArray(parsed) && parsed.length) packSchedule = parsed;
     }
@@ -4970,6 +4987,13 @@ async function loadSchedule(){
   ensureScheduleIds();
   renderSchedule();
   renderOverview();
+  if(adopted){
+    const el = document.getElementById('dataStatus');
+    if(el){
+      el.textContent = 'Pack schedule updated to the version shipped with this build.';
+      el.style.color = 'var(--gold)';
+    }
+  }
 }
 async function saveSchedule(){
   scheduleCloudSave();
@@ -5087,9 +5111,9 @@ function showCalDetail(entries, dateKey){
       <div class="cal-detail-row">
         <div class="cal-detail-name">${escapeHtml(e.name||'')}</div>
         <div class="cal-detail-cards">
-          <span>${rarityDot(occ, true)}OCC ${escapeHtml(occ)}
+          <span>${rarityDot(occ, true)}${escapeHtml(occ)}
             ${occMissing?'<em class="missing">missing</em>':''}</span>
-          <span>${rarityDot(gcc, false)}GCC ${escapeHtml(gcc)}
+          <span>${rarityDot(gcc, false)}${escapeHtml(gcc)}
             ${gccMissing?'<em class="missing">missing</em>':''}</span>
         </div>
       </div>`;
@@ -5278,12 +5302,12 @@ function parseScheduleText(text){
         if(!occ) occ=known.occ;
         if(!gcc) gcc=known.gcc;
         if(occ && known.occ && normalizeCardName(occ)!==normalizeCardName(known.occ))
-          warnings.push(`line ${i+1}: ${name} OCC "${occ}" differs from the known "${known.occ}"`);
+          warnings.push(`line ${i+1}: ${name} Onyx card "${occ}" differs from the known "${known.occ}"`);
         if(gcc && known.gcc && normalizeCardName(gcc)!==normalizeCardName(known.gcc))
-          warnings.push(`line ${i+1}: ${name} GCC "${gcc}" differs from the known "${known.gcc}"`);
+          warnings.push(`line ${i+1}: ${name} guaranteed card "${gcc}" differs from the known "${known.gcc}"`);
       }
     } else if(!occ && !gcc){
-      warnings.push(`line ${i+1}: "${name}" is an unknown pack — add its OCC and GCC columns`);
+      warnings.push(`line ${i+1}: "${name}" is an unknown pack — add its card columns`);
     }
     rows.push({name, date, occ, gcc});
   });
@@ -5398,7 +5422,7 @@ document.getElementById('schedExportBtn').addEventListener('click', ()=>{
     const t=String(v==null?'':v);
     return /[",\n]/.test(t) ? `"${t.replace(/"/g,'""')}"` : t;
   };
-  const lines=[['Pack Name','Date','OCC','GCC'].join(',')];
+  const lines=[['Pack Name','Date','Onyx Card','Guaranteed Card'].join(',')];
   [...packSchedule]
     .sort((a,b)=>String(a.date||'').localeCompare(String(b.date||'')))
     .forEach(r=>lines.push([r.name, r.date, r.occ, r.gcc].map(esc).join(',')));
@@ -5423,6 +5447,7 @@ wireConfirmDelete('#schedResetBtn', ()=>{
 function buildExportPayload(){
   return {
     exportedAt: new Date().toISOString(),
+    scheduleVersion: SCHEDULE_VERSION,
     myLibrary,
     goblinLog,
     packLog,
@@ -5448,7 +5473,11 @@ async function applyImportPayload(parsed){
     packIdCounter = Math.max(...packLog.map(r=>parseInt((r.id||'p0').slice(1))||0), 0)+1;
     await savePackLog();
   }
-  if(Array.isArray(parsed.packSchedule) && parsed.packSchedule.length){
+  // A backup or Drive snapshot carries whatever schedule was current when it was
+  // made. Only take it if it was made against this same shipped schedule —
+  // otherwise an old sync silently undoes a corrected schedule.
+  if(Array.isArray(parsed.packSchedule) && parsed.packSchedule.length
+     && parsed.scheduleVersion === SCHEDULE_VERSION){
     packSchedule = parsed.packSchedule;
     ensureScheduleIds();
     await saveSchedule();
