@@ -4496,9 +4496,12 @@ function formatDate(d){
 // four places — the sentence, the dates, the calendar and the chain-next button —
 // so changing one meant hunting down the others.
 const GOBLIN_CYCLE = {
-  'Onyx Goblin King': {chance:24, guaranteed:54},
-  'Diamond Goblin':   {chance:null, guaranteed:28},
-  'Gold Goblin':      {chance:null, guaranteed:12},
+  // windowStart: day after last sighting when the chance window opens on the calendar.
+  // For Onyx the gate is day 24 (truly impossible before then).
+  // For Gold and Diamond they can appear from day 1, so the window starts next day.
+  'Onyx Goblin King': {chance:24, guaranteed:54, windowStart:24},
+  'Diamond Goblin':   {chance:null, guaranteed:28, windowStart:1},
+  'Gold Goblin':      {chance:null, guaranteed:12, windowStart:1},
 };
 
 function computeSpawnSentence(type){
@@ -4634,28 +4637,30 @@ function goblinMark(type, kind, title){
 
 // Flatten the log into dated events. Only the Onyx King has a chance window;
 // the other two have a single date, which is a guarantee.
-// The Onyx King's chance date is not a one-day event: from that day on it may
-// appear at any time, and the only thing that ends the window is actually
-// catching one. So each logged Onyx sighting opens a window at +24 days which
-// runs until the next logged sighting, or stays open if there isn't one.
-//
-// The same sighting also supersedes the one before it: once a new Onyx is
-// logged, the previous entry's guaranteed date is moot and stops being drawn.
-function onyxChanceWindows(){
-  const c = GOBLIN_CYCLE['Onyx Goblin King'];
-  if(!c || c.chance == null) return [];
-  const logged = goblinLog
-    .filter(r=>r.date && r.type==='Onyx Goblin King')
-    .map(r=>parseLocalDate(r.date))
-    .sort((a,b)=>a-b);
-  return logged.map((base,i)=>({
-    start: addDays(base, c.chance),
-    // Ends the day before the next sighting; null means still open.
-    end: logged[i+1] ? addDays(logged[i+1], -1) : null,
-    guaranteed: addDays(base, c.guaranteed),
-    supersededBy: logged[i+1] || null,
-  }));
+// Chance windows for all three timed goblins. Each logged sighting opens a
+// window (from windowStart days later) that runs until the next sighting of the
+// same type, or stays open indefinitely. The window always closes before the
+// guaranteed date — once the guarantee fires, the goblin is certain, not chance.
+function goblinChanceWindows(){
+  const out = [];
+  for(const [type, c] of Object.entries(GOBLIN_CYCLE)){
+    if(c.windowStart == null) continue;
+    const logged = goblinLog
+      .filter(r=>r.date && r.type===type)
+      .map(r=>parseLocalDate(r.date))
+      .sort((a,b)=>a-b);
+    logged.forEach((base,i)=>out.push({
+      type,
+      start: addDays(base, c.windowStart),
+      end: logged[i+1] ? addDays(logged[i+1], -1) : null,
+      guaranteed: addDays(base, c.guaranteed),
+      supersededBy: logged[i+1] || null,
+    }));
+  }
+  return out;
 }
+// Kept for the goblinEvents call that references it by the old name.
+function onyxChanceWindows(){ return goblinChanceWindows().filter(w=>w.type==='Onyx Goblin King'); }
 
 function goblinEvents(){
   const events = [];
@@ -4732,9 +4737,11 @@ function renderGoblinCalendar(){
   const monthName = first.toLocaleDateString(undefined, {month:'long', year:'numeric'});
 
   let cells = '';
-  const windows = onyxChanceWindows();
-  const inWindow = date => windows.some(w =>
-    date >= w.start && date < w.guaranteed && (!w.end || date <= w.end));
+  const allWindows = goblinChanceWindows();
+  // Returns the type(s) whose chance window covers this date.
+  const windowTypesOn = date => allWindows
+    .filter(w => date >= w.start && date < w.guaranteed && (!w.end || date <= w.end))
+    .map(w => w.type);
 
   for(let i=0;i<lead;i++) cells += '<div class="cal-cell cal-blank"></div>';
   for(let d=1; d<=daysInMonth; d++){
@@ -4744,20 +4751,22 @@ function renderGoblinCalendar(){
     const isToday = date.getTime() === today.getTime();
     const past = date < today;
 
-    // A day inside the window gets the dashed crown too, unless it already
-    // carries an Onyx marker of its own (the window's own opening day, or the
-    // guaranteed day) — otherwise the same glyph would be drawn twice.
-    const hasOwnOnyx = entries.some(e => e.type === 'Onyx Goblin King');
-    const windowDay = !hasOwnOnyx && inWindow(date);
+    // Dashed window marks for every type whose window covers this day.
+    // Skip any type that already has its own marker (opening day or guaranteed
+    // day) — otherwise the same glyph appears twice.
+    const ownTypes = new Set(entries.map(e=>e.type));
+    const wTypes = windowTypesOn(date).filter(t=>!ownTypes.has(t));
+    const windowMarks = wTypes
+      .map(t=>goblinMark(t,'chance', GOBLIN_KINDS[t]?.short+' — still possible'))
+      .join('');
     const marks = entries.slice(0,4)
-      .map(e=>goblinMark(e.type, e.kind, goblinEventLabel(e))).join('')
-      + (windowDay
-          ? goblinMark('Onyx Goblin King','chance','Onyx King — still possible')
-          : '');
+      .map(e=>goblinMark(e.type, e.kind, goblinEventLabel(e))).join('') + windowMarks;
 
-    const clickable = entries.length || windowDay;
+    const clickable = entries.length || wTypes.length;
+    // Window class used for styling (faint tint + dimmed opacity on the marks).
+    const winClass = wTypes.length ? ` onyx-window` : '';
     cells += `
-      <div class="cal-cell${entries.length?' has-pack':''}${windowDay?' onyx-window':''}${isToday?' today':''}${past?' past':''}"
+      <div class="cal-cell${entries.length?' has-pack':''}${winClass}${isToday?' today':''}${past?' past':''}"
            ${clickable?`data-date="${key}"`:''}>
         <span class="cal-day">${d}</span>
         <span class="gob-marks">${marks}</span>
@@ -4792,8 +4801,11 @@ function renderGoblinCalendar(){
       c.classList.add('sel');
       const entries = (byDay.get(c.dataset.date) || []).slice();
       if(c.classList.contains('onyx-window')){
-        // A window day has no event of its own, so give it one to show.
-        entries.push({type:'Onyx Goblin King', kind:'chance', windowDay:true});
+        // Add a synthetic entry for each window type not already in the list.
+        const ownTypes = new Set(entries.map(e=>e.type));
+        windowTypesOn(new Date(c.dataset.date+'T00:00:00'))
+          .filter(t=>!ownTypes.has(t))
+          .forEach(t=>entries.push({type:t, kind:'chance', windowDay:true}));
       }
       showGoblinCalDetail(entries, c.dataset.date);
     });
