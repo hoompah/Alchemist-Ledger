@@ -4734,7 +4734,7 @@ function renderGoblinCalendar(){
   let cells = '';
   const windows = onyxChanceWindows();
   const inWindow = date => windows.some(w =>
-    date >= w.start && (!w.end || date <= w.end));
+    date >= w.start && date < w.guaranteed && (!w.end || date <= w.end));
 
   for(let i=0;i<lead;i++) cells += '<div class="cal-cell cal-blank"></div>';
   for(let d=1; d<=daysInMonth; d++){
