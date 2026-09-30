@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LA:R data probe</title>
+<style>
+  :root { --ink:#1d2433; --muted:#5b6478; --bg:#f7f8fb; --ok:#1f7a4d; --bad:#b3261e; --line:#d9dde6; }
+  @media (prefers-color-scheme: dark) { :root { --ink:#e6e9f0; --muted:#9aa3b5; --bg:#141821; --line:#2b3242; --ok:#5cc98e; --bad:#ff8a80; } }
+  body { margin:0; background:var(--bg); color:var(--ink); font:16px/1.5 system-ui, sans-serif; }
+  main { max-width:760px; margin:0 auto; padding:24px 16px 48px; }
+  h1 { font-size:1.4rem; margin:0 0 4px; }
+  p { color:var(--muted); margin:0 0 16px; }
+  button { font:inherit; padding:12px 20px; border-radius:8px; border:0; background:var(--ink); color:var(--bg); cursor:pointer; }
+  button:focus-visible { outline:3px solid var(--ok); outline-offset:2px; }
+  #status { margin:16px 0; font-weight:600; }
+  .ok { color:var(--ok); } .bad { color:var(--bad); }
+  .wrap { overflow-x:auto; }
+  table { border-collapse:collapse; width:100%; font-size:.9rem; }
+  th, td { text-align:left; padding:6px 8px; border-bottom:1px solid var(--line); white-space:nowrap; }
+  pre { white-space:pre-wrap; word-break:break-all; background:transparent; border:1px solid var(--line); padding:12px; border-radius:8px; font-size:.8rem; max-height:320px; overflow:auto; }
+</style>
+</head>
+<body>
+<main>
+  <h1>LA:R data probe</h1>
+  <p>Checks whether this site can read the LA:R game-data bucket, which files exist, and when each was last updated.</p>
+  <button id="run">Run check</button>
+  <div id="status"></div>
+  <div class="wrap" id="table"></div>
+  <pre id="report" hidden></pre>
+  <button id="copy" hidden>Copy report</button>
+</main>
+<script>
+// INTENT: run from the Ledger's own GitHub Pages address so the CORS result is real.
+// 1) try to list GameData/ keys  2) fetch the newest file's first 1,500 characters to reveal its format
+const BASE = 'https://l-a-r-game-data.s3.us-east-2.amazonaws.com';
+const $ = id => document.getElementById(id);
+let lines = [];
+const log = s => { lines.push(s); $('report').textContent = lines.join('\n'); };
+
+$('run').onclick = async () => {
+  lines = []; $('table').innerHTML = ''; $('report').hidden = false; $('copy').hidden = false;
+  log('Origin: ' + location.origin);
+  let res;
+  try {
+    res = await fetch(`${BASE}/?list-type=2&prefix=GameData/`);
+  } catch (e) {
+    $('status').innerHTML = '<span class="bad">Blocked by CORS or network. Use the GitHub Action copy route.</span>';
+    log('LIST: blocked (' + e.message + ')'); return;
+  }
+  const xml = await res.text();
+  log('LIST: HTTP ' + res.status + ' (CORS passed)');
+  const doc = new DOMParser().parseFromString(xml, 'application/xml');
+  const rows = [...doc.getElementsByTagName('Contents')].map(c => ({
+    key: c.getElementsByTagName('Key')[0]?.textContent,
+    modified: c.getElementsByTagName('LastModified')[0]?.textContent,
+    bytes: +c.getElementsByTagName('Size')[0]?.textContent
+  }));
+  if (!rows.length) {
+    $('status').innerHTML = '<span class="bad">CORS passed, but listing is off. Exact file names are needed.</span>';
+    log('BODY: ' + xml.slice(0, 500)); return;
+  }
+  $('status').innerHTML = `<span class="ok">Readable. ${rows.length} files found.</span>`;
+  $('table').innerHTML = '<table><tr><th>File</th><th>Last updated (UTC)</th><th>Size</th></tr>' +
+    rows.map(r => `<tr><td>${r.key}</td><td>${r.modified}</td><td>${r.bytes.toLocaleString()} B</td></tr>`).join('') + '</table>';
+  rows.forEach(r => log(`${r.key} | ${r.modified} | ${r.bytes} B`));
+  const newest = rows.filter(r => r.bytes > 0).sort((a, b) => b.modified.localeCompare(a.modified))[0];
+  if (newest) {
+    try {
+      const f = await fetch(`${BASE}/${newest.key}`);
+      const t = await f.text();
+      log(`\nSAMPLE (${newest.key}, ${f.headers.get('content-type')}):\n` + t.slice(0, 1500));
+    } catch (e) { log('SAMPLE: blocked (' + e.message + ')'); }
+  }
+};
+$('copy').onclick = () => navigator.clipboard.writeText(lines.join('\n')).then(() => $('copy').textContent = 'Copied');
+</script>
+</body>
+</html>
