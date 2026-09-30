@@ -1,0 +1,9 @@
+# INTENT: one-off check from GitHub's servers (no CORS): list GameData/ files, then show the HTTP status
+name: LAR probe
+on: workflow_dispatch
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          curl -s -w "\nHTTP %{http_code}\n" "https://l-a-r-game-data.s3.us-east-2.amazonaws.com/?list-type=2&prefix=GameData/" | head -c 5000
