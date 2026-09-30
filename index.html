@@ -750,6 +750,11 @@
   .fuse-note{color:var(--muted);font-size:11.5px;}
   .fuse-idle{color:var(--muted);font-size:11.5px;margin-top:4px;}
 
+
+  /* return estimates: always visibly marked as estimates */
+  .pack-when.pack-est{font-style:italic;opacity:.8;}
+  .pack-est-note{font-size:11.5px;color:var(--muted);font-style:italic;margin:2px 0 8px;line-height:1.45;}
+
   /* ---- reference deck slots: five across on one row, not wrapped ---- */
   #refSlotChips, #refSlotChipsOverview{
     display:grid;grid-template-columns:repeat(5,1fr);gap:6px;padding:0 20px 14px;
@@ -1108,7 +1113,7 @@
           <button class="menu-item" id="densityBtn">
             <svg viewBox="0 0 24 24"><path d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
             <span id="densityLabel">Compact rows</span></button>
-          <div class="menu-foot" id="versionTag">build 93 · schedule fix</div>
+          <div class="menu-foot" id="versionTag">build 96 · return estimates</div>
         </div>
       </div>
       <input type="file" id="importDataInput" accept="application/json" style="display:none;">
@@ -1291,7 +1296,7 @@
       <p class="panel-desc">Builds the strongest deck your library allows, weighing combos, card level, duplicate falloff and the orbs fused cards bring (Fusion buff). Fusing adds no combo value itself.</p>
       <div class="builder-controls">
         <label class="builder-field">
-          <span>Deck size</span>
+          <span>Combo cards</span>
           <input type="number" id="bDeckSize" value="28" min="4" max="300">
         </label>
         <label class="builder-field">
@@ -1721,7 +1726,14 @@ const SEED_LIBRARY = [];
 // both passes appear, and a pack shows up twice — the later date is its 2026 run
 // and the earlier one its 2027 run, since packs land about a day earlier each year.
 // Every entry once read 2026, which put most of the schedule in the past.
-const PACK_SCHEDULE = [{"name":"Primate","date":"2026-02-11","occ":"Prehistoric","gcc":"Monkey"},{"name":"Combat","date":"2026-02-13","occ":"Villain","gcc":"War"},{"name":"Scaly","date":"2026-02-16","occ":"Turtle","gcc":"Reptile"},{"name":"Vanity","date":"2026-02-18","occ":"Cat","gcc":"Beauty"},{"name":"Regal","date":"2026-02-20","occ":"Chinchilla","gcc":"Royalty"},{"name":"Scheming","date":"2026-02-23","occ":"Leader","gcc":"Royal Game"},{"name":"Confectionery","date":"2026-02-25","occ":"Hammer","gcc":"Sweets"},{"name":"Muscle","date":"2026-02-27","occ":"Sword","gcc":"Strength"},{"name":"Fable","date":"2026-03-02","occ":"Fairy","gcc":"Fairy Tale"},{"name":"Swift","date":"2026-03-04","occ":"Energy","gcc":"Speed"},{"name":"Innovation","date":"2026-03-06","occ":"Science","gcc":"Invention"},{"name":"Canine","date":"2026-03-09","occ":"Knight","gcc":"Dog"},{"name":"Dark Age","date":"2026-03-11","occ":"Time","gcc":"Medieval"},{"name":"The Dark","date":"2026-03-13","occ":"Madness","gcc":"Darkness"},{"name":"Mon","date":"2026-03-16","occ":"Dragon","gcc":"Pocket Pet"},{"name":"Meta","date":"2026-03-18","occ":"Multiples","gcc":"Card"},{"name":"Slumber","date":"2026-03-20","occ":"Bat","gcc":"Sleep"},{"name":"Half Half","date":"2026-03-23","occ":"Mutation","gcc":"Hybrid"},{"name":"Subterranean","date":"2026-03-25","occ":"Sci-Fi","gcc":"Underground"},{"name":"Hope","date":"2026-03-27","occ":"Love","gcc":"Hopefulness"},{"name":"Bug","date":"2026-03-30","occ":"Superhero","gcc":"Insect"},{"name":"Phantom","date":"2026-04-01","occ":"Water","gcc":"Spirit"},{"name":"Arachnid","date":"2026-04-03","occ":"Affliction","gcc":"Arachnid"},{"name":"Tortoise","date":"2026-04-06","occ":"Death","gcc":"Turtle"},{"name":"First Aid","date":"2026-04-08","occ":"Life","gcc":"Healing"},{"name":"Sahara","date":"2026-04-10","occ":"Relic","gcc":"Desert"},{"name":"Millionaire","date":"2026-04-13","occ":"Human","gcc":"Wealth"},{"name":"End of World","date":"2026-04-15","occ":"Strength","gcc":"Apocalypse"},{"name":"Portal","date":"2026-04-17","occ":"Extraterrestrial","gcc":"Portal"},{"name":"Frozen","date":"2026-04-20","occ":"Sun","gcc":"Ice"},{"name":"Wizarding","date":"2026-04-22","occ":"Magic","gcc":"Wizarding School"},{"name":"Gargantuan","date":"2026-04-24","occ":"Anger","gcc":"Giant"},{"name":"Botanical","date":"2026-04-27","occ":"Invention","gcc":"Plant"},{"name":"Mutant","date":"2026-04-29","occ":"Sci-Fi","gcc":"Mutation"},{"name":"Pirate","date":"2026-05-01","occ":"Monkey","gcc":"Pirate"},{"name":"Far Away","date":"2026-05-04","occ":"Space","gcc":"Galaxy Wars"},{"name":"Melody","date":"2026-05-06","occ":"Monster","gcc":"Music"},{"name":"Shrine","date":"2026-05-08","occ":"The Chosen One","gcc":"Shrine"},{"name":"Chosen Hero","date":"2026-05-11","occ":"Knight","gcc":"The Chosen One"},{"name":"Regal","date":"2026-05-13","occ":"Chinchilla","gcc":"Royalty"},{"name":"Skeletal","date":"2026-05-15","occ":"Cursed","gcc":"Bone"},{"name":"Multiplicity","date":"2026-05-18","occ":"Metal","gcc":"Multiples"},{"name":"Muscle","date":"2026-05-20","occ":"Sword","gcc":"Strength"},{"name":"Dark Age","date":"2026-05-22","occ":"Time","gcc":"Medieval"},{"name":"Jungle","date":"2026-05-25","occ":"Prehistoric","gcc":"Jungle"},{"name":"Animation","date":"2026-05-27","occ":"Toy","gcc":"Cartoon"},{"name":"Spycraft","date":"2026-05-29","occ":"Camouflage","gcc":"Spy"},{"name":"Confectionery","date":"2026-06-01","occ":"Hammer","gcc":"Sweets"},{"name":"Commander","date":"2026-06-03","occ":"Undead","gcc":"Leader"},{"name":"Future Fight","date":"2026-06-05","occ":"War","gcc":"Future Fight"},{"name":"Cloaked","date":"2026-06-08","occ":"Void","gcc":"Camouflage"},{"name":"Fantasy","date":"2026-06-10","occ":"Fairy Tale","gcc":"Precious Ring Lore"},{"name":"Sports","date":"2026-06-12","occ":"Speed","gcc":"Sports"},{"name":"Subterranean","date":"2026-06-15","occ":"Sci-Fi","gcc":"Underground"},{"name":"Futuristic","date":"2026-06-17","occ":"Water","gcc":"Sci-Fi"},{"name":"Summertide","date":"2026-06-19","occ":"Arcade","gcc":"Summertide"},{"name":"Half Half","date":"2026-06-22","occ":"Mutation","gcc":"Hybrid"},{"name":"Hypno","date":"2026-06-24","occ":"Werewolf","gcc":"Mind Control"},{"name":"Viking","date":"2026-06-26","occ":"Horn","gcc":"Viking"},{"name":"Accursed","date":"2026-06-29","occ":"Superhero","gcc":"Cursed"},{"name":"Rat","date":"2026-07-01","occ":"Wizard","gcc":"Rodent"},{"name":"Clairvoyant","date":"2026-07-03","occ":"Insect","gcc":"Psychic"},{"name":"Aviary","date":"2026-07-06","occ":"Wind","gcc":"Bird"},{"name":"Fun","date":"2026-07-08","occ":"Bear","gcc":"Toy"},{"name":"Atomic Aftermath","date":"2026-07-10","occ":"Apocalypse","gcc":"Atomic Aftermath"},{"name":"Machine","date":"2026-07-13","occ":"Elf","gcc":"Robot"},{"name":"Parasitic","date":"2026-07-15","occ":"Knowledge","gcc":"Parasite"},{"name":"Combat","date":"2026-07-17","occ":"Villain","gcc":"War"},{"name":"Plague","date":"2026-07-20","occ":"Water Serpent","gcc":"Affliction"},{"name":"Primate","date":"2026-07-22","occ":"Prehistoric","gcc":"Monkey"},{"name":"Oceana","date":"2026-07-24","occ":"Underwater","gcc":"Fish"},{"name":"Scaly","date":"2026-07-27","occ":"Turtle","gcc":"Reptile"},{"name":"Frozen","date":"2026-07-29","occ":"Sun","gcc":"Ice"},{"name":"Meta","date":"2026-07-31","occ":"Multiples","gcc":"Card"},{"name":"Tortoise","date":"2026-08-03","occ":"Death","gcc":"Turtle"},{"name":"Carnage","date":"2026-08-05","occ":"Weapon","gcc":"Destruction"},{"name":"Regal","date":"2026-08-07","occ":"Chinchilla","gcc":"Royalty"},{"name":"Scheming","date":"2026-08-10","occ":"Leader","gcc":"Royal Game"},{"name":"Muscle","date":"2026-08-12","occ":"Sword","gcc":"Strength"},{"name":"Adventure","date":"2026-08-14","occ":"Wealth","gcc":"Adventure"},{"name":"Booming Spike","date":"2026-08-17","occ":"Demon","gcc":"Horn"},{"name":"Canine","date":"2026-08-19","occ":"Knight","gcc":"Dog"},{"name":"Innovation","date":"2026-08-21","occ":"Science","gcc":"Invention"},{"name":"Aquatic","date":"2026-08-24","occ":"Trident","gcc":"Underwater"},{"name":"Bloody","date":"2026-08-26","occ":"Earth","gcc":"Blood"},{"name":"Hope","date":"2026-08-28","occ":"Love","gcc":"Hopefulness"},{"name":"Wizarding","date":"2026-08-31","occ":"Magic","gcc":"Wizarding School"},{"name":"Slumber","date":"2026-09-02","occ":"Bat","gcc":"Sleep"},{"name":"Vanity","date":"2026-09-04","occ":"Cat","gcc":"Beauty"},{"name":"Slime","date":"2026-09-07","occ":"Poison","gcc":"Blob"},{"name":"End of World","date":"2026-09-09","occ":"Strength","gcc":"Apocalypse"},{"name":"Arachnid","date":"2026-09-11","occ":"Affliction","gcc":"Arachnid"},{"name":"Melody","date":"2026-09-14","occ":"Monster","gcc":"Music"},{"name":"Botanical","date":"2026-09-16","occ":"Invention","gcc":"Plant"},{"name":"Half Half","date":"2026-09-18","occ":"Mutation","gcc":"Hybrid"},{"name":"Fable","date":"2026-09-21","occ":"Fairy","gcc":"Fairy Tale"},{"name":"Multiplicity","date":"2026-09-23","occ":"Metal","gcc":"Multiples"},{"name":"Phantom","date":"2026-09-25","occ":"Water","gcc":"Spirit"},{"name":"Portal","date":"2026-09-28","occ":"Extraterrestrial","gcc":"Portal"},{"name":"Tiny","date":"2026-09-30","occ":"Insect","gcc":"Miniature"},{"name":"Sahara","date":"2026-10-02","occ":"Relic","gcc":"Desert"},{"name":"Rage","date":"2026-10-05","occ":"Void","gcc":"Anger"},{"name":"Swift","date":"2026-10-07","occ":"Energy","gcc":"Speed"},{"name":"Insanity","date":"2026-10-09","occ":"Knowledge","gcc":"Madness"},{"name":"Wingman","date":"2026-10-12","occ":"Superhero","gcc":"Sidekick"},{"name":"Shrine","date":"2026-10-14","occ":"The Chosen One","gcc":"Shrine"},{"name":"First Aid","date":"2026-10-16","occ":"Life","gcc":"Healing"},{"name":"The Dark","date":"2026-10-19","occ":"Madness","gcc":"Darkness"},{"name":"Undying","date":"2026-10-21","occ":"Vampire","gcc":"Immortality"},{"name":"Hallow's Eve","date":"2026-10-23","occ":"Spirit","gcc":"Halloween"},{"name":"Fight","date":"2026-10-26","occ":"Werewolf","gcc":"Martial Arts"},{"name":"Skeletal","date":"2026-10-28","occ":"Cursed","gcc":"Bone"},{"name":"Mythos","date":"2026-10-30","occ":"Food","gcc":"Myth"},{"name":"Spycraft","date":"2026-11-02","occ":"Camouflage","gcc":"Spy"},{"name":"Martian","date":"2026-11-04","occ":"Space","gcc":"Extraterrestrial"},{"name":"Future Fight","date":"2026-11-06","occ":"War","gcc":"Future Fight"},{"name":"Primate","date":"2026-11-09","occ":"Prehistoric","gcc":"Monkey"},{"name":"Pirate","date":"2026-11-11","occ":"Monkey","gcc":"Pirate"},{"name":"Millionaire","date":"2026-11-13","occ":"Human","gcc":"Wealth"},{"name":"Sports","date":"2026-11-16","occ":"Speed","gcc":"Sports"},{"name":"Gamer","date":"2026-11-18","occ":"Chinchilla","gcc":"Arcade"},{"name":"Thanksgiving","date":"2026-11-20","occ":"Bird","gcc":"Turkey Day"},{"name":"Lunar","date":"2026-11-23","occ":"Wings","gcc":"Moon"},{"name":"Anniversary","date":"2026-11-25","occ":"Sweets/Golem","gcc":"Celebration"},{"name":"Muscle","date":"2026-11-27","occ":"Sword","gcc":"Strength"},{"name":"Plague","date":"2026-12-02","occ":"Water Serpent","gcc":"Affliction"},{"name":"Animation","date":"2026-12-04","occ":"Toy","gcc":"Cartoon"},{"name":"Wintertide","date":"2026-12-07","occ":"Holidays","gcc":"Wintertide"},{"name":"Zoom Zoom","date":"2026-12-09","occ":"Invention","gcc":"Vehicle"},{"name":"Gargantuan","date":"2026-12-11","occ":"Anger","gcc":"Giant"},{"name":"Mon","date":"2026-12-14","occ":"Dragon","gcc":"Pocket Pet"},{"name":"Mutant","date":"2026-12-16","occ":"Sci-Fi","gcc":"Mutation"},{"name":"Yuletide","date":"2026-12-18","occ":"Pocket Pet","gcc":"Holidays"},{"name":"Tortoise","date":"2026-12-21","occ":"Death","gcc":"Turtle"},{"name":"Dark Age","date":"2026-12-23","occ":"Time","gcc":"Medieval"},{"name":"Frozen","date":"2026-12-25","occ":"Sun","gcc":"Ice"},{"name":"New Years","date":"2026-12-28","occ":"Horse/Moon","gcc":"New Years"},{"name":"Futuristic","date":"2026-12-30","occ":"Water","gcc":"Sci-Fi"},{"name":"Cloaked","date":"2027-01-01","occ":"Void","gcc":"Camouflage"},{"name":"Fantasy","date":"2027-01-04","occ":"Fairy Tale","gcc":"Precious Ring Lore"},{"name":"Aviary","date":"2027-01-06","occ":"Wind","gcc":"Bird"},{"name":"Wingman","date":"2027-01-08","occ":"Superhero","gcc":"Sidekick"},{"name":"Viking","date":"2027-01-11","occ":"Horn","gcc":"Viking"},{"name":"Aquatic","date":"2027-01-13","occ":"Trident","gcc":"Underwater"},{"name":"Machine","date":"2027-01-15","occ":"Elf","gcc":"Robot"},{"name":"Clairvoyant","date":"2027-01-18","occ":"Insect","gcc":"Psychic"},{"name":"Far Away","date":"2027-01-20","occ":"Space","gcc":"Galaxy Wars"},{"name":"Wizarding","date":"2027-01-22","occ":"Magic","gcc":"Wizarding School"},{"name":"Oceana","date":"2027-01-25","occ":"Underwater","gcc":"Fish"},{"name":"Arms","date":"2027-01-27","occ":"Vampire","gcc":"Weapon"},{"name":"Commander","date":"2027-01-29","occ":"Undead","gcc":"Leader"},{"name":"Adventure","date":"2027-02-01","occ":"Wealth","gcc":"Adventure"},{"name":"Hypno","date":"2027-02-03","occ":"Werewolf","gcc":"Mind Control"},{"name":"Valentine's","date":"2027-02-05","occ":"Precious Ring Lore","gcc":"Love"},{"name":"Slime","date":"2027-02-08","occ":"Poison","gcc":"Blob"},{"name":"Primate","date":"2027-02-10","occ":"Prehistoric","gcc":"Monkey"},{"name":"Combat","date":"2027-02-12","occ":"Villain","gcc":"War"},{"name":"Scaly","date":"2027-02-15","occ":"Turtle","gcc":"Reptile"}];
+// Every dated card-pack sale in the game's own sales data (Sales list,
+// Mar 2023 - Feb 2027), keyed by the Ledger's pack names. Used only to ESTIMATE
+// when a pack returns after the known schedule ends. Game keys mapped to the
+// names used here: Dark Ages -> Dark Age, Darkness -> The Dark, and both
+// Purrrfect and Purrrrfect -> Purrfect. Not Ledger packs, so left out:
+// Arena Defensive, Insantity.
+const PACK_HISTORY = {"Accursed":["2023-10-23","2024-01-31","2024-05-29","2025-01-15","2025-06-30","2026-06-29"],"Adventure":["2024-05-24","2024-11-15","2025-08-15","2026-02-02","2026-08-14","2027-02-01"],"Animation":["2023-05-30","2023-12-20","2024-03-25","2024-12-18","2025-12-05","2026-05-27","2026-12-04"],"Anniversary":["2023-11-27","2024-11-29","2025-11-26","2026-11-25"],"Aquatic":["2023-03-11","2024-12-09","2025-08-25","2026-01-14","2026-08-24","2027-01-13"],"Arachnid":["2024-03-22","2024-08-16","2025-09-12","2026-04-03","2026-09-11"],"Arms":["2026-01-28","2027-01-27"],"Artifact":["2023-08-23","2024-06-26","2024-09-18"],"Atomic Aftermath":["2024-06-21","2025-01-17","2025-07-11","2026-07-10"],"Aviary":["2023-03-21","2023-12-01","2024-03-13","2024-07-15","2025-01-03","2025-07-07","2026-01-07","2026-07-06","2027-01-06"],"Bloody":["2023-10-22","2024-02-16","2024-07-08","2024-10-11","2025-02-05","2025-08-27","2026-08-26"],"Booming Spike":["2023-06-04","2023-11-08","2024-02-28","2024-06-10","2025-01-08","2025-08-18","2026-08-17"],"Botanical":["2023-07-19","2024-08-02","2025-09-17","2026-04-27","2026-09-16"],"Bug":["2023-08-08","2026-03-30"],"Canine":["2023-04-10","2024-11-11","2025-08-20","2026-03-09","2026-08-19"],"Carnage":["2023-03-31","2024-06-07","2025-01-06","2025-08-06","2026-08-05"],"Chosen Hero":["2023-11-20","2024-03-01","2024-06-19","2024-09-09","2025-12-01","2026-05-11","2026-11-30"],"Clairvoyant":["2023-06-09","2024-01-08","2024-05-08","2024-09-25","2025-07-04","2026-01-19","2026-07-03","2027-01-18"],"Cloaked":["2023-09-02","2023-12-13","2024-03-29","2024-06-17","2024-12-16","2026-01-02","2026-06-08","2027-01-01"],"Combat":["2023-11-06","2024-04-03","2024-07-05","2025-01-01","2025-07-18","2026-02-13","2026-07-17","2027-02-12"],"Commander":["2024-01-10","2024-04-15","2024-12-23","2026-01-30","2026-06-03","2027-01-29"],"Confectionery":["2023-09-22","2024-01-03","2024-08-07","2025-02-26","2026-02-25","2026-06-01"],"Dark Age":["2024-06-05","2024-12-11","2025-12-24","2026-03-11","2026-05-22","2026-12-23"],"End of World":["2023-10-02","2024-01-05","2024-05-03","2024-11-01","2025-09-10","2026-04-15","2026-09-09"],"Fable":["2025-09-22","2026-03-02","2026-09-21"],"Fantasy":["2023-07-09","2024-01-15","2024-07-19","2024-12-25","2026-01-05","2026-06-10","2027-01-04"],"Far Away":["2023-04-20","2023-12-25","2024-04-08","2024-08-19","2026-01-21","2026-05-04","2027-01-20"],"Fight":["2024-04-19","2025-02-21","2025-10-27","2026-10-26"],"First Aid":["2024-03-27","2024-11-06","2025-10-17","2026-04-08","2026-10-16"],"Frozen":["2024-02-21","2024-09-04","2025-07-30","2025-12-26","2026-04-20","2026-07-29","2026-12-25"],"Fun":["2023-11-01","2024-02-07","2024-07-24","2025-01-22","2025-07-09","2026-07-08"],"Future Fight":["2024-09-20","2025-11-07","2026-06-05","2026-11-06"],"Futuristic":["2023-10-07","2024-01-26","2024-12-30","2025-12-31","2026-06-17","2026-12-30"],"Gamer":["2023-03-16","2023-12-08","2024-06-12","2025-02-03","2025-11-19","2026-11-18"],"Gargantuan":["2024-04-10","2024-08-30","2025-12-12","2026-04-24","2026-12-11"],"Half Half":["2023-05-05","2024-05-15","2024-09-06","2025-09-19","2026-03-23","2026-06-22","2026-09-18"],"Hallow's Eve":["2023-10-27","2024-10-25","2025-10-24","2026-10-23"],"Hope":["2024-01-17","2024-04-22","2024-09-11","2025-08-29","2026-03-27","2026-08-28"],"Hypno":["2023-04-15","2024-08-14","2026-02-04","2026-06-24","2027-02-03"],"Innovation":["2023-03-26","2023-12-11","2024-03-08","2024-05-31","2024-09-30","2025-08-22","2026-03-06","2026-08-21"],"Insanity":["2023-04-05","2023-11-13","2024-02-02","2024-05-06","2025-02-07","2025-10-10","2026-10-09"],"Jungle":["2023-06-14","2023-11-24","2024-03-04","2024-07-10","2024-11-27","2026-05-25"],"Lunar":["2023-06-29","2024-02-09","2024-09-23","2025-01-29","2025-11-24","2026-11-23"],"Machine":["2023-07-04","2024-10-21","2025-07-14","2026-01-16","2026-07-13","2027-01-15"],"Martian":["2023-10-25","2024-01-29","2024-06-03","2025-11-05","2026-11-04"],"Melody":["2023-10-30","2024-07-17","2024-12-02","2025-09-15","2026-05-06","2026-09-14"],"Meta":["2024-02-26","2024-07-01","2024-10-30","2025-08-01","2026-03-18","2026-07-31"],"Millionaire":["2024-04-29","2025-11-14","2026-04-13","2026-11-13"],"Mon":["2023-06-19","2023-11-17","2024-03-06","2024-07-03","2024-11-13","2025-12-15","2026-03-16","2026-12-14"],"Multiplicity":["2023-09-27","2024-01-01","2024-03-15","2024-05-27","2024-09-13","2025-09-24","2026-05-18","2026-09-23"],"Muscle":["2023-08-28","2023-12-04","2024-03-18","2024-06-24","2024-12-04","2025-11-28","2026-02-27","2026-05-20","2026-08-12","2026-11-27"],"Mutant":["2023-11-15","2024-02-23","2024-05-01","2024-10-23","2025-12-17","2026-04-29","2026-12-16"],"Mythos":["2023-07-14","2023-12-06","2024-03-20","2024-07-31","2024-11-20","2025-02-17","2025-10-31","2026-10-30"],"New Years":["2025-01-24","2025-12-29","2026-12-28"],"Oceana":["2023-08-03","2024-07-12","2025-01-31","2025-07-25","2026-01-26","2026-07-24","2027-01-25"],"Parasitic":["2024-10-28","2025-07-16","2026-07-15"],"Phantom":["2023-12-22","2024-04-12","2025-02-12","2025-09-26","2026-04-01","2026-09-25"],"Pirate":["2024-04-26","2024-09-16","2025-11-12","2026-05-01","2026-11-11"],"Plague":["2024-10-07","2025-07-21","2025-12-03","2026-07-20","2026-12-02"],"Portal":["2024-08-23","2025-09-29","2026-04-17","2026-09-28"],"Primate":["2023-07-29","2025-01-20","2025-07-23","2025-11-10","2026-02-11","2026-07-22","2026-11-09","2027-02-10"],"Purrfect":["2023-07-24","2024-08-28"],"Rage":["2024-01-12","2024-05-13","2024-10-16","2025-10-06","2026-10-05"],"Rat":["2023-04-30","2023-11-03","2024-02-12","2025-01-13","2025-07-02","2026-07-01"],"Regal":["2023-10-12","2023-12-27","2024-04-05","2024-08-12","2025-08-08","2026-02-20","2026-05-13","2026-08-07"],"Sahara":["2024-08-09","2025-10-03","2026-04-10","2026-10-02"],"Scaly":["2024-05-22","2025-01-10","2025-07-28","2026-02-16","2026-07-27","2027-02-15"],"Scheming":["2023-08-13","2023-12-29","2024-05-17","2024-09-27","2025-02-24","2025-08-11","2026-02-23","2026-08-10"],"Shrine":["2023-09-17","2024-01-19","2024-04-17","2024-10-09","2025-10-15","2026-05-08","2026-10-14"],"Skeletal":["2024-10-04","2025-10-29","2026-05-15","2026-10-28"],"Slime":["2023-05-10","2024-06-28","2025-01-27","2025-09-08","2026-02-09","2026-09-07","2027-02-08"],"Slumber":["2023-09-12","2025-09-03","2026-03-20","2026-09-02"],"Sports":["2024-11-08","2025-11-17","2026-06-12","2026-11-16"],"Spycraft":["2024-10-18","2025-11-03","2026-05-29","2026-11-02"],"Subterranean":["2023-08-18","2024-08-26","2025-08-13","2026-03-25","2026-06-15"],"Summertide":["2024-07-26","2026-06-19"],"Swift":["2023-09-07","2024-01-22","2024-04-24","2024-08-21","2025-10-08","2026-03-04","2026-10-07"],"Thanksgiving":["2023-11-22","2024-11-22","2025-11-21","2026-11-20"],"The Dark":["2023-10-17","2024-01-24","2024-06-14","2024-10-14","2025-10-20","2026-03-13","2026-10-19"],"Tiny":["2023-05-20","2023-11-29","2024-03-11","2024-11-18","2025-10-01","2026-09-30"],"Tortoise":["2023-04-25","2024-07-22","2025-08-04","2025-12-22","2026-04-06","2026-08-03","2026-12-21"],"Undying":["2024-10-02","2025-10-22","2026-10-21"],"Valentine's":["2024-02-14","2025-02-14","2026-02-06","2027-02-05"],"Vanity":["2023-06-24","2024-05-10","2024-11-04","2025-02-19","2025-09-05","2026-02-18","2026-09-04"],"Viking":["2024-12-06","2026-01-12","2026-06-26","2027-01-11"],"Wingman":["2023-12-15","2024-04-01","2024-08-05","2025-02-10","2025-10-13","2026-01-09","2026-10-12","2027-01-08"],"Wintertide":["2023-12-18","2024-12-13","2025-12-08","2026-12-07"],"Wizarding":["2023-05-15","2024-07-29","2024-11-25","2025-09-01","2026-01-23","2026-04-22","2026-08-31","2027-01-22"],"Yuletide":["2024-12-20","2025-12-19","2026-12-18"],"Zoom Zoom":["2023-05-25","2023-11-10","2024-02-19","2024-05-20","2024-12-27","2025-12-10","2026-12-09"]};
+const PACK_SCHEDULE = [{"name":"Primate","date":"2026-02-11","occ":"Prehistoric","gcc":"Monkey","start":"2026-02-11T18:00:00Z","end":"2026-02-16T18:00:00Z"},{"name":"Combat","date":"2026-02-13","occ":"Villain","gcc":"War","start":"2026-02-13T18:00:00Z","end":"2026-02-18T18:00:00Z"},{"name":"Scaly","date":"2026-02-16","occ":"Turtle","gcc":"Reptile","start":"2026-02-16T18:00:00Z","end":"2026-02-21T18:00:00Z"},{"name":"Vanity","date":"2026-02-18","occ":"Cat","gcc":"Beauty","start":"2026-02-18T18:00:00Z","end":"2026-02-23T18:00:00Z"},{"name":"Regal","date":"2026-02-20","occ":"Chinchilla","gcc":"Royalty","start":"2026-02-20T18:00:00Z","end":"2026-02-25T18:00:00Z"},{"name":"Scheming","date":"2026-02-23","occ":"Leader","gcc":"Royal Game","start":"2026-02-23T18:00:00Z","end":"2026-02-28T18:00:00Z"},{"name":"Confectionery","date":"2026-02-25","occ":"Hammer","gcc":"Sweets","start":"2026-02-25T18:00:00Z","end":"2026-03-02T18:00:00Z"},{"name":"Muscle","date":"2026-02-27","occ":"Sword","gcc":"Strength","start":"2026-02-27T18:00:00Z","end":"2026-03-04T18:00:00Z"},{"name":"Fable","date":"2026-03-02","occ":"Fairy","gcc":"Fairy Tale","start":"2026-03-02T18:00:00Z","end":"2026-03-07T18:00:00Z"},{"name":"Swift","date":"2026-03-04","occ":"Energy","gcc":"Speed","start":"2026-03-04T18:00:00Z","end":"2026-03-09T18:00:00Z"},{"name":"Innovation","date":"2026-03-06","occ":"Science","gcc":"Invention","start":"2026-03-06T18:00:00Z","end":"2026-03-11T18:00:00Z"},{"name":"Canine","date":"2026-03-09","occ":"Knight","gcc":"Dog","start":"2026-03-09T18:00:00Z","end":"2026-03-14T18:00:00Z"},{"name":"Dark Age","date":"2026-03-11","occ":"Time","gcc":"Medieval","start":"2026-03-11T18:00:00Z","end":"2026-03-16T18:00:00Z"},{"name":"The Dark","date":"2026-03-13","occ":"Madness","gcc":"Darkness","start":"2026-03-13T18:00:00Z","end":"2026-03-18T18:00:00Z"},{"name":"Mon","date":"2026-03-16","occ":"Dragon","gcc":"Pocket Pet","start":"2026-03-16T18:00:00Z","end":"2026-03-21T18:00:00Z"},{"name":"Meta","date":"2026-03-18","occ":"Multiples","gcc":"Card","start":"2026-03-18T18:00:00Z","end":"2026-03-23T18:00:00Z"},{"name":"Slumber","date":"2026-03-20","occ":"Bat","gcc":"Sleep","start":"2026-03-20T18:00:00Z","end":"2026-03-25T18:00:00Z"},{"name":"Half Half","date":"2026-03-23","occ":"Mutation","gcc":"Hybrid","start":"2026-03-23T18:00:00Z","end":"2026-03-28T18:00:00Z"},{"name":"Subterranean","date":"2026-03-25","occ":"Sci-Fi","gcc":"Underground","start":"2026-03-25T18:00:00Z","end":"2026-03-30T18:00:00Z"},{"name":"Hope","date":"2026-03-27","occ":"Love","gcc":"Hopefulness","start":"2026-03-27T18:00:00Z","end":"2026-04-01T18:00:00Z"},{"name":"Bug","date":"2026-03-30","occ":"Superhero","gcc":"Insect","start":"2026-03-30T18:00:00Z","end":"2026-04-04T18:00:00Z"},{"name":"Phantom","date":"2026-04-01","occ":"Water","gcc":"Spirit","start":"2026-04-01T18:00:00Z","end":"2026-04-06T18:00:00Z"},{"name":"Arachnid","date":"2026-04-03","occ":"Affliction","gcc":"Arachnid","start":"2026-04-03T18:00:00Z","end":"2026-04-08T18:00:00Z"},{"name":"Tortoise","date":"2026-04-06","occ":"Death","gcc":"Turtle","start":"2026-04-06T18:00:00Z","end":"2026-04-11T18:00:00Z"},{"name":"First Aid","date":"2026-04-08","occ":"Life","gcc":"Healing","start":"2026-04-08T18:00:00Z","end":"2026-04-13T18:00:00Z"},{"name":"Sahara","date":"2026-04-10","occ":"Relic","gcc":"Desert","start":"2026-04-10T18:00:00Z","end":"2026-04-15T18:00:00Z"},{"name":"Millionaire","date":"2026-04-13","occ":"Human","gcc":"Wealth","start":"2026-04-13T18:00:00Z","end":"2026-04-18T18:00:00Z"},{"name":"End of World","date":"2026-04-15","occ":"Strength","gcc":"Apocalypse","start":"2026-04-15T18:00:00Z","end":"2026-04-20T18:00:00Z"},{"name":"Portal","date":"2026-04-17","occ":"Extraterrestrial","gcc":"Portal","start":"2026-04-17T18:00:00Z","end":"2026-04-22T18:00:00Z"},{"name":"Frozen","date":"2026-04-20","occ":"Sun","gcc":"Ice","start":"2026-04-20T18:00:00Z","end":"2026-04-25T18:00:00Z"},{"name":"Wizarding","date":"2026-04-22","occ":"Magic","gcc":"Wizarding School","start":"2026-04-22T18:00:00Z","end":"2026-04-27T18:00:00Z"},{"name":"Gargantuan","date":"2026-04-24","occ":"Anger","gcc":"Giant","start":"2026-04-24T18:00:00Z","end":"2026-04-29T18:00:00Z"},{"name":"Botanical","date":"2026-04-27","occ":"Invention","gcc":"Plant","start":"2026-04-27T18:00:00Z","end":"2026-05-02T18:00:00Z"},{"name":"Mutant","date":"2026-04-29","occ":"Sci-Fi","gcc":"Mutation","start":"2026-04-29T18:00:00Z","end":"2026-05-04T18:00:00Z"},{"name":"Pirate","date":"2026-05-01","occ":"Monkey","gcc":"Pirate","start":"2026-05-01T18:00:00Z","end":"2026-05-06T18:00:00Z"},{"name":"Far Away","date":"2026-05-04","occ":"Space","gcc":"Galaxy Wars","start":"2026-05-04T18:00:00Z","end":"2026-05-09T18:00:00Z"},{"name":"Melody","date":"2026-05-06","occ":"Monster","gcc":"Music","start":"2026-05-06T18:00:00Z","end":"2026-05-11T18:00:00Z"},{"name":"Shrine","date":"2026-05-08","occ":"The Chosen One","gcc":"Shrine","start":"2026-05-08T18:00:00Z","end":"2026-05-13T18:00:00Z"},{"name":"Chosen Hero","date":"2026-05-11","occ":"Knight","gcc":"The Chosen One","start":"2026-05-11T18:00:00Z","end":"2026-05-16T18:00:00Z"},{"name":"Regal","date":"2026-05-13","occ":"Chinchilla","gcc":"Royalty","start":"2026-05-13T18:00:00Z","end":"2026-05-18T18:00:00Z"},{"name":"Skeletal","date":"2026-05-15","occ":"Cursed","gcc":"Bone","start":"2026-05-15T18:00:00Z","end":"2026-05-20T18:00:00Z"},{"name":"Multiplicity","date":"2026-05-18","occ":"Metal","gcc":"Multiples","start":"2026-05-18T18:00:00Z","end":"2026-05-23T18:00:00Z"},{"name":"Muscle","date":"2026-05-20","occ":"Sword","gcc":"Strength","start":"2026-05-20T18:00:00Z","end":"2026-05-25T18:00:00Z"},{"name":"Dark Age","date":"2026-05-22","occ":"Time","gcc":"Medieval","start":"2026-05-22T18:00:00Z","end":"2026-05-27T18:00:00Z"},{"name":"Jungle","date":"2026-05-25","occ":"Prehistoric","gcc":"Jungle","start":"2026-05-25T18:00:00Z","end":"2026-05-30T18:00:00Z"},{"name":"Animation","date":"2026-05-27","occ":"Toy","gcc":"Cartoon","start":"2026-05-27T18:00:00Z","end":"2026-06-01T18:00:00Z"},{"name":"Spycraft","date":"2026-05-29","occ":"Camouflage","gcc":"Spy","start":"2026-05-29T18:00:00Z","end":"2026-06-03T18:00:00Z"},{"name":"Confectionery","date":"2026-06-01","occ":"Hammer","gcc":"Sweets","start":"2026-06-01T18:00:00Z","end":"2026-06-06T18:00:00Z"},{"name":"Commander","date":"2026-06-03","occ":"Undead","gcc":"Leader","start":"2026-06-03T18:00:00Z","end":"2026-06-08T18:00:00Z"},{"name":"Future Fight","date":"2026-06-05","occ":"War","gcc":"Future Fight","start":"2026-06-05T18:00:00Z","end":"2026-06-10T18:00:00Z"},{"name":"Cloaked","date":"2026-06-08","occ":"Void","gcc":"Camouflage","start":"2026-06-08T18:00:00Z","end":"2026-06-13T18:00:00Z"},{"name":"Fantasy","date":"2026-06-10","occ":"Fairy Tale","gcc":"Precious Ring Lore","start":"2026-06-10T18:00:00Z","end":"2026-06-15T18:00:00Z"},{"name":"Sports","date":"2026-06-12","occ":"Speed","gcc":"Sports","start":"2026-06-12T18:00:00Z","end":"2026-06-17T18:00:00Z"},{"name":"Subterranean","date":"2026-06-15","occ":"Sci-Fi","gcc":"Underground","start":"2026-06-15T18:00:00Z","end":"2026-06-20T18:00:00Z"},{"name":"Futuristic","date":"2026-06-17","occ":"Water","gcc":"Sci-Fi","start":"2026-06-17T18:00:00Z","end":"2026-06-22T18:00:00Z"},{"name":"Summertide","date":"2026-06-19","occ":"Arcade","gcc":"Summertide","start":"2026-06-19T18:00:00Z","end":"2026-06-24T18:00:00Z"},{"name":"Half Half","date":"2026-06-22","occ":"Mutation","gcc":"Hybrid","start":"2026-06-22T18:00:00Z","end":"2026-06-27T18:00:00Z"},{"name":"Hypno","date":"2026-06-24","occ":"Werewolf","gcc":"Mind Control","start":"2026-06-24T18:00:00Z","end":"2026-06-29T18:00:00Z"},{"name":"Viking","date":"2026-06-26","occ":"Horn","gcc":"Viking","start":"2026-06-26T18:00:00Z","end":"2026-07-01T18:00:00Z"},{"name":"Accursed","date":"2026-06-29","occ":"Superhero","gcc":"Cursed","start":"2026-06-29T18:00:00Z","end":"2026-07-04T18:00:00Z"},{"name":"Rat","date":"2026-07-01","occ":"Wizard","gcc":"Rodent","start":"2026-07-01T18:00:00Z","end":"2026-07-06T18:00:00Z"},{"name":"Clairvoyant","date":"2026-07-03","occ":"Insect","gcc":"Psychic","start":"2026-07-03T18:00:00Z","end":"2026-07-08T18:00:00Z"},{"name":"Aviary","date":"2026-07-06","occ":"Wind","gcc":"Bird","start":"2026-07-06T18:00:00Z","end":"2026-07-11T18:00:00Z"},{"name":"Fun","date":"2026-07-08","occ":"Bear","gcc":"Toy","start":"2026-07-08T18:00:00Z","end":"2026-07-13T18:00:00Z"},{"name":"Atomic Aftermath","date":"2026-07-10","occ":"Apocalypse","gcc":"Atomic Aftermath","start":"2026-07-10T18:00:00Z","end":"2026-07-15T18:00:00Z"},{"name":"Machine","date":"2026-07-13","occ":"Elf","gcc":"Robot","start":"2026-07-13T18:00:00Z","end":"2026-07-18T18:00:00Z"},{"name":"Parasitic","date":"2026-07-15","occ":"Knowledge","gcc":"Parasite","start":"2026-07-15T18:00:00Z","end":"2026-07-20T18:00:00Z"},{"name":"Combat","date":"2026-07-17","occ":"Villain","gcc":"War","start":"2026-07-17T18:00:00Z","end":"2026-07-22T18:00:00Z"},{"name":"Plague","date":"2026-07-20","occ":"Water Serpent","gcc":"Affliction","start":"2026-07-20T18:00:00Z","end":"2026-07-25T18:00:00Z"},{"name":"Primate","date":"2026-07-22","occ":"Prehistoric","gcc":"Monkey","start":"2026-07-22T18:00:00Z","end":"2026-07-27T18:00:00Z"},{"name":"Oceana","date":"2026-07-24","occ":"Underwater","gcc":"Fish","start":"2026-07-24T18:00:00Z","end":"2026-07-29T18:00:00Z"},{"name":"Scaly","date":"2026-07-27","occ":"Turtle","gcc":"Reptile","start":"2026-07-27T18:00:00Z","end":"2026-08-01T18:00:00Z"},{"name":"Frozen","date":"2026-07-29","occ":"Sun","gcc":"Ice","start":"2026-07-29T18:00:00Z","end":"2026-08-03T18:00:00Z"},{"name":"Meta","date":"2026-07-31","occ":"Multiples","gcc":"Card","start":"2026-07-31T18:00:00Z","end":"2026-08-05T18:00:00Z"},{"name":"Tortoise","date":"2026-08-03","occ":"Death","gcc":"Turtle","start":"2026-08-03T18:00:00Z","end":"2026-08-08T18:00:00Z"},{"name":"Carnage","date":"2026-08-05","occ":"Weapon","gcc":"Destruction","start":"2026-08-05T18:00:00Z","end":"2026-08-10T18:00:00Z"},{"name":"Regal","date":"2026-08-07","occ":"Chinchilla","gcc":"Royalty","start":"2026-08-07T18:00:00Z","end":"2026-08-12T18:00:00Z"},{"name":"Scheming","date":"2026-08-10","occ":"Leader","gcc":"Royal Game","start":"2026-08-10T18:00:00Z","end":"2026-08-15T18:00:00Z"},{"name":"Muscle","date":"2026-08-12","occ":"Sword","gcc":"Strength","start":"2026-08-12T18:00:00Z","end":"2026-08-17T18:00:00Z"},{"name":"Adventure","date":"2026-08-14","occ":"Wealth","gcc":"Adventure","start":"2026-08-14T18:00:00Z","end":"2026-08-19T18:00:00Z"},{"name":"Booming Spike","date":"2026-08-17","occ":"Demon","gcc":"Horn","start":"2026-08-17T18:00:00Z","end":"2026-08-22T18:00:00Z"},{"name":"Canine","date":"2026-08-19","occ":"Knight","gcc":"Dog","start":"2026-08-19T18:00:00Z","end":"2026-08-24T18:00:00Z"},{"name":"Innovation","date":"2026-08-21","occ":"Science","gcc":"Invention","start":"2026-08-21T18:00:00Z","end":"2026-08-26T18:00:00Z"},{"name":"Aquatic","date":"2026-08-24","occ":"Trident","gcc":"Underwater","start":"2026-08-24T18:00:00Z","end":"2026-08-29T18:00:00Z"},{"name":"Bloody","date":"2026-08-26","occ":"Earth","gcc":"Blood","start":"2026-08-26T18:00:00Z","end":"2026-08-31T18:00:00Z"},{"name":"Hope","date":"2026-08-28","occ":"Love","gcc":"Hopefulness","start":"2026-08-28T18:00:00Z","end":"2026-09-02T18:00:00Z"},{"name":"Wizarding","date":"2026-08-31","occ":"Magic","gcc":"Wizarding School","start":"2026-08-31T18:00:00Z","end":"2026-09-05T18:00:00Z"},{"name":"Slumber","date":"2026-09-02","occ":"Bat","gcc":"Sleep","start":"2026-09-02T18:00:00Z","end":"2026-09-07T18:00:00Z"},{"name":"Vanity","date":"2026-09-04","occ":"Cat","gcc":"Beauty","start":"2026-09-04T18:00:00Z","end":"2026-09-09T18:00:00Z"},{"name":"Slime","date":"2026-09-07","occ":"Poison","gcc":"Blob","start":"2026-09-07T18:00:00Z","end":"2026-09-12T18:00:00Z"},{"name":"End of World","date":"2026-09-09","occ":"Strength","gcc":"Apocalypse","start":"2026-09-09T18:00:00Z","end":"2026-09-14T18:00:00Z"},{"name":"Arachnid","date":"2026-09-11","occ":"Affliction","gcc":"Arachnid","start":"2026-09-11T18:00:00Z","end":"2026-09-16T18:00:00Z"},{"name":"Melody","date":"2026-09-14","occ":"Monster","gcc":"Music","start":"2026-09-14T18:00:00Z","end":"2026-09-19T18:00:00Z"},{"name":"Botanical","date":"2026-09-16","occ":"Invention","gcc":"Plant","start":"2026-09-16T18:00:00Z","end":"2026-09-21T18:00:00Z"},{"name":"Half Half","date":"2026-09-18","occ":"Mutation","gcc":"Hybrid","start":"2026-09-18T18:00:00Z","end":"2026-09-23T18:00:00Z"},{"name":"Fable","date":"2026-09-21","occ":"Fairy","gcc":"Fairy Tale","start":"2026-09-21T18:00:00Z","end":"2026-09-26T18:00:00Z"},{"name":"Multiplicity","date":"2026-09-23","occ":"Metal","gcc":"Multiples","start":"2026-09-23T18:00:00Z","end":"2026-09-28T18:00:00Z"},{"name":"Phantom","date":"2026-09-25","occ":"Water","gcc":"Spirit","start":"2026-09-25T18:00:00Z","end":"2026-09-30T18:00:00Z"},{"name":"Portal","date":"2026-09-28","occ":"Extraterrestrial","gcc":"Portal","start":"2026-09-28T18:00:00Z","end":"2026-10-03T18:00:00Z"},{"name":"Tiny","date":"2026-09-30","occ":"Insect","gcc":"Miniature","start":"2026-09-30T18:00:00Z","end":"2026-10-05T18:00:00Z"},{"name":"Sahara","date":"2026-10-02","occ":"Relic","gcc":"Desert","start":"2026-10-02T18:00:00Z","end":"2026-10-07T18:00:00Z"},{"name":"Rage","date":"2026-10-05","occ":"Void","gcc":"Anger","start":"2026-10-05T18:00:00Z","end":"2026-10-10T18:00:00Z"},{"name":"Swift","date":"2026-10-07","occ":"Energy","gcc":"Speed","start":"2026-10-07T18:00:00Z","end":"2026-10-12T18:00:00Z"},{"name":"Insanity","date":"2026-10-09","occ":"Knowledge","gcc":"Madness","start":"2026-10-09T18:00:00Z","end":"2026-10-14T18:00:00Z"},{"name":"Wingman","date":"2026-10-12","occ":"Superhero","gcc":"Sidekick","start":"2026-10-12T18:00:00Z","end":"2026-10-17T18:00:00Z"},{"name":"Shrine","date":"2026-10-14","occ":"The Chosen One","gcc":"Shrine","start":"2026-10-14T18:00:00Z","end":"2026-10-19T18:00:00Z"},{"name":"First Aid","date":"2026-10-16","occ":"Life","gcc":"Healing","start":"2026-10-16T18:00:00Z","end":"2026-10-21T18:00:00Z"},{"name":"The Dark","date":"2026-10-19","occ":"Madness","gcc":"Darkness","start":"2026-10-19T18:00:00Z","end":"2026-10-24T18:00:00Z"},{"name":"Undying","date":"2026-10-21","occ":"Vampire","gcc":"Immortality","start":"2026-10-21T18:00:00Z","end":"2026-10-26T18:00:00Z"},{"name":"Hallow's Eve","date":"2026-10-23","occ":"Spirit","gcc":"Halloween","start":"2026-10-23T18:00:00Z","end":"2026-11-02T18:00:00Z"},{"name":"Fight","date":"2026-10-26","occ":"Werewolf","gcc":"Martial Arts","start":"2026-10-26T18:00:00Z","end":"2026-10-31T18:00:00Z"},{"name":"Skeletal","date":"2026-10-28","occ":"Cursed","gcc":"Bone","start":"2026-10-28T18:00:00Z","end":"2026-11-02T18:00:00Z"},{"name":"Mythos","date":"2026-10-30","occ":"Food","gcc":"Myth","start":"2026-10-30T18:00:00Z","end":"2026-11-04T18:00:00Z"},{"name":"Spycraft","date":"2026-11-02","occ":"Camouflage","gcc":"Spy","start":"2026-11-02T18:00:00Z","end":"2026-11-07T18:00:00Z"},{"name":"Martian","date":"2026-11-04","occ":"Space","gcc":"Extraterrestrial","start":"2026-11-04T18:00:00Z","end":"2026-11-09T18:00:00Z"},{"name":"Future Fight","date":"2026-11-06","occ":"War","gcc":"Future Fight","start":"2026-11-06T18:00:00Z","end":"2026-11-11T18:00:00Z"},{"name":"Primate","date":"2026-11-09","occ":"Prehistoric","gcc":"Monkey","start":"2026-11-09T18:00:00Z","end":"2026-11-14T18:00:00Z"},{"name":"Pirate","date":"2026-11-11","occ":"Monkey","gcc":"Pirate","start":"2026-11-11T18:00:00Z","end":"2026-11-16T18:00:00Z"},{"name":"Millionaire","date":"2026-11-13","occ":"Human","gcc":"Wealth","start":"2026-11-13T18:00:00Z","end":"2026-11-18T18:00:00Z"},{"name":"Sports","date":"2026-11-16","occ":"Speed","gcc":"Sports","start":"2026-11-16T18:00:00Z","end":"2026-11-21T18:00:00Z"},{"name":"Gamer","date":"2026-11-18","occ":"Chinchilla","gcc":"Arcade","start":"2026-11-18T18:00:00Z","end":"2026-11-23T18:00:00Z"},{"name":"Thanksgiving","date":"2026-11-20","occ":"Bird","gcc":"Turkey Day","start":"2026-11-20T18:00:00Z","end":"2026-11-30T18:00:00Z"},{"name":"Lunar","date":"2026-11-23","occ":"Wings","gcc":"Moon","start":"2026-11-23T18:00:00Z","end":"2026-11-28T18:00:00Z"},{"name":"Anniversary","date":"2026-11-25","occ":"Sweets/Golem","gcc":"Celebration","start":"2026-11-25T18:00:00Z","end":"2026-12-05T18:00:00Z"},{"name":"Muscle","date":"2026-11-27","occ":"Sword","gcc":"Strength","start":"2026-11-27T18:00:00Z","end":"2026-12-02T18:00:00Z"},{"name":"Chosen Hero","date":"2026-11-30","occ":"Knight","gcc":"The Chosen One","start":"2026-11-30T18:00:00Z","end":"2026-12-05T18:00:00Z"},{"name":"Plague","date":"2026-12-02","occ":"Water Serpent","gcc":"Affliction","start":"2026-12-02T18:00:00Z","end":"2026-12-07T18:00:00Z"},{"name":"Animation","date":"2026-12-04","occ":"Toy","gcc":"Cartoon","start":"2026-12-04T18:00:00Z","end":"2026-12-09T18:00:00Z"},{"name":"Wintertide","date":"2026-12-07","occ":"Holidays","gcc":"Wintertide","start":"2026-12-07T18:00:00Z","end":"2026-12-17T18:00:00Z"},{"name":"Zoom Zoom","date":"2026-12-09","occ":"Invention","gcc":"Vehicle","start":"2026-12-09T18:00:00Z","end":"2026-12-14T18:00:00Z"},{"name":"Gargantuan","date":"2026-12-11","occ":"Anger","gcc":"Giant","start":"2026-12-11T18:00:00Z","end":"2026-12-16T18:00:00Z"},{"name":"Mon","date":"2026-12-14","occ":"Dragon","gcc":"Pocket Pet","start":"2026-12-14T18:00:00Z","end":"2026-12-19T18:00:00Z"},{"name":"Mutant","date":"2026-12-16","occ":"Sci-Fi","gcc":"Mutation","start":"2026-12-16T18:00:00Z","end":"2026-12-21T18:00:00Z"},{"name":"Yuletide","date":"2026-12-18","occ":"Pocket Pet","gcc":"Holidays","start":"2026-12-18T18:00:00Z","end":"2026-12-28T18:00:00Z"},{"name":"Tortoise","date":"2026-12-21","occ":"Death","gcc":"Turtle","start":"2026-12-21T18:00:00Z","end":"2026-12-26T18:00:00Z"},{"name":"Dark Age","date":"2026-12-23","occ":"Time","gcc":"Medieval","start":"2026-12-23T18:00:00Z","end":"2026-12-28T18:00:00Z"},{"name":"Frozen","date":"2026-12-25","occ":"Sun","gcc":"Ice","start":"2026-12-25T18:00:00Z","end":"2026-12-30T18:00:00Z"},{"name":"New Years","date":"2026-12-28","occ":"Horse/Moon","gcc":"New Years","start":"2026-12-28T18:00:00Z","end":"2027-01-07T18:00:00Z"},{"name":"Futuristic","date":"2026-12-30","occ":"Water","gcc":"Sci-Fi","start":"2026-12-30T18:00:00Z","end":"2027-01-04T18:00:00Z"},{"name":"Cloaked","date":"2027-01-01","occ":"Void","gcc":"Camouflage","start":"2027-01-01T18:00:00Z","end":"2027-01-06T18:00:00Z"},{"name":"Fantasy","date":"2027-01-04","occ":"Fairy Tale","gcc":"Precious Ring Lore","start":"2027-01-04T18:00:00Z","end":"2027-01-09T18:00:00Z"},{"name":"Aviary","date":"2027-01-06","occ":"Wind","gcc":"Bird","start":"2027-01-06T18:00:00Z","end":"2027-01-11T18:00:00Z"},{"name":"Wingman","date":"2027-01-08","occ":"Superhero","gcc":"Sidekick","start":"2027-01-08T18:00:00Z","end":"2027-01-13T18:00:00Z"},{"name":"Viking","date":"2027-01-11","occ":"Horn","gcc":"Viking","start":"2027-01-11T18:00:00Z","end":"2027-01-16T18:00:00Z"},{"name":"Aquatic","date":"2027-01-13","occ":"Trident","gcc":"Underwater","start":"2027-01-13T18:00:00Z","end":"2027-01-18T18:00:00Z"},{"name":"Machine","date":"2027-01-15","occ":"Elf","gcc":"Robot","start":"2027-01-15T18:00:00Z","end":"2027-01-20T18:00:00Z"},{"name":"Clairvoyant","date":"2027-01-18","occ":"Insect","gcc":"Psychic","start":"2027-01-18T18:00:00Z","end":"2027-01-23T18:00:00Z"},{"name":"Far Away","date":"2027-01-20","occ":"Space","gcc":"Galaxy Wars","start":"2027-01-20T18:00:00Z","end":"2027-01-25T18:00:00Z"},{"name":"Wizarding","date":"2027-01-22","occ":"Magic","gcc":"Wizarding School","start":"2027-01-22T18:00:00Z","end":"2027-01-27T18:00:00Z"},{"name":"Oceana","date":"2027-01-25","occ":"Underwater","gcc":"Fish","start":"2027-01-25T18:00:00Z","end":"2027-01-30T18:00:00Z"},{"name":"Arms","date":"2027-01-27","occ":"Vampire","gcc":"Weapon","start":"2027-01-27T18:00:00Z","end":"2027-02-01T18:00:00Z"},{"name":"Commander","date":"2027-01-29","occ":"Undead","gcc":"Leader","start":"2027-01-29T18:00:00Z","end":"2027-02-03T18:00:00Z"},{"name":"Adventure","date":"2027-02-01","occ":"Wealth","gcc":"Adventure","start":"2027-02-01T18:00:00Z","end":"2027-02-06T18:00:00Z"},{"name":"Hypno","date":"2027-02-03","occ":"Werewolf","gcc":"Mind Control","start":"2027-02-03T18:00:00Z","end":"2027-02-08T18:00:00Z"},{"name":"Valentine's","date":"2027-02-05","occ":"Precious Ring Lore","gcc":"Love","start":"2027-02-05T18:00:00Z","end":"2027-02-15T18:00:00Z"},{"name":"Slime","date":"2027-02-08","occ":"Poison","gcc":"Blob","start":"2027-02-08T18:00:00Z","end":"2027-02-13T18:00:00Z"},{"name":"Primate","date":"2027-02-10","occ":"Prehistoric","gcc":"Monkey","start":"2027-02-10T18:00:00Z","end":"2027-02-15T18:00:00Z"},{"name":"Combat","date":"2027-02-12","occ":"Villain","gcc":"War","start":"2027-02-12T18:00:00Z","end":"2027-02-17T18:00:00Z"},{"name":"Scaly","date":"2027-02-15","occ":"Turtle","gcc":"Reptile","start":"2027-02-15T18:00:00Z","end":"2027-02-20T18:00:00Z"}];
 // Bump this whenever PACK_SCHEDULE above is edited. The schedule is saved to
 // local storage on first run, and from then on the saved copy wins — so a new
 // build shipped a corrected schedule that no existing browser ever adopted.
@@ -1868,7 +1880,9 @@ function findPackSources(cardName, wantOnyx){
     const hit = splitCardNames(field).some(n=>normalizeCardName(n)===target);
     if(!hit) continue;
     const dateObj = parseLocalDate(row.date);
-    out.push({pack: row.name, date: row.date, dateObj, upcoming: dateObj>=now});
+    // still purchasable until the sale's UTC end, not just before its start
+    out.push({pack: row.name, date: row.date, dateObj, upcoming: saleEndMs(row) > Date.now(),
+              onSaleNow: saleStartMs(row) <= Date.now() && saleEndMs(row) > Date.now()});
   }
   out.sort((a,b)=>a.dateObj-b.dateObj);
   return out;
@@ -2396,7 +2410,7 @@ function renderUpgradeList(){
   const keyLabel = {atk:'Atk', def:'Def', sum:'Sum'}[key] || 'Sum';
 
   el.innerHTML = lastPackAdvice.list.slice(0,5).map((r,i)=>{
-    const when = r.next ? formatDate(r.next.dateObj) : 'no date scheduled';
+    const when = packWhenText(r);
     const delta = r.delta[key];
     // Name the cards that earn the ranking, so the row is actionable on its own.
     const cards = (r.cards||[]).slice(0,2)
@@ -2521,8 +2535,81 @@ function refDeckToSlots(deck){
 // Suggestions only rank cards you already own. This answers the other question:
 // which pack should you open next, judged against a specific deck rather than
 // the collection as a whole. A pack helps only if its cards would earn a slot.
+// ================= RETURN ESTIMATES =================
+// When is a pack likely on sale again, beyond the known schedule? This is an
+// ESTIMATE, and everything that shows it says so. Past sales follow no fixed
+// rotation (the order repeats about 2% of the time) and the gap between one
+// pack's sales ranges from 68 to 965 days, median about six months. Method:
+// take every past gap, keep those longer than this pack has already been away,
+// and use their median as the estimate and their middle half as the likely
+// window. Backtested over 23 monthly cutoffs (Jun 2024 - Apr 2026): median
+// error about two months (a blind "same wait for every pack" guess: ~2.5
+// months), the window held the real date about half the time, and ranking
+// agreement with actual returns was weak (0.13). Monthly probabilities were
+// tested too and were uncalibrated, so estimates are never placed on the
+// calendar, where they would read as a forecast.
+const EST_ERROR_NOTE = 'A rough estimate from past sales, not the schedule: typically off by about two months, and only slightly better than a blind guess.';
+function isoDaysBetween(a, b){
+  return Math.round((Date.parse(b+'T00:00:00Z') - Date.parse(a+'T00:00:00Z')) / 86400000);
+}
+function isoAddDays(a, n){
+  const d = new Date(Date.parse(a+'T00:00:00Z') + n*86400000);
+  return d.toISOString().slice(0,10);
+}
+function monthLabel(iso){
+  return new Date(iso+'T00:00:00').toLocaleDateString(undefined, {month:'short', year:'numeric'});
+}
+// History plus the live schedule, so an edited schedule moves the estimates too.
+function packSalesIndex(){
+  const byName = new Map();
+  const add = (name, d) => {
+    if(!name || !d) return;
+    const key = normalizeCardName(name);
+    if(!byName.has(key)) byName.set(key, {name, dates:new Set()});
+    byName.get(key).dates.add(d);
+  };
+  for(const [name, dates] of Object.entries(PACK_HISTORY)) dates.forEach(d=>add(name, d));
+  for(const e of (packSchedule || [])) add(e.name, e.date);
+  let knownEnd = '';
+  const gaps = [];
+  for(const v of byName.values()){
+    v.sorted = [...v.dates].sort();
+    const last = v.sorted[v.sorted.length-1];
+    if(last > knownEnd) knownEnd = last;
+    for(let i=1; i<v.sorted.length; i++) gaps.push(isoDaysBetween(v.sorted[i-1], v.sorted[i]));
+  }
+  gaps.sort((a,b)=>a-b);
+  return {byName, knownEnd, gaps};
+}
+function estimateReturn(name, idx){
+  idx = idx || packSalesIndex();
+  const v = idx.byName.get(normalizeCardName(name));
+  if(!v) return {kind:'none'};
+  const live = (packSchedule || [])
+    .filter(e => normalizeCardName(e.name||'') === normalizeCardName(name) && saleEndMs(e) > Date.now())
+    .sort((a,b) => saleStartMs(a) - saleStartMs(b))[0];
+  if(live) return {kind:'known', date: live.date, onSaleNow: saleStartMs(live) <= Date.now()};
+  const last = v.sorted[v.sorted.length-1];
+  // The pack is known NOT to sell through the end of the schedule, so only
+  // gaps longer than that absence are possible.
+  const away = isoDaysBetween(last, idx.knownEnd);
+  const tail = idx.gaps.filter(g => g > away);
+  if(tail.length < 4) return {kind:'none', last};     // absent longer than almost any past gap
+  const q = p => tail[Math.round(p * (tail.length-1))];
+  return {kind:'estimate', last, date: isoAddDays(last, q(0.5)), lo: isoAddDays(last, q(0.25)), hi: isoAddDays(last, q(0.75))};
+}
+// Short text for a pack's next sale: a scheduled date, or a labelled estimate.
+function packWhenText(r){
+  if(r.next) return r.next.onSaleNow ? 'on sale now' : formatDate(r.next.dateObj);
+  const e = r.est;
+  if(e && e.kind === 'estimate') return `≈ ${monthLabel(e.date)} · estimate`;
+  if(e && e.last) return `not sold since ${monthLabel(e.last)}`;
+  return 'no date scheduled';
+}
+
 function computePackAdvice(settings, deckRows, limit){
   if(!Array.isArray(deckRows)) return {list:[], base:0, deckSize:0, baseMet:null, key:'sum'};
+  const salesIdx = packSalesIndex();
   if(!deckRows || deckRows.length < 2) return {list:[], base:0, deckSize:0};
 
   const deck = deckRows.map(d=>({
@@ -2588,7 +2675,9 @@ function computePackAdvice(settings, deckRows, limit){
       // copy already in the deck: combos stay the same, that card turns fused
       // and brings more orbs. Combo gains always come first; this is the
       // "nothing lost, orbs gained" case.
-      const fi = working.findIndex(o => o.name === c.name && !!o.onyx === c.onyx && !o.fused);
+      // Fusing needs both copies at level 5; the new copy is taken as levelled,
+      // like every seated card here, so the deck copy must be level 5 too.
+      const fi = working.findIndex(o => o.name === c.name && !!o.onyx === c.onyx && !o.fused && (o.level||5) === 5);
       if(fi >= 0){
         working = working.map((o,j) => j === fi ? {...o, fused:true} : o);
         taken.push({label:c.label, onyx:c.onyx, gain:0, isNew:false, fuse:true});
@@ -2600,10 +2689,12 @@ function computePackAdvice(settings, deckRows, limit){
     const upcoming = packSchedule
       .filter(e=>normalizeCardName(e.name||'')===normalizeCardName(pack))
       .map(e=>({...e, dateObj:new Date(e.date+'T00:00:00')}))
-      .filter(e=>!isNaN(e.dateObj) && e.dateObj >= new Date(new Date().toDateString()))
+      .filter(e=>!isNaN(e.dateObj) && saleEndMs(e) > Date.now())
+      .map(e=>({...e, onSaleNow: saleStartMs(e) <= Date.now()}))
       .sort((a,b)=>a.dateObj-b.dateObj);
     const after = deckMetrics(working, {...settings, skipHand:true});
     out.push({pack, cards: taken, next: upcoming[0] || null,
+      est: upcoming[0] ? null : estimateReturn(pack, salesIdx),
               gain: pairSum(working) - base,
               delta: {
                 atk: after.avgAttack - baseMet.avgAttack,
@@ -2642,18 +2733,25 @@ function renderPackAdvice(settings, deckRows, sourceLabel){
   // several screens; collapsed they fit one.
   list.innerHTML = res.list.map((r,i)=>{
     const head = r.delta[res.key];
-    const when = r.next ? formatDate(r.next.dateObj) : '';
+    const when = packWhenText(r);
+    const isEst = !r.next;
+    const estLine = (r.next && r.next.onSaleNow)
+      ? `<div class="pack-est-note" style="font-style:normal;color:var(--teal)">On sale now, until ${escapeHtml(saleEndLabel(r.next))}.</div>`
+      : (r.est && r.est.kind === 'estimate')
+      ? `<div class="pack-est-note">Estimated return ≈ ${escapeHtml(monthLabel(r.est.date))}, with a 50/50 window of ${escapeHtml(monthLabel(r.est.lo))} – ${escapeHtml(monthLabel(r.est.hi))}. ${EST_ERROR_NOTE}</div>`
+      : '';
     return `
     <div class="pack-row" data-idx="${i}">
       <button type="button" class="pack-head">
         <span class="pack-rank">${i+1}</span>
         <span class="pack-name">${escapeHtml(r.pack)}
-          ${when ? `<span class="pack-when">${escapeHtml(when)}</span>` : ''}
+          ${when ? `<span class="pack-when${isEst?' pack-est':''}">${escapeHtml(when)}</span>` : ''}
         </span>
         <span class="pack-delta">${deltaHTML(head)}<span class="pack-delta-lbl">${keyLabel}</span></span>
         <span class="pack-caret">›</span>
       </button>
       <div class="pack-body">
+        ${estLine}
         <div class="pack-deltas">
           <span>Atk ${deltaHTML(r.delta.atk)}</span>
           <span>Sum ${deltaHTML(r.delta.sum)}</span>
@@ -2687,7 +2785,8 @@ function renderPackAdvice(settings, deckRows, sourceLabel){
 // consumed copy leaves a slot, filled with the best card you still hold.
 function fusionEffect(name, onyx, deck, candidates, settings){
   const same = c => c.name === name && !!c.onyx === onyx;
-  const unfIdx = deck.map((c,i)=>(same(c) && !c.fused) ? i : -1).filter(i=>i>=0);
+  // only unfused copies at level 5 can take part in a fusion
+  const unfIdx = deck.map((c,i)=>(same(c) && !c.fused && (c.level||5) === 5) ? i : -1).filter(i=>i>=0);
   const baseMet = deckMetrics(deck, {...settings, skipHand:true});
   if(!unfIdx.length){
     return {kind:'none', dStat:0, dUnfused:0, dDead:0, filler:null, baseMet};
@@ -2772,15 +2871,17 @@ async function computeSuggestions(){
   // Track total copies and unfused copies separately: fusing consumes two
   // unfused copies of the same card and yields one fused card.
   const ownedCount = new Map();
-  const unfusedCount = new Map();
+  const unfusedCount = new Map();   // unfused copies at level 5 — the fusable ones
+  const belowFive = new Map();      // unfused copies still under level 5
   const ownedByName = new Map();
   for(const row of myLibrary){
     const key = row.name+'|'+row.onyx;
     ownedCount.set(key, (ownedCount.get(key)||0)+row.qty);
     // The 3-per-deck cap counts Onyx and non-Onyx together.
     ownedByName.set(row.name, (ownedByName.get(row.name)||0)+row.qty);
-    // Fusion pairs two unfused copies of the same variant.
-    if(!row.fused) unfusedCount.set(key, (unfusedCount.get(key)||0)+row.qty);
+    // Fusion pairs two unfused LEVEL-5 copies of the same variant.
+    if(!row.fused && (row.level||5) === 5) unfusedCount.set(key, (unfusedCount.get(key)||0)+row.qty);
+    else if(!row.fused) belowFive.set(key, (belowFive.get(key)||0)+row.qty);
   }
 
   // Cards you can fuse right now, judged against the deck being analysed.
@@ -2808,6 +2909,15 @@ async function computeSuggestions(){
       : null;
     readyToFuse.push({name, onyx, copies:u, kind, fusions, inDeck:k, orbSlots: Math.min(fusions, kUnf), selfPair,
                       effect: fusionEffect(name, onyx, deck, candidates, settings)});
+  }
+  // Pairs held back only by level: two or more unfused copies, fewer than two at level 5.
+  const needLevel = [];
+  for(const [key, low] of belowFive){
+    const at5 = unfusedCount.get(key) || 0;
+    if(at5 < 2 && at5 + low >= 2){
+      const [name, onyxStr] = key.split('|');
+      needLevel.push({name, onyx: onyxStr === 'true', at5, low});
+    }
   }
 
   const evaluated = [];
@@ -2918,7 +3028,7 @@ async function computeSuggestions(){
       combined: p.combined,
     }));
 
-  return {deck, suggestions: ranked, readyToFuse, usingSaved, source, topPairs};
+  return {deck, suggestions: ranked, readyToFuse, needLevel, usingSaved, source, topPairs};
 }
 
 // The analysis is async and fires on every library edit, so rapid changes can
@@ -2947,7 +3057,7 @@ async function runSuggestionAnalysis(){
     return;
   }
   statusEl.textContent = 'Analysing…';
-  const { deck, suggestions, readyToFuse, usingSaved, source, topPairs } = await computeSuggestions();
+  const { deck, suggestions, readyToFuse, needLevel, usingSaved, source, topPairs } = await computeSuggestions();
   if(token !== suggRunToken) return;   // a newer run superseded this one
   lastSuggestions = suggestions.map((s,i)=>({...s, rank:i+1}));
 
@@ -2989,7 +3099,8 @@ async function runSuggestionAnalysis(){
   const inDeck = (readyToFuse||[]).filter(f => f.effect && f.effect.kind !== 'none')
     .sort((a,b) => b.effect.dStat - a.effect.dStat);
   const idle = (readyToFuse||[]).filter(f => !f.effect || f.effect.kind === 'none');
-  if(inDeck.length || idle.length){
+  const lvl = needLevel || [];
+  if(inDeck.length || idle.length || lvl.length){
     // Each line: what fusing one pair does to this deck. The stat change is the
     // combo side; a lower unfused share is the orb side. Orbs have their uses,
     // so costly fusions are shown as a trade, not ruled out.
@@ -3004,9 +3115,10 @@ async function runSuggestionAnalysis(){
         + (Math.abs(e.dDead) >= 0.05 ? ` · dead ${deltaHTML(e.dDead, {lowerIsBetter:true, suffix:'%'})}` : '')
         + ` <span class="fuse-note">(${note})</span></li>`;
     });
-    fuseEl.innerHTML = `<strong>Fusing two copies</strong> — change to this deck if you fuse one pair:`
+    fuseEl.innerHTML = `<strong>Fusing two copies</strong> — ` + (lines.length ? 'change to this deck if you fuse one pair:' : 'nothing fusable yet.')
       + (lines.length ? `<ul class="fuse-list">${lines.join('')}</ul>` : '')
-      + (idle.length ? `<div class="fuse-idle">Not in this deck, so fusing changes nothing here: ${idle.map(nm).join(', ')}.</div>` : '');
+      + (idle.length ? `<div class="fuse-idle">Not in this deck, so fusing changes nothing here: ${idle.map(nm).join(', ')}.</div>` : '')
+      + (lvl.length ? `<div class="fuse-idle">Level up first — fusing needs two level-5 copies: ${lvl.map(f=>`${nm(f)} (${f.at5} of ${f.at5+f.low} at level 5)`).join(', ')}.</div>` : '');
     fuseEl.style.display = 'block';
   } else {
     fuseEl.style.display = 'none';
@@ -3423,6 +3535,15 @@ function marginalScore(candidate, deckSlots, settings){
 let myLibrary = SEED_LIBRARY.map((r,i)=>({...r, id:'r'+i}));
 let libIdCounter = SEED_LIBRARY.length;
 
+// Fusing needs two level-5 cards, so a fused card is always level 5. Older
+// saves could hold fused cards at lower levels (the tool once allowed fusing at
+// any level); correct those on load rather than scoring an impossible card.
+function enforceFusionLevel(rows){
+  let fixed = 0;
+  for(const r of rows){ if(r.fused && (r.level||5) !== 5){ r.level = 5; fixed++; } }
+  return fixed;
+}
+
 async function loadLibrary(){
   try{
     const result = await Store.get('my-library');
@@ -3434,6 +3555,12 @@ async function loadLibrary(){
       }
     }
   }catch(e){ /* key not found or storage unavailable — keep seed */ }
+  const fixedLv = enforceFusionLevel(myLibrary);
+  if(fixedLv){
+    await saveLibrary();
+    const el = document.getElementById('dataStatus');
+    if(el){ el.textContent = `${fixedLv} fused card${fixedLv===1?'':'s'} set to level 5 — fusing needs two level-5 cards.`; el.style.color = 'var(--gold)'; }
+  }
   renderMyLibrary();
   runSuggestionAnalysis();
 }
@@ -3507,7 +3634,7 @@ function renderMyLibrary(){
       <td class="card-name">${rarityDot(r.name, r.onyx)}${escapeHtml(r.name)}</td>
       <td><input type="checkbox" class="lib-onyx" data-id="${r.id}" ${r.onyx?'checked':''}></td>
       <td>
-        <select class="row-input lib-level" data-id="${r.id}">
+        <select class="row-input lib-level" data-id="${r.id}" ${r.fused?'disabled title="Fused cards are level 5"':''}>
           ${[1,2,3,4,5].map(l=>`<option value="${l}" ${r.level===l?'selected':''}>${l}</option>`).join('')}
         </select>
       </td>
@@ -3602,9 +3729,20 @@ function updateLibRow(id, patch){
     renderMyLibrary();
     return;
   }
+  // Fusing needs two level-5 cards: a fused card is level 5 and stays there.
+  if(patch.fused === true && (row.level||5) !== 5){
+    patch = {...patch, level: 5};
+    showLibError(`<strong>${escapeHtml(row.name)}</strong> set to level 5 — fusing needs two level-5 cards.`);
+  }
+  if(patch.level != null && patch.level !== 5 && row.fused && patch.fused !== false){
+    showLibError(`<strong>${escapeHtml(row.name)}</strong> is fused, so it stays at level 5 — unmark Fused to change its level.`);
+    renderMyLibrary();
+    return;
+  }
   Object.assign(row, patch);
   saveLibrary();
   queueSuggestionAnalysis();
+  if(patch.fused === true) renderMyLibrary();   // level box locks for fused rows
 }
 document.getElementById('myLibSearch').addEventListener('input', renderMyLibrary);
 
@@ -4261,7 +4399,7 @@ function renderDeckDiff(oldDeck, newDeck){
 
 // The game allows at most 3 of the same card in a deck, counting Onyx and
 // non-Onyx variants together — so the cap is per card NAME, not per library row.
-const MAX_PER_NAME = 3;
+const MAX_PER_NAME = 3;   // confirmed: 3 copies per card, Onyx and plain counted together
 
 // Rank a library row by what it is actually worth, rather than by a fixed
 // fused-beats-Onyx rule. Onyx raises the base stats AND promotes the pair to top
@@ -5251,18 +5389,52 @@ function cardCell(cardName, isOnyx){
   return `${rarityDot(cardName, isOnyx)}${escapeHtml(cardName)} <span style="font-size:10.5px;color:${color};font-family:'IBM Plex Mono',monospace;">(${label})</span>`;
 }
 
+// A sale runs from its UTC start to its UTC end in the game data — 5 days as
+// a rule, occasionally 10 — so several packs overlap. Entries added by hand
+// carry no times; they assume the usual 5-day sale from 18:00 UTC.
+function saleStartMs(e){
+  const t = e && e.start ? Date.parse(e.start) : NaN;
+  return !isNaN(t) ? t : Date.parse((e && e.date) + 'T18:00:00Z');
+}
+function saleEndMs(e){
+  const t = e && e.end ? Date.parse(e.end) : NaN;
+  return !isNaN(t) ? t : saleStartMs(e) + 5*86400000;
+}
+function saleEndLabel(e){
+  const d = new Date(saleEndMs(e));
+  return d.toLocaleDateString(undefined, {day:'numeric', month:'short', timeZone:'UTC'})
+    + ', ' + d.toISOString().slice(11,16) + ' UTC';
+}
+
 // Corrections to the shipped schedule, applied to whichever copy is loaded —
 // saved on this device or synced from Drive/a backup. Bumping SCHEDULE_VERSION
 // would also deliver a fix, but it replaces the whole saved schedule and so
-// wipes any entries you added or edited yourself. This removes only the error.
+// wipes any entries you added or edited yourself. These touch only the errors.
+// Checked against the game's own sales data (Sales list, 514 dated packs).
 const SCHEDULE_REMOVALS = [
-  {name:'Futuristic', date:'2026-11-30'},   // no pack is scheduled that day
+  {name:'Futuristic', date:'2026-11-30'},   // wrong pack for that date
+];
+const SCHEDULE_ADDITIONS = [
+  // In the game's sales data; cards taken from its 2026-05-11 run, as the
+  // sales file lists no cards.
+  {name:'Chosen Hero', date:'2026-11-30', occ:'Knight', gcc:'The Chosen One', start:'2026-11-30T18:00:00Z', end:'2026-12-05T18:00:00Z'},
 ];
 function applyScheduleCorrections(){
+  const same = (a, b) => a.date === b.date && normalizeCardName(a.name || '') === normalizeCardName(b.name || '');
   const before = packSchedule.length;
-  packSchedule = packSchedule.filter(e => !SCHEDULE_REMOVALS.some(r =>
-    r.date === e.date && normalizeCardName(r.name) === normalizeCardName(e.name || '')));
-  return packSchedule.length !== before;
+  packSchedule = packSchedule.filter(e => !SCHEDULE_REMOVALS.some(r => same(r, e)));
+  let changed = packSchedule.length !== before;
+  for(const add of SCHEDULE_ADDITIONS){
+    if(!packSchedule.some(e => same(add, e))){ packSchedule.push({...add}); changed = true; }
+  }
+  // Older saved copies predate sale times; take them from the shipped schedule.
+  for(const e of packSchedule){
+    if(e.end) continue;
+    const ship = PACK_SCHEDULE.find(x => same(x, e));
+    if(ship && ship.end){ e.start = ship.start; e.end = ship.end; changed = true; }
+  }
+  if(changed) packSchedule.sort((a, b) => a.date < b.date ? -1 : a.date > b.date ? 1 : 0);
+  return changed;
 }
 
 async function loadSchedule(){
@@ -5284,8 +5456,10 @@ async function loadSchedule(){
       if(Array.isArray(parsed) && parsed.length) packSchedule = parsed;
     }
   }catch(e){ /* nothing saved yet — keep the shipped default */ }
-  if(applyScheduleCorrections()) await saveSchedule();
+  // ids first, so a corrected entry is saved with an id the table can address
+  const corrected = applyScheduleCorrections();
   ensureScheduleIds();
+  if(corrected) await saveSchedule();
   renderSchedule();
   renderOverview();
   if(adopted){
@@ -5303,13 +5477,16 @@ async function saveSchedule(){
   }catch(e){ /* storage unavailable — edits stay for this session only */ }
 }
 function ensureScheduleIds(){
+  // Find the highest existing id FIRST. Assigning inside the same pass let an
+  // id-less entry that sorts mid-list (a correction added to a saved schedule)
+  // take an id already in use further down — deleting one then deleted both.
   let max = 0;
   packSchedule.forEach(r=>{
-    if(!r.id) r.id = 's'+(scheduleIdCounter++);
-    const n = parseInt(String(r.id).slice(1));
-    if(!isNaN(n) && n>max) max = n;
+    const n = parseInt(String(r.id || '').slice(1));
+    if(!isNaN(n) && n > max) max = n;
   });
-  scheduleIdCounter = max+1;
+  scheduleIdCounter = Math.max(scheduleIdCounter, max + 1);
+  packSchedule.forEach(r=>{ if(!r.id) r.id = 's'+(scheduleIdCounter++); });
 }
 
 // ================= SCHEDULE CALENDAR =================
@@ -5668,6 +5845,7 @@ function buildExportPayload(){
 async function applyImportPayload(parsed){
   if(Array.isArray(parsed.myLibrary)){
     myLibrary = parsed.myLibrary;
+    enforceFusionLevel(myLibrary);
     libIdCounter = Math.max(...myLibrary.map(r=>parseInt((r.id||'r0').slice(1))||0), 0)+1;
     await saveLibrary();
   }
@@ -6064,10 +6242,20 @@ function syncDeckSizeToMode(){
         ? `Builds ${n} fusable cards — about ${total} total once ~22% ability cards are added. Ability cards aren't scored.`
         : 'Deck size counts fusable cards only; ability cards aren\'t scored.';
     } else {
-      hint.textContent = '';
+      // A deck is 35 cards including final forms, which never combine, so the
+      // builder only chooses the combo cards: 35 minus your final forms.
+      hint.textContent = comboCardHint(parseInt(document.getElementById('bDeckSize').value) || 0);
     }
   }
 }
+// A deck is 35 cards including final forms, which never combine — so the
+// builder chooses only the combo cards.
+function comboCardHint(n){
+  if(!n) return 'Enter combo cards only: 35 minus your final forms.';
+  if(n > 35) return `${n} combo cards is more than a 35-card deck holds — fine for testing, not playable.`;
+  return `${n} combo cards + ${35 - n} final forms = a 35-card deck. Final forms aren't scored.`;
+}
+
 document.getElementById('bMode').addEventListener('change', syncDeckSizeToMode);
 document.getElementById('packSearch').addEventListener('input', renderPackLog);
 document.getElementById('bDeckSize').addEventListener('input', ()=>{
@@ -6075,6 +6263,9 @@ document.getElementById('bDeckSize').addEventListener('input', ()=>{
   if(!isNaN(n) && n > 0 && lastSeenMode) deckSizeByMode[lastSeenMode] = n;
   const modeEl = document.getElementById('bMode');
   const hint = document.getElementById('deckSizeHint');
+  if(modeEl && modeEl.value!=='heroic' && hint && n > 0){
+    hint.textContent = comboCardHint(n);
+  }
   if(modeEl && modeEl.value==='heroic' && hint && n > 0){
     hint.textContent = `Builds ${n} fusable cards — about ${Math.round(n/0.78)} total once ~22% ability cards are added. Ability cards aren't scored.`;
   }
