@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Open Audio Finder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one search console on top, a single column of result rows, each row expandable to its file list. */
+:root {
+  --bg: #eef0f2; --panel: #ffffff; --ink: #18202b; --muted: #5b6573; --line: #d6dbe1;
+  --accent: #2448b8; --accent-ink: #ffffff; --ok: #1d7a4c; --warn: #9a5b00; --chip: #e3e8f4;
+  --f-display: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --f-body: "IBM Plex Sans", system-ui, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #11151b; --panel: #1a2029; --ink: #e6eaf0; --muted: #98a2b1; --line: #2b3340;
+  --accent: #7d9bff; --accent-ink: #0d1220; --ok: #5fd39a; --warn: #f0b45a; --chip: #232c3b; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #11151b; --panel: #1a2029; --ink: #e6eaf0; --muted: #98a2b1; --line: #2b3340;
+  --accent: #7d9bff; --accent-ink: #0d1220; --ok: #5fd39a; --warn: #f0b45a; --chip: #232c3b; color-scheme: dark }
+
+* { box-sizing: border-box }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.5 var(--f-body); }
+.wrap { max-width: 960px; margin: 0 auto; padding: 32px 16px 64px; display: grid; gap: 20px }
+h1 { font: 800 clamp(28px, 5vw, 40px)/1.05 var(--f-display); letter-spacing: -0.02em; margin: 0; text-wrap: balance }
+.lede { color: var(--muted); max-width: 65ch; margin: 6px 0 0 }
+.console { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 16px; display: grid; gap: 12px }
+.row { display: flex; flex-wrap: wrap; gap: 10px; align-items: end }
+.field { display: grid; gap: 4px; min-width: 0 }
+.field.grow { flex: 1 1 260px }
+label { font: 500 11px var(--f-mono); text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted) }
+input, select, button { font: inherit; color: inherit }
+input[type=search], select { background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 9px 10px; width: 100% }
+button { cursor: pointer; border-radius: 6px; border: 1px solid var(--line); background: var(--panel); padding: 9px 14px }
+button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 500 }
+button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px }
+.checks { display: flex; gap: 14px; flex-wrap: wrap; font-size: 14px }
+.checks label { font: inherit; text-transform: none; letter-spacing: 0; color: var(--ink); display: flex; gap: 6px; align-items: center }
+.status { font: 13px var(--f-mono); color: var(--muted) }
+.results { display: grid; gap: 10px }
+.item { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px; display: grid; gap: 8px; min-width: 0 }
+.item-head { display: flex; gap: 12px; justify-content: space-between; flex-wrap: wrap }
+.item h3 { margin: 0; font: 700 17px/1.3 var(--f-display); overflow-wrap: anywhere }
+.meta { color: var(--muted); font-size: 13px; overflow-wrap: anywhere }
+.chips { display: flex; gap: 6px; flex-wrap: wrap }
+.chip { font: 500 11px var(--f-mono); letter-spacing: 0.04em; text-transform: uppercase; background: var(--chip); padding: 3px 7px; border-radius: 4px }
+.chip.src { color: var(--accent) }
+.chip.lic { color: var(--ok) }
+.actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center }
+.actions a, .linkbtn { color: var(--accent); font-size: 14px; text-decoration: none; background: none; border: 0; padding: 0 }
+.actions a:hover, .linkbtn:hover { text-decoration: underline }
+audio { width: 100%; max-width: 420px; height: 36px }
+.files { display: grid; gap: 6px; border-top: 1px dashed var(--line); padding-top: 8px }
+.file { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 8px; align-items: center; font-size: 13px }
+.file code { font: 12px var(--f-mono); overflow-wrap: anywhere }
+.cmd { display: grid; gap: 6px; background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 10px }
+.cmd pre { margin: 0; font: 12px/1.5 var(--f-mono); white-space: pre-wrap; overflow-wrap: anywhere }
+.buy { font-size: 14px; color: var(--muted) }
+.buy a { color: var(--accent) }
+.note { font-size: 13px; color: var(--muted); max-width: 70ch }
+.warn { color: var(--warn) }
+@media (prefers-reduced-motion: no-preference) { .item { animation: in .2s ease-out } @keyframes in { from { transform: translateY(4px) } } }
+</style>
+</head>
+<body>
+<main class="wrap">
+  <header>
+    <h1>Open Audio Finder</h1>
+    <p class="lede">Search openly licensed and public‑domain audio (FLAC, MP3, OGG, AAC/M4A) on Openverse and the Internet Archive, preview it, then copy an ffmpeg command that saves it as an AAC file under the name you choose.</p>
+  </header>
+
+  <form class="console" id="searchForm">
+    <div class="row">
+      <div class="field grow">
+        <label for="q">Song, artist or keyword</label>
+        <input type="search" id="q" value="Satie Gymnopedie" autocomplete="off">
+      </div>
+      <div class="field">
+        <label for="fmt">Format</label>
+        <select id="fmt">
+          <option value="any">Any</option>
+          <option value="flac" selected>FLAC</option>
+          <option value="aac">AAC / M4A</option>
+          <option value="mp3">MP3</option>
+          <option value="ogg">OGG</option>
+        </select>
+      </div>
+      <button class="primary" type="submit" id="go">Search</button>
+    </div>
+    <div class="checks">
+      <label><input type="checkbox" id="srcOv" checked> Openverse (Jamendo, Freesound, Wikimedia, ccMixter)</label>
+      <label><input type="checkbox" id="srcIa" checked> Internet Archive</label>
+    </div>
+    <div class="status" id="status" role="status">Ready.</div>
+  </form>
+
+  <section class="buy" id="buy"></section>
+  <section class="results" id="results" aria-live="polite"></section>
+
+  <p class="note">Only sources that publish files under public‑domain or Creative Commons terms are searched. Check each item's license before reuse: some CC licenses forbid commercial use (NC) or modification (ND). For commercial music, buy lossless downloads from the stores linked above.</p>
+</main>
+
+<script>
+// Intent: query open-license audio APIs from the browser, show results with license + format,
+// and generate a per-file ffmpeg command converting the source to AAC under a user-chosen name.
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const EXT = { flac: ["flac"], aac: ["aac", "m4a", "mp4"], mp3: ["mp3"], ogg: ["ogg", "oga", "opus"] };
+const IA_FORMAT = { flac: '"Flac"', mp3: '("VBR MP3" OR "MP3")', ogg: '"Ogg Vorbis"' }; // no reliable AAC facet; filtered per file instead
+const extOf = name => (String(name).split("?")[0].split(".").pop() || "").toLowerCase();
+const fmtOk = (fmt, ext) => fmt === "any" || (EXT[fmt] || []).includes(ext) || (EXT.ogg.includes(ext) && fmt === "ogg");
+const safeName = s => String(s || "track").replace(/[\\/:*?"<>|]+/g, " ").replace(/\s+/g, " ").trim().slice(0, 120) || "track";
+const mmss = ms => { if (!ms) return ""; const t = Math.round(ms / 1000); return `${Math.floor(t / 60)}:${String(t % 60).padStart(2, "0")}` };
+
+function ffmpegCmd(url, name, ext) {
+  // Lossy sources (mp3/ogg) re-encoded to AAC lose more quality; prefer FLAC/WAV input.
+  return `ffmpeg -i "${url}" -map_metadata 0 -c:a aac -b:a 256k -movflags +faststart "${safeName(name)}.m4a"`;
+}
+
+function buyLinks(q) {
+  const e = encodeURIComponent(q);
+  $("#buy").innerHTML = `Commercial releases: buy lossless on <a href="https://bandcamp.com/search?q=${e}" target="_blank" rel="noopener">Bandcamp</a>, <a href="https://www.qobuz.com/us-en/search?q=${e}" target="_blank" rel="noopener">Qobuz</a> or <a href="https://www.hdtracks.com/#/search?q=${e}" target="_blank" rel="noopener">HDtracks</a>.`;
+}
+
+async function searchOpenverse(q, fmt) {
+  const p = new URLSearchParams({ q, page_size: "20" });
+  if (fmt !== "any" && fmt !== "aac") p.set("extension", fmt);
+  const r = await fetch(`https://api.openverse.org/v1/audio/?${p}`);
+  if (!r.ok) throw new Error(`Openverse returned ${r.status}`);
+  const j = await r.json();
+  return (j.results || []).map(a => {
+    const ext = (a.filetype || extOf(a.url)).toLowerCase();
+    const files = [{ name: `${a.title}.${ext}`, url: a.url, ext }]
+      .concat((a.alt_files || []).map(f => ({ name: `${a.title}.${f.filetype}`, url: f.url, ext: (f.filetype || extOf(f.url)).toLowerCase() })));
+    return {
+      source: `Openverse · ${a.source || a.provider}`, title: a.title, creator: a.creator,
+      license: `CC ${String(a.license).toUpperCase()} ${a.license_version || ""}`.replace("CC PDM", "Public domain").replace("CC CC0", "CC0"),
+      licenseUrl: a.license_url, page: a.foreign_landing_url, preview: a.url, duration: mmss(a.duration),
+      files: files.filter(f => fmtOk(fmt, f.ext))
+    };
+  }).filter(x => x.files.length);
+}
+
+async function searchArchive(q, fmt) {
+  let query = `(${q}) AND mediatype:audio`;
+  if (IA_FORMAT[fmt]) query += ` AND format:${IA_FORMAT[fmt]}`;
+  const p = new URLSearchParams({ q: query, rows: "20", output: "json", "sort[]": "downloads desc" });
+  ["identifier", "title", "creator", "licenseurl", "year"].forEach(f => p.append("fl[]", f));
+  const r = await fetch(`https://archive.org/advancedsearch.php?${p}`);
+  if (!r.ok) throw new Error(`Internet Archive returned ${r.status}`);
+  const j = await r.json();
+  return (j.response?.docs || []).map(d => ({
+    source: "Internet Archive", title: d.title || d.identifier,
+    creator: Array.isArray(d.creator) ? d.creator.join(", ") : d.creator,
+    license: d.licenseurl ? "See license" : "Check item rights", licenseUrl: d.licenseurl,
+    page: `https://archive.org/details/${d.identifier}`, year: d.year, iaId: d.identifier, files: null
+  }));
+}
+
+async function loadIaFiles(item, fmt) {
+  const r = await fetch(`https://archive.org/metadata/${encodeURIComponent(item.iaId)}/files`);
+  if (!r.ok) throw new Error(`Could not list files (${r.status})`);
+  const j = await r.json();
+  const audio = ["flac", "mp3", "ogg", "m4a", "aac", "mp4", "opus", "wav"];
+  return (j.result || [])
+    .map(f => ({ name: f.name, ext: extOf(f.name), size: f.size, url: `https://archive.org/download/${encodeURIComponent(item.iaId)}/${f.name.split("/").map(encodeURIComponent).join("/")}` }))
+    .filter(f => audio.includes(f.ext) && fmtOk(fmt, f.ext));
+}
+
+function fileRows(item, idx) {
+  if (!item.files.length) return `<div class="meta warn">No files in the chosen format for this item.</div>`;
+  return item.files.map((f, j) => `
+    <div class="file">
+      <code>${esc(f.name)}${f.size ? ` · ${(f.size / 1048576).toFixed(1)} MB` : ""}</code>
+      <span class="actions"><a href="${esc(f.url)}" target="_blank" rel="noopener">Open file</a>
+      <button type="button" class="linkbtn" data-cmd="${idx}:${j}">AAC command</button></span>
+    </div>`).join("");
+}
+
+function render(items, fmt) {
+  const box = $("#results");
+  box.innerHTML = items.map((it, i) => `
+    <article class="item" data-i="${i}">
+      <div class="item-head">
+        <div style="min-width:0">
+          <h3>${esc(it.title)}</h3>
+          <div class="meta">${esc(it.creator || "Unknown creator")}${it.year ? ` · ${esc(it.year)}` : ""}${it.duration ? ` · ${it.duration}` : ""}</div>
+        </div>
+        <div class="chips"><span class="chip src">${esc(it.source)}</span>
+          ${it.licenseUrl ? `<a class="chip lic" href="${esc(it.licenseUrl)}" target="_blank" rel="noopener">${esc(it.license)}</a>` : `<span class="chip">${esc(it.license)}</span>`}
+          ${it.files ? [...new Set(it.files.map(f => f.ext))].map(e => `<span class="chip">${esc(e)}</span>`).join("") : ""}</div>
+      </div>
+      ${it.preview ? `<audio controls preload="none" src="${esc(it.preview)}"></audio>` : ""}
+      <div class="actions"><a href="${esc(it.page)}" target="_blank" rel="noopener">Source page</a>
+        ${it.iaId ? `<button type="button" class="linkbtn" data-ia="${i}">Show audio files</button>` : ""}</div>
+      <div class="files" ${it.files ? "" : "hidden"}>${it.files ? fileRows(it, i) : ""}</div>
+      <div class="cmd" hidden>
+        <label for="name-${i}">Save as (file name)</label>
+        <input type="search" id="name-${i}" value="${esc(safeName(`${it.creator ? it.creator + " - " : ""}${it.title}`))}">
+        <pre></pre>
+        <div class="actions"><button type="button" class="primary" data-copy="${i}">Copy command</button></div>
+      </div>
+    </article>`).join("") || `<p class="meta">No results. Try a broader keyword or set Format to Any.</p>`;
+
+  box.onclick = async e => {
+    const t = e.target;
+    if (t.dataset.ia !== undefined) {
+      const it = items[+t.dataset.ia], card = t.closest(".item"), files = card.querySelector(".files");
+      t.disabled = true; t.textContent = "Loading files…";
+      try { it.files = await loadIaFiles(it, fmt); files.innerHTML = fileRows(it, +t.dataset.ia); files.hidden = false; t.remove(); }
+      catch (err) { t.disabled = false; t.textContent = "Retry file list"; files.hidden = false; files.innerHTML = `<div class="meta warn">${esc(err.message)}</div>`; }
+    }
+    if (t.dataset.cmd) {
+      const [i, j] = t.dataset.cmd.split(":").map(Number), card = t.closest(".item"), cmd = card.querySelector(".cmd");
+      const f = items[i].files[j], input = cmd.querySelector("input"), pre = cmd.querySelector("pre");
+      const update = () => pre.textContent = ffmpegCmd(f.url, input.value, f.ext)
+        + (["mp3", "ogg", "oga", "opus"].includes(f.ext) ? "\n# Source is already lossy; AAC output will not improve quality." : "");
+      input.oninput = update; update(); cmd.hidden = false; input.focus();
+    }
+    if (t.dataset.copy !== undefined) {
+      const pre = t.closest(".cmd").querySelector("pre");
+      try { await navigator.clipboard.writeText(pre.textContent.split("\n")[0]); t.textContent = "Copied"; setTimeout(() => t.textContent = "Copy command", 1500); }
+      catch { const s = getSelection(), rg = document.createRange(); rg.selectNodeContents(pre); s.removeAllRanges(); s.addRange(rg); t.textContent = "Press Ctrl+C"; }
+    }
+  };
+}
+
+async function run(e) {
+  e?.preventDefault();
+  const q = $("#q").value.trim(), fmt = $("#fmt").value;
+  if (!q) { $("#status").textContent = "Type a song, artist or keyword first."; return; }
+  buyLinks(q);
+  const jobs = [];
+  if ($("#srcOv").checked) jobs.push(searchOpenverse(q, fmt));
+  if ($("#srcIa").checked) jobs.push(searchArchive(q, fmt));
+  if (!jobs.length) { $("#status").textContent = "Pick at least one source."; return; }
+  $("#status").textContent = `Searching for “${q}”…`; $("#go").disabled = true;
+  const settled = await Promise.allSettled(jobs);
+  $("#go").disabled = false;
+  const items = settled.flatMap(s => s.status === "fulfilled" ? s.value : []);
+  const errs = settled.filter(s => s.status === "rejected").map(s => s.reason.message);
+  $("#status").textContent = `${items.length} result${items.length === 1 ? "" : "s"}` + (errs.length ? ` · ${errs.join("; ")}` : "")
+    + ($("#srcIa").checked && fmt === "aac" ? " · Internet Archive items are filtered by format when you open their file list." : "");
+  render(items, fmt);
+}
+
+$("#searchForm").addEventListener("submit", run);
+run();
+</script>
+</body>
+</html>
