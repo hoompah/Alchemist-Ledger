@@ -1131,6 +1131,16 @@ body.m .syn-pc .card-thumb{height:44px !important}
 .syn-pop{display:none;position:absolute;left:12px;right:12px;top:calc(100% - 4px);z-index:40;background:var(--panel);border:1px solid var(--gold-soft);border-radius:12px;padding:12px 14px;box-shadow:0 12px 32px rgba(0,0,0,.6)}
 .syn-item.open .syn-pop{display:block}
 @media (hover:hover){ .syn-item:hover .syn-pop{display:block} }
+.syn-bar{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;margin:0 20px 12px}
+.syn-modes{display:inline-flex;border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.syn-modes button{background:var(--panel-2);color:var(--muted);border:0;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit}
+.syn-modes button+button{border-left:1px solid var(--border)}
+.syn-modes button.on{background:var(--gold);color:var(--bg)}
+.syn-legend{font-size:11.5px;color:var(--muted)}
+.syn-chip b.syn-good,.syn-sub b.syn-good,.syn-legend b.syn-good{color:#86d993}
+.syn-chip b.syn-atk{color:#ef8a4b}.syn-chip b.syn-def{color:#5ea8ef}.syn-slash{color:var(--muted);margin:0 1px}
+.syn-chip.good{border-color:rgba(134,217,147,.55);background:rgba(134,217,147,.08)}
+@media (max-width:640px){ .syn-bar{margin:0 10px 10px} .syn-modes button{padding:6px 9px} }
 </style>
 </head>
 <body>
@@ -1215,7 +1225,7 @@ body.m .syn-pc .card-thumb{height:44px !important}
           <button class="menu-item" id="densityBtn">
             <svg viewBox="0 0 24 24"><path d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
             <span id="densityLabel">Compact rows</span></button>
-          <div class="menu-foot" id="versionTag">build 104 · sale combos (compact)</div>
+          <div class="menu-foot" id="versionTag">build 105 · combo preview modes</div>
         </div>
       </div>
       <input type="file" id="importDataInput" accept="application/json" style="display:none;">
@@ -2125,41 +2135,61 @@ const BEST_MEAN_SIZE = {attack:28, defense:28, both:28, heroic:234};
 
 // ---------- On sale now: which of your cards combine with the pack's cards ----------
 function _synFmt(ms){ const d=new Date(ms); return d.toLocaleString('en-GB',{timeZone:'UTC',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})+' UTC'; }
+const SYN_KEY='alchemists-ledger:synmode';
+function _synMode(ref){
+  try{ const m=localStorage.getItem(SYN_KEY); if(['sum','attack','defense','both'].includes(m)) return m; }catch(e){}
+  const dm = ref.comboMode || (REF_SLOTS.find(r=>r.key===activeRefSlot)||{}).mode || 'both';
+  return dm==='attack' ? 'attack' : dm==='defense' ? 'defense' : 'sum';
+}
 function renderSaleSynergy(){
   const el=document.getElementById('saleSynergy'); if(!el) return;
   const now=Date.now();
   let sales=packSchedule.filter(e=>saleStartMs(e)<=now && saleEndMs(e)>now), label='on sale now';
   if(!sales.length){ const nx=packSchedule.filter(e=>saleStartMs(e)>now).sort((a,b)=>saleStartMs(a)-saleStartMs(b))[0]; if(nx){ sales=[nx]; label='next sale'; } }
   if(!sales.length){ el.innerHTML='<div class="empty-note">No sale on the schedule.</div>'; return; }
-  const ref=activeRef();
+  const ref=activeRef(), mode=_synMode(ref);
   const uniq=list=>{ const m=new Map(); for(const c of list){ const k=c.name+(c.onyx?'|o':''); if(!m.has(k)||c.level>m.get(k).level) m.set(k,c); } return [...m.values()]; };
-  const deck=uniq((ref.deck||[]).map(d=>({name:String(d.name||'').replace(/:Onyx$/,''), onyx:/:Onyx$/.test(String(d.name||''))||!!d.onyx, level:+d.level||5})));
+  const slots=(ref.deck||[]).map(d=>({name:String(d.name||'').replace(/:Onyx$/,''), onyx:/:Onyx$/.test(String(d.name||''))||!!d.onyx, fused:!!d.fused, level:+d.level||5, copyIndex:d.copyIndex||1}));
+  const deck=uniq(slots.map(x=>({name:x.name, onyx:x.onyx, level:x.level})));
   const deckKeys=new Set(deck.map(c=>c.name+(c.onyx?'|o':'')));
   const lib=uniq(myLibrary.filter(r=>(+r.qty||0)>0).map(r=>({name:r.name, onyx:!!r.onyx, level:+r.level||1})));
+  // The deck's own average pair (dead pairs count as zero) is the bar a new combo should clear.
+  let avg=null;
+  try{ if(slots.length>1){ const m=deckMetrics(slots,{mode:'both',copyReduction:1,skipHand:true}); avg={s:m.avgSum, a:m.avgAttack, d:m.avgDefense}; } }catch(err){ avg=null; }
+  const key = mode==='attack' ? 'a' : mode==='defense' ? 'd' : 's';
+  const sortKey = mode==='both' ? 's' : key;
+  const good=(v,k)=> !!avg && v[k] > avg[k];
   const val=(p,c)=>{ const A={name:p.name,onyx:p.onyx,level:5,copyIndex:1}, B={name:c.name,onyx:c.onyx,level:c.level,copyIndex:2};
-    const s=comboValue(A,B,'both'); if(s==null) return null; return {s, a:comboValue(A,B,'attack'), d:comboValue(A,B,'defense')}; };
-  const chip=(c,v)=>`<span class="syn-chip" title="${escapeHtml(c.name)}${c.onyx?' (Onyx)':''} — attack ${Math.round(v.a)}, defense ${Math.round(v.d)}">${cardThumb(c.name,c.onyx,30)}<span>${escapeHtml(c.name)}</span><b>${Math.round(v.s)}</b></span>`;
-  el.innerHTML=sales.map(e=>{
+    const sv=comboValue(A,B,'both'); if(sv==null) return null; return {s:sv, a:comboValue(A,B,'attack'), d:comboValue(A,B,'defense')}; };
+  const valHTML=v=> mode==='both'
+    ? `<b class="${good(v,'a')?'syn-good':'syn-atk'}">${Math.round(v.a)}</b><span class="syn-slash">/</span><b class="${good(v,'d')?'syn-good':'syn-def'}">${Math.round(v.d)}</b>`
+    : `<b class="${good(v,key)?'syn-good':''}">${Math.round(v[key])}</b>`;
+  const chipGood=v=> mode==='both' ? good(v,'s') : good(v,key);
+  const chip=(c,v)=>`<span class="syn-chip${chipGood(v)?' good':''}" title="${escapeHtml(c.name)}${c.onyx?' (Onyx)':''} — attack ${Math.round(v.a)}, defense ${Math.round(v.d)}, sum ${Math.round(v.s)}">${cardThumb(c.name,c.onyx,30)}<span>${escapeHtml(c.name)}</span>${valHTML(v)}</span>`;
+  const unit = mode==='attack' ? ' atk' : mode==='defense' ? ' def' : '';
+  const bestTxt=v=> mode==='both' ? `${Math.round(v.a)}/${Math.round(v.d)}` : `${Math.round(v[key])}${unit}`;
+  const legendVal = !avg ? '' : mode==='both' ? `${avg.a.toFixed(1)} / ${avg.d.toFixed(1)}` : avg[key].toFixed(1);
+  const bar=`<div class="syn-bar"><div class="syn-modes">${[['sum','Sum'],['attack','Attack'],['defense','Defense'],['both','Atk/Def']].map(([k,l])=>`<button type="button" data-synmode="${k}" class="${k===mode?'on':''}">${l}</button>`).join('')}</div>${avg?`<span class="syn-legend"><b class="syn-good">Green</b> = better than your deck's average pair (${legendVal})</span>`:''}</div>`;
+  el.innerHTML=bar+sales.map(e=>{
     const pcs=[...String(e.occ||'').split('/').map(x=>x.trim()).filter(Boolean).map(n=>({name:n,onyx:true})),
                ...String(e.gcc||'').split('/').map(x=>x.trim()).filter(Boolean).map(n=>({name:n,onyx:false}))];
     const when = label==='on sale now' ? `on sale now · ends ${_synFmt(saleEndMs(e))}` : `next sale · starts ${_synFmt(saleStartMs(e))}`;
     const blocks=pcs.map(pc=>{
       const hits=[], dead=[];
       for(const c of deck){ const v=val(pc,c); if(v) hits.push([c,v]); else dead.push(c); }
-      hits.sort((x,y)=>y[1].s-x[1].s);
-      const extra=lib.filter(c=>!deckKeys.has(c.name+(c.onyx?'|o':''))).map(c=>[c,val(pc,c)]).filter(x=>x[1]).sort((x,y)=>y[1].s-x[1].s);
+      hits.sort((x,y)=>y[1][sortKey]-x[1][sortKey]);
+      const extra=lib.filter(c=>!deckKeys.has(c.name+(c.onyx?'|o':''))).map(c=>[c,val(pc,c)]).filter(x=>x[1]).sort((x,y)=>y[1][sortKey]-x[1][sortKey]);
       const owned=isCardOwned(pc.name,pc.onyx);
+      const nGood=hits.filter(([c,v])=>chipGood(v)).length;
       const deckPart = deck.length
-        ? `<div class="syn-sub">Combines with <b>${hits.length}</b> of the ${deck.length} different cards in your saved deck</div>
+        ? `<div class="syn-sub">Combines with <b>${hits.length}</b> of the ${deck.length} different cards in your saved deck${avg?` · <b class="syn-good">${nGood}</b> above your deck's average`:''}</div>
            <div class="syn-chips">${hits.map(([c,v])=>chip(c,v)).join('')||'<span class="syn-sub">none</span>'}</div>
            ${dead.length?`<div class="syn-dead">No combo with: ${dead.map(c=>escapeHtml(c.name)+(c.onyx?' (Onyx)':'')).join(', ')}</div>`:''}`
         : `<div class="syn-sub">Save a deck to see which deck cards it combines with.</div>`;
       const libPart = extra.length
         ? `<div class="syn-sub" style="margin-top:8px">Also in your library (${extra.length}):</div><div class="syn-chips">${extra.slice(0,8).map(([c,v])=>chip(c,v)).join('')}${extra.length>8?`<span class="syn-sub">+${extra.length-8} more</span>`:''}</div>` : '';
       const best=hits[0];
-      const summary = deck.length
-        ? `${hits.length}/${deck.length} deck${best?` · best ${escapeHtml(best[0].name)} ${Math.round(best[1].s)}`:''}`
-        : `${extra.length} library matches`;
+      const summary = deck.length ? `${hits.length}/${deck.length} deck${best?` · best ${escapeHtml(best[0].name)} ${bestTxt(best[1])}`:''}` : `${extra.length} library matches`;
       return `<div class="syn-item" tabindex="0">
         <div class="syn-sum">${cardThumb(pc.name,pc.onyx,36)}<span class="syn-sum-t"><span class="syn-pc-name">${escapeHtml(pc.name)} <span class="syn-tag ${pc.onyx?'onyx':'gold'}">${pc.onyx?'Onyx':'gold'}${owned?' · owned':''}</span></span><span class="syn-sum-v">${summary}</span></span><span class="syn-caret">▾</span></div>
         <div class="syn-pop">${deckPart}${libPart}</div></div>`;
@@ -2168,7 +2198,10 @@ function renderSaleSynergy(){
   }).join('');
   if(!el.dataset.wired){
     el.dataset.wired='1';
-    el.addEventListener('click',ev=>{ const it=ev.target.closest('.syn-item'); if(!it) return; const was=it.classList.contains('open');
+    el.addEventListener('click',ev=>{
+      const mb=ev.target.closest('[data-synmode]');
+      if(mb){ try{ localStorage.setItem(SYN_KEY, mb.dataset.synmode); }catch(e){} renderSaleSynergy(); ev.stopPropagation(); return; }
+      const it=ev.target.closest('.syn-item'); if(!it) return; const was=it.classList.contains('open');
       el.querySelectorAll('.syn-item.open').forEach(x=>x.classList.remove('open')); if(!was) it.classList.add('open'); ev.stopPropagation(); });
     document.addEventListener('click',()=>el.querySelectorAll('.syn-item.open').forEach(x=>x.classList.remove('open')));
   }
