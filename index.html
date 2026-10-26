@@ -1141,6 +1141,10 @@ body.m .syn-pc .card-thumb{height:44px !important}
 .syn-chip b.syn-atk{color:#ef8a4b}.syn-chip b.syn-def{color:#5ea8ef}.syn-slash{color:var(--muted);margin:0 1px}
 .syn-chip.good{border-color:rgba(134,217,147,.55);background:rgba(134,217,147,.08)}
 @media (max-width:640px){ .syn-bar{margin:0 10px 10px} .syn-modes button{padding:6px 9px} }
+.cov-cell{font-family:'IBM Plex Mono',monospace;cursor:pointer;text-decoration:underline dotted;text-underline-offset:3px;color:var(--gold)}
+.dg-tile[data-cov]{cursor:pointer}.dg-cov{font-size:10px;color:var(--muted);font-family:'IBM Plex Mono',monospace;margin-top:-3px}
+.cov-pop{position:fixed;z-index:1000;display:none;width:min(560px,94vw);background:var(--panel);border:1px solid var(--gold-soft);border-radius:12px;padding:12px 14px;box-shadow:0 12px 32px rgba(0,0,0,.6)}
+.cov-pop.show{display:block}.cov-head{display:flex;align-items:center;gap:10px;margin-bottom:8px}.cov-head .card-thumb{margin:0}
 </style>
 </head>
 <body>
@@ -1225,7 +1229,7 @@ body.m .syn-pc .card-thumb{height:44px !important}
           <button class="menu-item" id="densityBtn">
             <svg viewBox="0 0 24 24"><path d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
             <span id="densityLabel">Compact rows</span></button>
-          <div class="menu-foot" id="versionTag">build 105 · combo preview modes</div>
+          <div class="menu-foot" id="versionTag">build 106 · build coverage</div>
         </div>
       </div>
       <input type="file" id="importDataInput" accept="application/json" style="display:none;">
@@ -1489,6 +1493,7 @@ body.m .syn-pc .card-thumb{height:44px !important}
               <th data-key="fused" data-table="builder">Fused <span class="arrow"></span></th>
               <th data-key="level" data-table="builder">Level <span class="arrow"></span></th>
               <th data-key="selfCombo" data-table="builder">Self-combo <span class="arrow"></span></th>
+              <th data-key="coverage" data-table="builder">Combos <span class="arrow"></span></th>
             </tr>
           </thead>
           <tbody id="builderBody"></tbody>
@@ -5082,12 +5087,60 @@ let lastBuilderMetrics = null;
 let lastBuilderMode = null;
 let lastBuilderSettings = null;
 let builderSort = {key:'name', dir:1};
+// ---------- Combo coverage in the Build view ----------
+function deckGroups(slots){
+  const g=new Map();
+  for(const x of (slots||[])){ const n=String(x.name||'').replace(/:Onyx$/,''), o=/:Onyx$/.test(String(x.name||''))||!!x.onyx, k=n+(o?'|o':'');
+    if(!g.has(k)) g.set(k,{key:k,name:n,onyx:o,level:+x.level||5,count:0}); const e=g.get(k); e.count++; e.level=Math.max(e.level,+x.level||5); }
+  return g;
+}
+function deckCoverage(slots){
+  const g=deckGroups(slots), list=[...g.values()], out=new Map(), t=Math.max(0,list.length-1);
+  for(const a of list){ let n=0; for(const b of list){ if(b.key!==a.key && getCombo(a.name,b.name)) n++; } out.set(a.key,{n,t}); }
+  return out;
+}
+function covPopHTML(key){
+  const slots=lastBuilderResult||[]; const g=deckGroups(slots); const me=g.get(key); if(!me) return '';
+  const bm=(document.getElementById('bMode')||{}).value||'both'; const mk = bm==='attack'?'a' : bm==='defense'?'d' : 's';
+  const unit = mk==='a'?' attack' : mk==='d'?' defense' : ' sum';
+  const val=(c)=>{ const A={name:me.name,onyx:me.onyx,level:me.level,copyIndex:1}, B={name:c.name,onyx:c.onyx,level:c.level,copyIndex:2};
+    const sv=comboValue(A,B,'both'); if(sv==null) return null; return {s:sv,a:comboValue(A,B,'attack'),d:comboValue(A,B,'defense')}; };
+  let avg=null; try{ const m=deckMetrics(slots.map(x=>({...x})),{mode:'both',copyReduction:1,skipHand:true}); avg={s:m.avgSum,a:m.avgAttack,d:m.avgDefense}; }catch(e){}
+  const hits=[], dead=[];
+  for(const c of g.values()){ if(c.key===key) continue; const v=val(c); if(v) hits.push([c,v]); else dead.push(c); }
+  hits.sort((x,y)=>y[1][mk]-x[1][mk]);
+  const chip=([c,v])=>{ const good=avg && v[mk]>avg[mk]; return `<span class="syn-chip${good?' good':''}" title="attack ${Math.round(v.a)}, defense ${Math.round(v.d)}, sum ${Math.round(v.s)}">${cardThumb(c.name,c.onyx,30)}<span>${escapeHtml(c.name)}</span><b class="${good?'syn-good':''}">${Math.round(v[mk])}</b></span>`; };
+  const selfNote = me.count>1 && selfCombines(me.name) ? `<div class="syn-sub" style="margin-top:6px">↺ Also combines with its own ${me.count} copies.</div>` : '';
+  return `<div class="cov-head">${cardThumb(me.name,me.onyx,44)}<div><div style="font-weight:700">${escapeHtml(me.name)}${me.onyx?' <span class="syn-tag onyx">Onyx</span>':''}</div>
+      <div class="syn-sub">Combines with <b>${hits.length}</b> of the ${g.size-1} other cards in this deck · values:${unit}${avg?` · <b class="syn-good">green</b> beats the deck's average (${avg[mk].toFixed(1)})`:''}</div></div></div>
+    <div class="syn-chips">${hits.map(chip).join('')||'<span class="syn-sub">none</span>'}</div>${selfNote}
+    ${dead.length?`<div class="syn-dead">No combo with: ${dead.map(c=>escapeHtml(c.name)+(c.onyx?' (Onyx)':'')).join(', ')}</div>`:''}`;
+}
+let _covPop=null, _covPinned=null, _covCur=null;
+function _covEl(){ if(!_covPop){ _covPop=document.createElement('div'); _covPop.className='cov-pop'; document.body.appendChild(_covPop); } return _covPop; }
+function _covShow(t){
+  const pop=_covEl(); const html=covPopHTML(t.dataset.cov); if(!html) return; pop.innerHTML=html; pop.classList.add('show');
+  const r=t.getBoundingClientRect(), pw=pop.offsetWidth, ph=pop.offsetHeight;
+  let top=r.bottom+6; if(top+ph>innerHeight-8 && r.top-ph-6>8) top=r.top-ph-6; if(top+ph>innerHeight-8) top=Math.max(8,innerHeight-ph-8);
+  pop.style.top=top+'px'; pop.style.left=Math.min(Math.max(8,r.left),innerWidth-pw-8)+'px';
+}
+function _covHide(){ if(_covPop) _covPop.classList.remove('show'); _covCur=null; }
+(function wireCoverage(){
+  const hover = window.matchMedia && matchMedia('(hover:hover)').matches;
+  if(hover) document.addEventListener('mouseover',e=>{ const t=e.target.closest('[data-cov]');
+    if(t){ if(_covCur!==t){ _covCur=t; _covShow(t); } } else if(!_covPinned && _covCur && !e.target.closest('.cov-pop')){ _covHide(); } });
+  document.addEventListener('click',e=>{ const t=e.target.closest('[data-cov]');
+    if(t){ if(_covPinned===t){ _covPinned=null; _covHide(); } else { _covPinned=t; _covCur=t; _covShow(t); } e.stopPropagation(); return; }
+    if(!e.target.closest('.cov-pop')){ _covPinned=null; _covHide(); } });
+  window.addEventListener('scroll',()=>{ if(_covPop && _covPop.classList.contains('show')){ _covPinned=null; _covHide(); } },{passive:true});
+})();
 function renderBuilderTable(){
   if(!lastBuilderResult) return;
-  { const g=document.getElementById('builderGallery'); if(g) g.innerHTML=deckGalleryHTML(lastBuilderResult); }
+  const cov = deckCoverage(lastBuilderResult);
+  { const g=document.getElementById('builderGallery'); if(g) g.innerHTML=deckGalleryHTML(lastBuilderResult,{cov}); }
   const key = builderSort.key, dir = builderSort.dir;
   const rows = [...lastBuilderResult]
-    .map(s=>({...s, selfCombo: selfCombines(s.name)}))
+    .map(s=>{ const k=String(s.name).replace(/:Onyx$/,'')+(s.onyx?'|o':''); const c=cov.get(k)||{n:0,t:0}; return {...s, selfCombo: selfCombines(s.name), coverage:c.n, covT:c.t, covKey:k}; })
     .sort((a,b)=>{
     let av = a[key], bv = b[key];
     if(typeof av === 'boolean'){ av = av?1:0; bv = bv?1:0; }
@@ -5102,6 +5155,7 @@ function renderBuilderTable(){
       <td>${s.fused? '<span class="badge fused">Fused</span>' : '<span class="badge unfused">Unfused</span>'}</td>
       <td>${s.level}</td>
       <td>${selfComboIcon(s.selfCombo)}</td>
+      <td><span class="cov-cell" data-cov="${escapeHtml(s.covKey)}" title="Hover or tap for the list">${s.coverage}/${s.covT}</span></td>
     </tr>
   `).join('');
 }
@@ -5218,7 +5272,7 @@ const CARD_THUMBS = {"Adventure":"data:image/webp;base64,UklGRiIKAABXRUJQVlA4IBY
 function _cardKey(name, onyx){ let n=String(name||''); if(/:Onyx$/.test(n)){ n=n.replace(/:Onyx$/,''); onyx=true; } return [n.trim(), !!onyx]; }
 function cardThumbSrc(name, onyx){ const [n,ox]=_cardKey(name,onyx); return CARD_THUMBS[n+(ox?'|onyx':'')] || ''; }
 function cardThumb(name, onyx, h){ const [n,ox]=_cardKey(name,onyx); const src=cardThumbSrc(n,ox); return src ? `<img class="card-thumb${ox?' onyx':''}" src="${src}" alt="" style="height:${h||40}px">` : ''; }
-function deckGalleryHTML(cards){
+function deckGalleryHTML(cards, opts){
   const groups=new Map();
   for(const c of (cards||[])){
     const [n,ox]=_cardKey(c.name, c.onyx); if(!n) continue;
@@ -5230,10 +5284,11 @@ function deckGalleryHTML(cards){
   if(!tiles.length) return '';
   return tiles.map(g=>{
     const lv=g.levels.length?Math.max(...g.levels):null, src=cardThumbSrc(g.name,g.onyx);
-    return `<div class="dg-tile${g.onyx?' onyx':''}" title="${escapeHtml(g.name)}${g.onyx?' (Onyx)':''} — ${g.count} cop${g.count>1?'ies':'y'}${g.fused?`, ${g.fused} fused`:''}">
+    const cv = opts && opts.cov ? opts.cov.get(g.name+(g.onyx?'|o':'')) : null;
+    return `<div class="dg-tile${g.onyx?' onyx':''}"${cv?` data-cov="${escapeHtml(g.name+(g.onyx?'|o':''))}"`:''} title="${escapeHtml(g.name)}${g.onyx?' (Onyx)':''} — ${g.count} cop${g.count>1?'ies':'y'}${g.fused?`, ${g.fused} fused`:''}">
       <div class="dg-art">${src?`<img src="${src}" alt="">`:`<div class="dg-noart">${escapeHtml(g.name)}</div>`}
         ${g.count>1?`<span class="dg-count">×${g.count}</span>`:''}${lv!=null&&!isNaN(lv)?`<span class="dg-lv">Lv${lv}</span>`:''}${g.fused?`<span class="dg-fused">${g.fused>1?g.fused+'F':'F'}</span>`:''}
-      </div><div class="dg-name">${escapeHtml(g.name)}</div></div>`;
+      </div><div class="dg-name">${escapeHtml(g.name)}</div>${cv?`<div class="dg-cov">combos ${cv.n}/${cv.t}</div>`:''}</div>`;
   }).join('');
 }
 function goblinSprite(type, px){
