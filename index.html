@@ -1145,6 +1145,14 @@ body.m .syn-pc .card-thumb{height:44px !important}
 .dg-tile[data-cov]{cursor:pointer}.dg-cov{font-size:10px;color:var(--muted);font-family:'IBM Plex Mono',monospace;margin-top:-3px}
 .cov-pop{position:fixed;z-index:1000;display:none;width:min(560px,94vw);background:var(--panel);border:1px solid var(--gold-soft);border-radius:12px;padding:12px 14px;box-shadow:0 12px 32px rgba(0,0,0,.6)}
 .cov-pop.show{display:block}.cov-head{display:flex;align-items:center;gap:10px;margin-bottom:8px}.cov-head .card-thumb{margin:0}
+.ldg-ov{position:fixed;inset:0;background:rgba(0,0,0,.62);z-index:2000;display:flex;align-items:center;justify-content:center;padding:16px}
+.ldg-dlg{background:var(--panel);border:1px solid var(--gold-soft);border-radius:14px;max-width:520px;width:100%;padding:18px 20px;box-shadow:0 18px 48px rgba(0,0,0,.6);max-height:90vh;overflow:auto}
+.ldg-t{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:700;color:var(--gold);margin-bottom:8px}
+.ldg-b{font-size:13.5px;line-height:1.5}.ldg-b p{margin:0 0 10px}
+.ldg-row{border:1px solid var(--border);border-radius:10px;padding:8px 10px;margin:8px 0;background:var(--panel-2)}.ldg-row span{color:var(--muted);font-size:12.5px}
+.ldg-btns{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end;margin-top:14px}
+.ldg-btns button{padding:8px 14px;border-radius:9px;border:1px solid var(--border);background:var(--panel-2);color:var(--text);font-weight:600;cursor:pointer;font-family:inherit}
+.ldg-btns button.primary{background:var(--gold);color:var(--bg);border-color:var(--gold)}
 </style>
 </head>
 <body>
@@ -1222,6 +1230,8 @@ body.m .syn-pc .card-thumb{height:44px !important}
             <svg viewBox="0 0 24 24"><path d="M12 15V3M12 3L8 7M12 3l4 4M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg>Import data</button>
           <button class="menu-item" id="textDataBtn">
             <svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h10M4 18h13"/></svg>Text transfer</button>
+          <button class="menu-item" id="restoreBackupBtn">
+            <svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 103-6.7M3 4v5h5"/></svg>Restore backup</button>
           <button class="menu-item" id="confirmImportBtn" style="display:none;color:var(--gold);">
             <svg viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg>Confirm import</button>
           <button class="menu-item" id="cloudSignOut" style="display:none;">
@@ -1229,7 +1239,7 @@ body.m .syn-pc .card-thumb{height:44px !important}
           <button class="menu-item" id="densityBtn">
             <svg viewBox="0 0 24 24"><path d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
             <span id="densityLabel">Compact rows</span></button>
-          <div class="menu-foot" id="versionTag">build 106 · build coverage</div>
+          <div class="menu-foot" id="versionTag">build 107 · data safety</div>
         </div>
       </div>
       <input type="file" id="importDataInput" accept="application/json" style="display:none;">
@@ -1850,13 +1860,18 @@ const Store = (() => {
       return v == null ? null : {key, value: v};
     },
     async set(key, value){
-      if(hostStorage) return await hostStorage.set(key, value, false);
-      if(!hasLocal){
-        if(!warned){ warned = true; console.warn('No storage available - changes will not persist.'); }
+      try{
+        if(hostStorage) return await hostStorage.set(key, value, false);
+        if(!hasLocal){
+          if(!warned){ warned = true; console.warn('No storage available - changes will not persist.'); }
+          return null;
+        }
+        localStorage.setItem(PREFIX + key, value);
+        return {key, value};
+      }catch(e){
+        if(typeof storageNotice==='function') storageNotice("Couldn't save — this browser's storage is full or blocked. Export a backup from Settings and data now.");
         return null;
       }
-      localStorage.setItem(PREFIX + key, value);
-      return {key, value};
     },
   };
 })();
@@ -1934,9 +1949,62 @@ function activeRef(){
   return referenceDecks[activeRefSlot] || {deck:[], score:0, savedAt:null};
 }
 
+// ---------- Data safety ----------
+// Automatic saves (schedule updates, level fixes, loading from Drive) must not
+// count as "your" changes, or a fresh device looks newer than Drive.
+let _autoSaving = 0;
+async function asAutoSave(fn){ _autoSaving++; try{ return await fn(); } finally{ _autoSaving--; } }
+const LOAD_FAILED = new Set();
+const LOAD_LABEL = {'my-library':'library','reference-decks':'saved decks','goblin-log':'goblin log','pack-log':'pack log'};
+function storageNotice(msg){ const el=document.getElementById('dataStatus'); if(el){ el.textContent=msg; el.style.color='var(--danger)'; } try{ if(msg) console.warn(msg); }catch(e){} }
+function markLoadFailed(key, raw){
+  LOAD_FAILED.add(key);
+  try{ localStorage.setItem('alchemists-ledger:unreadable:'+key, String(raw)); }catch(e){}
+  storageNotice(`Your saved ${LOAD_LABEL[key]||key} couldn't be read, so it is protected from being overwritten. Use Restore backup or Import, or sign in to load your Drive copy.`);
+}
+function saveBlocked(key){
+  if(!LOAD_FAILED.has(key)) return false;
+  storageNotice(`Not saved: your stored ${LOAD_LABEL[key]||key} couldn't be read, so it is protected from being overwritten.`);
+  return true;
+}
+function dataSummary(p){
+  const lib=Array.isArray(p&&p.myLibrary)?p.myLibrary:[]; const cards=lib.reduce((t,r)=>t+(+r.qty||0),0);
+  const rd=(p&&p.referenceDecks)||{}; const decks=Object.values(rd).filter(x=>x&&Array.isArray(x.deck)&&x.deck.length).length;
+  const logs=(Array.isArray(p&&p.goblinLog)?p.goblinLog.length:0)+(Array.isArray(p&&p.packLog)?p.packLog.length:0);
+  return {rows:lib.length, cards, decks, logs, empty: lib.length+decks+logs===0};
+}
+function summaryText(t){ return `${t.cards} cards (${t.rows} entries), ${t.decks} saved deck${t.decks===1?'':'s'}, ${t.logs} log entr${t.logs===1?'y':'ies'}`; }
+function coreJSON(p){ return JSON.stringify({l:p.myLibrary||[], d:p.referenceDecks||{}, g:p.goblinLog||[], k:p.packLog||[]}); }
+const BACKUP_KEY='backups';
+async function readBackups(){ try{ const r=await Store.get(BACKUP_KEY); const l=r&&r.value?JSON.parse(r.value):[]; return Array.isArray(l)?l:[]; }catch(e){ return []; } }
+async function snapshot(label, payload){
+  if(!payload || dataSummary(payload).empty) return;
+  const list=await readBackups(); list.unshift({at:new Date().toISOString(), label, payload});
+  try{ await Store.set(BACKUP_KEY, JSON.stringify(list.slice(0,3))); }catch(e){}
+}
+function ledgerDialog(title, html, buttons){
+  return new Promise(res=>{
+    const ov=document.createElement('div'); ov.className='ldg-ov';
+    ov.innerHTML=`<div class="ldg-dlg" role="dialog"><div class="ldg-t">${title}</div><div class="ldg-b">${html}</div><div class="ldg-btns">${buttons.map((b,i)=>`<button type="button" data-i="${i}" class="${b.primary?'primary':''}">${b.label}</button>`).join('')}</div></div>`;
+    document.body.appendChild(ov);
+    ov.addEventListener('click',e=>{ const b=e.target.closest('button[data-i]'); if(!b) return; ov.remove(); res(buttons[+b.dataset.i].value); });
+  });
+}
+async function openRestoreBackups(){
+  const list=await readBackups();
+  if(!list.length){ await ledgerDialog('Restore backup','<p>No backups yet. The Ledger saves one automatically before any import, restore or Drive sync replaces your data.</p>',[{label:'Close',value:null,primary:true}]); return; }
+  const html='<p>Choose a copy to restore. Your current data is backed up first, so this can be undone.</p>'+
+    list.map((b,i)=>`<div class="ldg-row"><b>#${i+1} · ${new Date(b.at).toLocaleString()}</b> · ${escapeHtml(b.label)}<br><span>${summaryText(dataSummary(b.payload))}</span></div>`).join('');
+  const choice=await ledgerDialog('Restore backup', html, [...list.map((b,i)=>({label:`Restore #${i+1}`, value:i})), {label:'Cancel', value:null, primary:true}]);
+  if(choice==null) return;
+  const pick=list[choice];
+  await applyImportPayload(pick.payload, 'before restoring a backup');
+  const el=document.getElementById('dataStatus'); if(el){ el.textContent='Backup restored.'; el.style.color='var(--gold)'; }
+}
 async function loadReferenceDecks(){
+  let result=null;
   try{
-    const result = await Store.get('reference-decks');
+    result = await Store.get('reference-decks');
     if(result && result.value){
       const parsed = JSON.parse(result.value);
       if(parsed && typeof parsed==='object'){
@@ -1946,12 +2014,13 @@ async function loadReferenceDecks(){
         if(parsed.activeRefSlot && referenceDecks[parsed.activeRefSlot]) activeRefSlot = parsed.activeRefSlot;
       }
     }
-  }catch(e){ /* nothing saved yet */ }
+  }catch(e){ if(result && result.value) markLoadFailed('reference-decks', result.value); }
   renderRefSlotChips();
   renderDeck();
   renderOverview();
 }
 async function saveReferenceDecks(){
+  if(saveBlocked('reference-decks')) return;
   scheduleCloudSave();
   try{
     await Store.set('reference-decks', JSON.stringify({...referenceDecks, activeRefSlot}));
@@ -3913,8 +3982,9 @@ function enforceFusionLevel(rows){
 }
 
 async function loadLibrary(){
+  let result=null;
   try{
-    const result = await Store.get('my-library');
+    result = await Store.get('my-library');
     if(result && result.value){
       const parsed = JSON.parse(result.value);
       if(Array.isArray(parsed) && parsed.length){
@@ -3922,10 +3992,10 @@ async function loadLibrary(){
         libIdCounter = Math.max(...parsed.map(r=>parseInt((r.id||'r0').slice(1))||0), 0)+1;
       }
     }
-  }catch(e){ /* key not found or storage unavailable — keep seed */ }
+  }catch(e){ if(result && result.value) markLoadFailed('my-library', result.value); }
   const fixedLv = enforceFusionLevel(myLibrary);
   if(fixedLv){
-    await saveLibrary();
+    await asAutoSave(saveLibrary);
     const el = document.getElementById('dataStatus');
     if(el){ el.textContent = `${fixedLv} fused card${fixedLv===1?'':'s'} set to level 5 — fusing needs two level-5 cards.`; el.style.color = 'var(--gold)'; }
   }
@@ -3933,6 +4003,7 @@ async function loadLibrary(){
   runSuggestionAnalysis();
 }
 async function saveLibrary(){
+  if(saveBlocked('my-library')) return;
   scheduleCloudSave();
   try{
     await Store.set('my-library', JSON.stringify(myLibrary));
@@ -5230,8 +5301,9 @@ document.getElementById('goblinType').addEventListener('change', updateGoblinPre
 document.getElementById('goblinType').addEventListener('change', syncGoblinTypeSprite);
 
 async function loadGoblinLog(){
+  let result=null;
   try{
-    const result = await Store.get('goblin-log');
+    result = await Store.get('goblin-log');
     if(result && result.value){
       const parsed = JSON.parse(result.value);
       if(Array.isArray(parsed)){
@@ -5239,10 +5311,11 @@ async function loadGoblinLog(){
         goblinIdCounter = Math.max(...parsed.map(r=>parseInt((r.id||'g0').slice(1))||0), 0)+1;
       }
     }
-  }catch(e){ /* no persistent storage available — start empty */ }
+  }catch(e){ if(result && result.value) markLoadFailed('goblin-log', result.value); }
   renderGoblinLog();
 }
 async function saveGoblinLog(){
+  if(saveBlocked('goblin-log')) return;
   scheduleCloudSave();
   try{
     await Store.set('goblin-log', JSON.stringify(goblinLog));
@@ -5766,8 +5839,9 @@ let packIdCounter = 0;
 let packSort = {key:'seq', dir:1};
 
 async function loadPackLog(){
+  let result=null;
   try{
-    const result = await Store.get('pack-log');
+    result = await Store.get('pack-log');
     if(result && result.value){
       const parsed = JSON.parse(result.value);
       if(Array.isArray(parsed)){
@@ -5775,10 +5849,11 @@ async function loadPackLog(){
         packIdCounter = Math.max(...parsed.map(r=>parseInt((r.id||'p0').slice(1))||0), 0)+1;
       }
     }
-  }catch(e){ /* no persistent storage available — start empty */ }
+  }catch(e){ if(result && result.value) markLoadFailed('pack-log', result.value); }
   renderPackLog();
 }
 async function savePackLog(){
+  if(saveBlocked('pack-log')) return;
   scheduleCloudSave();
   try{
     await Store.set('pack-log', JSON.stringify(packLog));
@@ -5952,7 +6027,7 @@ async function loadSchedule(){
       // The build ships a newer schedule than what is saved. Take the new one,
       // otherwise a corrected schedule can never reach an existing browser.
       adopted = !!(result && result.value);
-      await saveSchedule();
+      await asAutoSave(saveSchedule);
       await Store.set('pack-schedule-version', SCHEDULE_VERSION);
     } else if(result && result.value){
       const parsed = JSON.parse(result.value);
@@ -5962,7 +6037,7 @@ async function loadSchedule(){
   // ids first, so a corrected entry is saved with an id the table can address
   const corrected = applyScheduleCorrections();
   ensureScheduleIds();
-  if(corrected) await saveSchedule();
+  if(corrected) await asAutoSave(saveSchedule);
   renderSchedule();
   renderOverview();
   if(adopted){
@@ -6362,20 +6437,24 @@ function buildExportPayload(){
   };
 }
 
-async function applyImportPayload(parsed){
+async function applyImportPayload(parsed, label){
+  await snapshot(label || 'before import', buildExportPayload());
   if(Array.isArray(parsed.myLibrary)){
     myLibrary = parsed.myLibrary;
+    LOAD_FAILED.delete('my-library');
     enforceFusionLevel(myLibrary);
     libIdCounter = Math.max(...myLibrary.map(r=>parseInt((r.id||'r0').slice(1))||0), 0)+1;
     await saveLibrary();
   }
   if(Array.isArray(parsed.goblinLog)){
     goblinLog = parsed.goblinLog;
+    LOAD_FAILED.delete('goblin-log');
     goblinIdCounter = Math.max(...goblinLog.map(r=>parseInt((r.id||'g0').slice(1))||0), 0)+1;
     await saveGoblinLog();
   }
   if(Array.isArray(parsed.packLog)){
     packLog = parsed.packLog;
+    LOAD_FAILED.delete('pack-log');
     packIdCounter = Math.max(...packLog.map(r=>parseInt((r.id||'p0').slice(1))||0), 0)+1;
     await savePackLog();
   }
@@ -6390,6 +6469,7 @@ async function applyImportPayload(parsed){
     await saveSchedule();
   }
   if(parsed.referenceDecks && typeof parsed.referenceDecks==='object'){
+    LOAD_FAILED.delete('reference-decks');
     for(const {key} of REF_SLOTS){
       const slot = parsed.referenceDecks[key];
       if(slot && Array.isArray(slot.deck)) referenceDecks[key] = slot;
@@ -6413,7 +6493,7 @@ async function applyImportPayload(parsed){
 const Cloud = (() => {
   const FILE_NAME = 'alchemists-ledger.json';
   const SCOPE = 'https://www.googleapis.com/auth/drive.appdata';
-  let tokenClient = null, accessToken = null, tokenExpiry = 0, fileId = null;
+  let tokenClient = null, accessToken = null, tokenExpiry = 0, fileId = null, paused = false;
 
   // The token was only ever held in memory, so every page load began signed out
   // and prompted again. Google tokens last about an hour; cache within that.
@@ -6537,18 +6617,47 @@ const Cloud = (() => {
     try{ renderButtons(); }catch(e){}
     status('Checking Drive…');
     try{
+      try{ await window.LOCAL_READY; }catch(e){}
+      paused = false;
       await findFile();
       const remote = await download();
       if(remote && looksLikeLedgerExport(remote)){
+        const local = buildExportPayload();
+        const L = dataSummary(local), R = dataSummary(remote);
         const localTime = Number(localStorage.getItem('alchemists-ledger:lastChange') || 0);
         const remoteTime = Date.parse(remote.exportedAt || 0) || 0;
-        // Newer wins; a tie or unknown favours what's already on screen.
-        if(remoteTime > localTime){
-          await applyImportPayload(remote);
+        const unreadable = LOAD_FAILED.size > 0;
+        const useDrive = async ()=>{
+          await asAutoSave(()=>applyImportPayload(remote, 'before loading from Drive'));
+          localStorage.setItem('alchemists-ledger:lastChange', String(remoteTime || Date.now()));
           status('Loaded from Drive · ' + new Date(remoteTime).toLocaleString());
-        } else {
+        };
+        const useDevice = async ()=>{
+          await snapshot('Drive copy before this device replaced it', remote);
           await save();
-          status('Drive updated from this device.');
+          status('Drive updated from this device · the old Drive copy is kept as a backup.');
+        };
+        if(!R.empty && coreJSON(local) === coreJSON(remote)){
+          localStorage.setItem('alchemists-ledger:lastChange', String(remoteTime));
+          status('In sync with Drive.');
+        } else if(!R.empty && (L.empty || unreadable)){
+          await useDrive();                       // never let an empty device overwrite Drive
+        } else if(R.empty && !L.empty){
+          await save(); status('Saved to Drive.');
+        } else if(R.empty && L.empty){
+          status('Signed in · nothing saved yet.');
+        } else {
+          const fmt = t => t ? new Date(t).toLocaleString() : 'unknown';
+          const pick = await ledgerDialog('Drive and this device differ',
+            `<p>Both have data. Choose which copy to keep — the other is saved as a backup you can restore from Settings and data.</p>
+             <div class="ldg-row"><b>Google Drive</b> · saved ${fmt(remoteTime)}<br><span>${summaryText(R)}</span></div>
+             <div class="ldg-row"><b>This device</b> · last changed ${fmt(localTime)}<br><span>${summaryText(L)}</span></div>`,
+            [{label:'Use Drive copy', value:'drive', primary: remoteTime >= localTime},
+             {label:'Keep this device', value:'device', primary: localTime > remoteTime},
+             {label:'Decide later', value:null}]);
+          if(pick === 'drive') await useDrive();
+          else if(pick === 'device') await useDevice();
+          else { paused = true; status('Sync paused — tap Sync now to choose which copy to keep.', 'error'); }
         }
       } else {
         await save();
@@ -6561,6 +6670,8 @@ const Cloud = (() => {
 
   async function save(){
     if(!enabled() || !signedIn()) return;
+    if(paused){ status('Sync paused — tap Sync now to choose which copy to keep.', 'error'); return; }
+    if(LOAD_FAILED.size){ status('Drive save paused — some data on this device could not be read.', 'error'); return; }
     try{
       const payload = buildExportPayload();
       await upload(payload);
@@ -6721,11 +6832,7 @@ document.getElementById('confirmImportBtn').addEventListener('click', async ()=>
 ensureScheduleIds();
 renderOverview();
 renderDeck();
-loadLibrary();
-loadGoblinLog();
-loadPackLog();
-loadSchedule();
-loadReferenceDecks();
+window.LOCAL_READY = Promise.all([loadLibrary(), loadGoblinLog(), loadPackLog(), loadSchedule(), loadReferenceDecks()]).catch(()=>{});
 populatePackTypeOptions();
 populateSuggSourceOptions();
 applyDensity();
@@ -6901,12 +7008,14 @@ setInterval(()=>{
 // Push to Drive after edits settle, so a burst of changes is one upload.
 var cloudSaveTimer = null;
 function scheduleCloudSave(){
+  if(_autoSaving>0) return;
   try{ localStorage.setItem('alchemists-ledger:lastChange', String(Date.now())); }catch(e){}
   if(!Cloud.signedIn()) return;
   clearTimeout(cloudSaveTimer);
   cloudSaveTimer = setTimeout(()=>Cloud.save(), 1500);
 }
 
+{ const rb=document.getElementById('restoreBackupBtn'); if(rb) rb.addEventListener('click', ()=>openRestoreBackups()); }
 // Make the storage situation visible rather than failing silently.
 if(Store.backend === 'none'){
   const el = document.getElementById('dataStatus');
