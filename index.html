@@ -1239,7 +1239,7 @@ body.m .syn-pc .card-thumb{height:44px !important}
           <button class="menu-item" id="densityBtn">
             <svg viewBox="0 0 24 24"><path d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
             <span id="densityLabel">Compact rows</span></button>
-          <div class="menu-foot" id="versionTag">build 107 · data safety</div>
+          <div class="menu-foot" id="versionTag">build 108 · faster</div>
         </div>
       </div>
       <input type="file" id="importDataInput" accept="application/json" style="display:none;">
@@ -2153,6 +2153,10 @@ function rarityLabel(r){ return RARITY_LABEL[r] || r; }
 // Eight tabs became four. Each group holds one or more of the original
 // sections, which keep their ids and handlers untouched; groups with more than
 // one section get a segmented sub-tab bar under the main nav.
+// Sections whose big tables are drawn lazily: built on first view, and again
+// when opened after their data changed while hidden.
+const _staleSec = {};
+function _secShowing(id){ const el=document.getElementById(id); return !!(el && el.classList.contains('active')); }
 const TAB_GROUPS = {
   overview: [['overview','Overview']],
   library:  [['mylibrary','Library']],
@@ -2187,6 +2191,10 @@ function showSection(group, sectionId){
     bar.innerHTML = '';
   }
   if(target === 'overview' && typeof renderUnifiedCalendar === 'function') renderUnifiedCalendar();
+  if(_staleSec[target]){
+    if(target === 'mylibrary' && typeof renderMyLibrary === 'function') renderMyLibrary();
+    else if(target === 'packschedule' && typeof renderSchedule === 'function') renderSchedule();
+  }
 }
 document.querySelectorAll('.tab-btn').forEach(btn=>{
   btn.addEventListener('click', ()=>showSection(btn.dataset.group));
@@ -2208,7 +2216,14 @@ const BEST_MEAN_SIZE = {attack:28, defense:28, both:28, heroic:234};
 
 
 // ---------- On sale now: which of your cards combine with the pack's cards ----------
-function _synFmt(ms){ const d=new Date(ms); return d.toLocaleString('en-GB',{timeZone:'UTC',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})+' UTC'; }
+// ---------- Reusable date formatters ----------
+// toLocaleDateString(locale, options) builds a fresh formatter on every call,
+// which is slow when a table formats hundreds of dates. These are built once
+// and give the same text. An invalid date still prints "Invalid Date".
+const _DTF = {};
+function _dtf(key, locale, opts){ return _DTF[key] || (_DTF[key] = new Intl.DateTimeFormat(locale, opts)); }
+function _fmtD(d, key, locale, opts){ return isNaN(d) ? 'Invalid Date' : _dtf(key, locale, opts).format(d); }
+function _synFmt(ms){ return _fmtD(new Date(ms),'syn','en-GB',{timeZone:'UTC',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})+' UTC'; }
 const SYN_KEY='alchemists-ledger:synmode';
 function _synMode(ref){
   try{ const m=localStorage.getItem(SYN_KEY); if(['sum','attack','defense','both'].includes(m)) return m; }catch(e){}
@@ -2510,7 +2525,9 @@ function renderDeck(){
     </tr>
   `).join('');
 }
-document.getElementById('deckSearch').addEventListener('input', renderDeck);
+// Redraw a searched table once typing pauses, not on every keystroke.
+function debounced(fn, ms){ let t; return function(){ clearTimeout(t); t=setTimeout(fn, ms==null?120:ms); }; }
+document.getElementById('deckSearch').addEventListener('input', debounced(renderDeck));
 
 // ================= CUSTOM DECK EDITOR =================
 // A saved slot was previously write-only from the builder. This edits the
@@ -2996,7 +3013,7 @@ function metricDelta(after, before){
 function saleWindowLabel(e){
   const now = Date.now();
   if(saleStartMs(e) <= now && saleEndMs(e) > now) return 'on sale now';
-  const f = ms => new Date(ms).toLocaleDateString(undefined, {day:'numeric', month:'short', timeZone:'UTC'});
+  const f = ms => _fmtD(new Date(ms),'dmU',undefined,{day:'numeric', month:'short', timeZone:'UTC'});
   return `${f(saleStartMs(e))} – ${f(saleEndMs(e))}`;
 }
 function buildBuyPlan(settings, deckRows, inHand, monthsPerPack){
@@ -3714,7 +3731,37 @@ const SUM_MODES = new Set(['both','heroic']);
 const DEFAULT_DECK_SIZE = {attack:28, defense:28, both:28, heroic:234};
 let deckSizeByMode = {...DEFAULT_DECK_SIZE};
 
+// ---------- Remembered combo values ----------
+// A pair's value depends only on the two cards' base names, Onyx flags and
+// (clamped) levels, the mode, and whether levels are ignored. The builder asks
+// for the same pairs millions of times, so each answer is kept after the first
+// calculation. Card identity is remembered per card object in a WeakMap, which
+// adds nothing to the objects themselves, so saved decks and exports are
+// untouched; it is re-read whenever a card's name, Onyx flag or level changes.
+const _ROWC = new WeakMap(), _CV_KEYS = new Map(), _CV_CACHE = new Map(), _CV_MODES = new Map();
+let _cvNext = 1;
+function _rowc(r){
+  let e = _ROWC.get(r);
+  if(e && e.n===r.name && e.o===!!r.onyx && e.l===r.level) return e;
+  const lv = Math.max(1, Math.min(5, r.level || 5));
+  const k = baseName(r.name) + '|' + (r.onyx?1:0) + '|' + lv;
+  let id = _CV_KEYS.get(k); if(id===undefined){ id=_cvNext++; _CV_KEYS.set(k,id); }
+  e = {id, n:r.name, o:!!r.onyx, l:r.level, nn:normalizeCardName(r.name)}; _ROWC.set(r,e); return e;
+}
 function comboValue(rowX, rowY, mode, opts){
+  const a=_rowc(rowX).id, b=_rowc(rowY).id;
+  if(a<4096 && b<4096){
+    let m=_CV_MODES.get(mode); if(m===undefined){ m=_CV_MODES.size; _CV_MODES.set(mode,m); }
+    if(m<32){
+      const key = ((a<b ? a*4096+b : b*4096+a)*64) + m*2 + ((opts && opts.ignoreLevel)?1:0);
+      const c=_CV_CACHE.get(key); if(c!==undefined) return c;
+      if(_CV_CACHE.size>600000) _CV_CACHE.clear();
+      const v=_comboValueRaw(rowX,rowY,mode,opts); _CV_CACHE.set(key,v); return v;
+    }
+  }
+  return _comboValueRaw(rowX,rowY,mode,opts);
+}
+function _comboValueRaw(rowX, rowY, mode, opts){
   const combo = getCombo(rowX.name, rowY.name);
   if(!combo) return null;
   const onyxCount = (rowX.onyx?1:0)+(rowY.onyx?1:0);
@@ -3759,7 +3806,7 @@ function selfCombines(name){
 }
 
 function isSelfCombo(rowX, rowY){
-  return normalizeCardName(rowX.name) === normalizeCardName(rowY.name);
+  return _rowc(rowX).nn === _rowc(rowY).nn;
 }
 
 // Note on dead combos: the OPTIMIZER scores a dead pair as zero on purpose —
@@ -3793,8 +3840,8 @@ function pairScore(rowX, rowY, settings){
   const buff = settings.fusionBuff != null ? settings.fusionBuff : 1;
   const fusionMult = (1 + (fusedCount/2)*(buff-1)) * (1 + fusedCount*1e-6);
   if(isSelfCombo(rowX, rowY)) return value*fusionMult;
-  const dampenX = Math.pow(settings.copyReduction, Math.max(0, rowX.copyIndex-1));
-  const dampenY = Math.pow(settings.copyReduction, Math.max(0, rowY.copyIndex-1));
+  const dampenX = rowX.copyIndex===1 ? 1 : Math.pow(settings.copyReduction, Math.max(0, rowX.copyIndex-1));
+  const dampenY = rowY.copyIndex===1 ? 1 : Math.pow(settings.copyReduction, Math.max(0, rowY.copyIndex-1));
   return value*fusionMult*dampenX*dampenY;
 }
 // ================= DECK METRICS =================
@@ -4021,6 +4068,14 @@ let myLibSort = {key:null, dir:1};
 
 function renderMyLibrary(){
   if(typeof renderBundleList === 'function') renderBundleList();   // ownership column follows the library
+  // The Schedule's owned/missing tags follow the library too, so it is redrawn
+  // the next time it is opened (it used to keep whatever it showed at start-up).
+  _staleSec.packschedule = true;
+  // The table itself is only built while its tab is showing; a hidden table is
+  // marked stale and drawn when the tab opens. Everything that depends on the
+  // library (the Overview) still refreshes right away.
+  if(!_secShowing('mylibrary')){ _staleSec.mylibrary = true; renderOverview(); return; }
+  _staleSec.mylibrary = false;
   const q = document.getElementById('myLibSearch').value.trim().toLowerCase();
   let rows = myLibrary.filter(r=> r.name.toLowerCase().includes(q))
     .map(r=>({...r,
@@ -4184,7 +4239,7 @@ function updateLibRow(id, patch){
   queueSuggestionAnalysis();
   if(patch.fused === true) renderMyLibrary();   // level box locks for fused rows
 }
-document.getElementById('myLibSearch').addEventListener('input', renderMyLibrary);
+document.getElementById('myLibSearch').addEventListener('input', debounced(renderMyLibrary));
 
 // ---------- Rarity marker ----------
 // One dot, used wherever a card name appears, so tier is readable at a glance
@@ -4979,12 +5034,23 @@ async function buildOnce(inputCandidates, deckSize, settings, seed, onTick, rng)
   const work = deck.length * candidates.length * deck.length;
   const passes = work > 4e7 ? 1 : work > 8e6 ? 2 : 6;
 
+  // Score tables for the refinement. P[j][k] is the candidate j against deck
+  // card k; Q[i][k] is deck card i against deck card k. Each entry is exactly
+  // the pairScore() the old loop recomputed on every visit, and the sums below
+  // add them in the same order, so the choices are identical — only the
+  // repeated work is gone. A swap refreshes just the row and column it touches.
+  const D = deck.length, C = candidates.length;
+  const P = new Float64Array(C*D), Q = new Float64Array(D*D);
+  for(let j=0;j<C;j++){ const pj=j*D, cj=candidates[j]; for(let k=0;k<D;k++) P[pj+k] = pairScore(cj, deck[k], settings); }
+  for(let i=0;i<D;i++){ const qi=i*D, di=deck[i]; for(let k=0;k<D;k++) if(k!==i) Q[qi+k] = pairScore(di, deck[k], settings); }
+
   for(let pass=0; pass<passes; pass++){
     let improved = false;
-    for(let i=0;i<deck.length;i++){
+    for(let i=0;i<D;i++){
       if(onTick && i % 20 === 0) await onTick(deck.length, targetSize, 'refining');
       const withoutI = deck.filter((_,idx)=>idx!==i);
-      const currentContrib = marginalScore(deck[i], withoutI, settings);
+      let currentContrib = 0;
+      { const qi=i*D; for(let k=0;k<D;k++) if(k!==i) currentContrib += Q[qi+k]; }
       const unfusedWithoutI = countUnfused(withoutI);
       let bestGain = 1e-9, bestJ = -1;
       // Dead pairs in the rest of the deck, so a swap can be judged against
@@ -4997,7 +5063,7 @@ async function buildOnce(inputCandidates, deckSize, settings, seed, onTick, rng)
             if(!getCombo(withoutI[a].name, withoutI[b].name)) deadRest++;
       }
       const pairsFull = deck.length*(deck.length-1)/2;
-      for(let j=0;j<candidates.length;j++){
+      for(let j=0;j<C;j++){
         const cand = candidates[j];
         if(capped && !cand.fused && unfusedWithoutI >= cap) continue;
         if(deadCap != null){
@@ -5005,7 +5071,9 @@ async function buildOnce(inputCandidates, deckSize, settings, seed, onTick, rng)
           for(const o of withoutI) if(!getCombo(cand.name, o.name)) dead++;
           if(pairsFull && (dead/pairsFull)*100 > deadCap) continue;
         }
-        const gain = marginalScore(cand, withoutI, settings) - currentContrib;
+        let m = 0; const pj=j*D;
+        for(let k=0;k<D;k++) if(k!==i) m += P[pj+k];
+        const gain = m - currentContrib;
         if(gain > bestGain){ bestGain = gain; bestJ = j; }
       }
       if(bestJ>=0){
@@ -5013,6 +5081,10 @@ async function buildOnce(inputCandidates, deckSize, settings, seed, onTick, rng)
         deck[i] = candidates[bestJ];
         candidates[bestJ] = removed;
         improved = true;
+        const ni = deck[i];
+        for(let j=0;j<C;j++) P[j*D+i] = pairScore(candidates[j], ni, settings);          // column i: everyone against the new deck card
+        { const pj=bestJ*D, cj=candidates[bestJ]; for(let k=0;k<D;k++) P[pj+k] = pairScore(cj, deck[k], settings); }   // row: the card that left
+        { const qi=i*D; for(let k=0;k<D;k++) if(k!==i){ Q[qi+k] = pairScore(ni, deck[k], settings); Q[k*D+i] = pairScore(deck[k], ni, settings); } }
       }
     }
     if(!improved) break;
@@ -5037,6 +5109,14 @@ async function computeOptimalDeck(inputCandidates, deckSize, settings, restarts)
 
 // Yield to the browser so pending paints actually happen.
 const nextFrame = () => new Promise(r => requestAnimationFrame(()=>setTimeout(r,0)));
+// Pause for a repaint only when enough work has piled up since the last one.
+// Pausing after every small step kept the page responsive but left the builder
+// waiting on the display for most of its running time.
+let _lastYield = 0;
+async function maybeYield(force){
+  const now = performance.now();
+  if(force || now - _lastYield >= 40){ await nextFrame(); _lastYield = performance.now(); }
+}
 
 // Same search as computeOptimalDeck, but pauses between restarts so the status
 // text updates and the page stays responsive on slower devices.
@@ -5046,13 +5126,13 @@ async function computeOptimalDeckAsync(inputCandidates, deckSize, settings, rest
   const n = restarts != null ? restarts : auto;
   let best = null, bestScore = -Infinity;
   for(let r=0; r<n; r++){
-    if(onProgress){ onProgress(r, n); await nextFrame(); }
+    if(onProgress){ onProgress(r, n); await maybeYield(r===0); }
     // Yield periodically inside the build too — a single large deck can take
     // seconds on its own, which would otherwise freeze the page.
     const tick = onProgress
       ? async (done, total, phase) => {
           onProgress(r, n, phase ? `${phase} ${done}/${total}` : `${done}/${total}`);
-          await nextFrame();
+          await maybeYield();
         }
       : null;
     // Seeded per restart: reproducible across runs, still varied between restarts.
@@ -5246,7 +5326,7 @@ function addDays(date, n){
   return d;
 }
 function formatDate(d){
-  return d.toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'});
+  return _fmtD(d,'usMDY','en-US',{month:'short', day:'numeric', year:'numeric'});
 }
 // One source of truth for the spawn cycles. These numbers previously appeared in
 // four places — the sentence, the dates, the calendar and the chain-next button —
@@ -5814,7 +5894,7 @@ function populatePackTypeOptions(){
 }
 
 function formatDateShort(d){
-  return d.toLocaleDateString('en-US', {month:'short', day:'numeric'});
+  return _fmtD(d,'usMD','en-US',{month:'short', day:'numeric'});
 }
 
 function updatePackTypeHint(){
@@ -5980,7 +6060,7 @@ function saleEndMs(e){
 }
 function saleEndLabel(e){
   const d = new Date(saleEndMs(e));
-  return d.toLocaleDateString(undefined, {day:'numeric', month:'short', timeZone:'UTC'})
+  return _fmtD(d,'dmU',undefined,{day:'numeric', month:'short', timeZone:'UTC'})
     + ', ' + d.toISOString().slice(11,16) + ' UTC';
 }
 
@@ -6088,7 +6168,7 @@ function renderBundleList(){
   const body = document.getElementById('bundleBody');
   if(!body) return;
   const now = Date.now();
-  const f = ms => new Date(ms).toLocaleDateString(undefined, {day:'numeric', month:'short', year:'numeric', timeZone:'UTC'});
+  const f = ms => _fmtD(new Date(ms),'dmyU',undefined,{day:'numeric', month:'short', year:'numeric', timeZone:'UTC'});
   body.innerHTML = BUNDLE_SCHEDULE.map(b => {
     const past = saleEndMs(b) <= now, live = !past && saleStartMs(b) <= now;
     const own = isCardOwned(b.card, true);
@@ -6103,6 +6183,8 @@ function renderBundleList(){
 function renderSchedule(){
   renderBundleList();
   if(typeof renderUnifiedCalendar === 'function') setTimeout(renderUnifiedCalendar, 0);
+  if(!_secShowing('packschedule')){ _staleSec.packschedule = true; return; }
+  _staleSec.packschedule = false;
   const q = document.getElementById('scheduleSearch').value.trim().toLowerCase();
   const missingOnly = document.getElementById('scheduleMissingOnly').checked;
   const upcomingOnly = document.getElementById('scheduleUpcomingOnly').checked;
@@ -6188,7 +6270,7 @@ function renderSchedule(){
     renderSugg();
   });
 }
-document.getElementById('scheduleSearch').addEventListener('input', renderSchedule);
+document.getElementById('scheduleSearch').addEventListener('input', debounced(renderSchedule));
 document.getElementById('scheduleMissingOnly').addEventListener('change', renderSchedule);
 document.getElementById('scheduleUpcomingOnly').addEventListener('change', renderSchedule);
 
@@ -6884,7 +6966,7 @@ function comboCardHint(n){
 }
 
 document.getElementById('bMode').addEventListener('change', syncDeckSizeToMode);
-document.getElementById('packSearch').addEventListener('input', renderPackLog);
+document.getElementById('packSearch').addEventListener('input', debounced(renderPackLog));
 document.getElementById('bDeckSize').addEventListener('input', ()=>{
   const n = parseInt(document.getElementById('bDeckSize').value);
   if(!isNaN(n) && n > 0 && lastSeenMode) deckSizeByMode[lastSeenMode] = n;
