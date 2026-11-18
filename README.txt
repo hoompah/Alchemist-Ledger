@@ -1,6 +1,5 @@
 Alchemist's Ledger - site folder
+includes pack schedule, deck builder, goblin and pack tracker, and several other items.
 
-  index.html              the Ledger itself (same file as deck-dashboard.html)
-  manifest.webmanifest    tells phones and browsers this is an installable app
-  sw.js                   keeps a copy on the device: instant opening, offline use
-  icons/                  home-screen icons
+Side project of Hoompah, Credit and copyright of card images belonging to Monumental (Do tell if you are against the use of these images).
+
