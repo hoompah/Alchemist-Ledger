@@ -1259,7 +1259,7 @@ body.m .syn-pc .card-thumb{height:44px !important}
           <button class="menu-item" id="densityBtn">
             <svg viewBox="0 0 24 24"><path d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
             <span id="densityLabel">Compact rows</span></button>
-          <div class="menu-foot" id="versionTag">build 112 · two stat fixes</div>
+          <div class="menu-foot" id="versionTag">build 113 · unfuse unlocks level</div>
         </div>
       </div>
       <input type="file" id="importDataInput" accept="application/json" style="display:none;">
@@ -4304,6 +4304,14 @@ function updateLibRow(id, patch){
   saveLibrary();
   queueSuggestionAnalysis();
   if(patch.fused === true) renderMyLibrary();   // level box locks for fused rows
+  else if(patch.fused === false){
+    // Unfusing unlocks the level box. Do it in place, so the list keeps its
+    // scroll position (this used to need a page refresh).
+    document.querySelectorAll(`.lib-level[data-id="${id}"]`).forEach(sel=>{
+      sel.disabled = false;
+      sel.removeAttribute('title');
+    });
+  }
 }
 document.getElementById('myLibSearch').addEventListener('input', debounced(renderMyLibrary));
 
